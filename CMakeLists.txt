@@ -14,11 +14,13 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_subdirectory(ext)
 # Logging (https://github.com/gabime/spdlog)
 include_directories(ext/spdlog-0.14.0/include)
-# Lua 5.3
+# Lua 5.3 (http://www.lua.org/)
 find_package(Lua 5.3 REQUIRED)
 include_directories(${LUA_INCLUDE_DIR})
-# Lua bindings
+# Lua bindings (https://github.com/jeremyong/Selene)
 include_directories(ext/Selene-master/include)
+# Argument parsing (https://github.com/Taywee/args)
+include_directories(ext/args-6.2.0)
 
 # =================================================
 # OUR STUFF

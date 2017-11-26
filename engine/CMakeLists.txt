@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
 project(milsim_engine)
 
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
 include_directories(include)
 
 set(SOURCES
@@ -13,3 +16,4 @@ set(SOURCES
 )
 add_library(milsim_engine STATIC ${SOURCES})
 target_link_libraries(milsim_engine ${LUA_LIBRARY})
+target_link_libraries(milsim_engine Threads::Threads)
