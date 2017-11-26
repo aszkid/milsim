@@ -10,10 +10,10 @@ set(SOURCES
 	src/core.cpp
 	src/hermes.cpp
 	src/sys.cpp
+	src/state.cpp
 
 	src/sys/script.cpp
 	src/sys/audio.cpp
-	src/sys/comm.cpp
 	src/sys/graph.cpp
 	src/sys/net.cpp
 )

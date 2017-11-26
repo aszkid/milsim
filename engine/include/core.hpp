@@ -7,6 +7,7 @@
 #include "util/types.hpp"
 #include "hermes.hpp"
 #include "sys.hpp"
+#include "state.hpp"
 
 namespace MilSim {
 	
@@ -36,8 +37,8 @@ namespace MilSim {
 		GLFWwindow* m_window;
 
 		std::vector<std::unique_ptr<Sys>> m_systems;
-		// vector<GameState> m_states
-		// GameState* m_current_state
+		std::vector<GameState> m_states;
+		GameState* m_current_state;
 	};
 	
 }
