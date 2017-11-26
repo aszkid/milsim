@@ -15,6 +15,8 @@ The communication system is a subscription-based message queue. Every system is 
 
 The *Sys.Graph* system (graphics) deals with both 3D and 2D stuff in a relatively transparent way. It is capable of generating UI layouts (howw??? embed chromium? ) and drawing 3D scenes.
 
+We use GLFW for window & context creation, and (???) as a C++-wrapped OpenGL interface.
+
 ## Sys.Graph.GUI
 
 A subsystem that specializes on drawing GUIs. A GUI screen is a tree of *widgets*, anchored to a parent frame. Every single piece of GUI is loaded from scripts.
