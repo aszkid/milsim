@@ -12,3 +12,4 @@ set(SOURCES
 	src/sys/net.cpp
 )
 add_library(milsim_engine STATIC ${SOURCES})
+target_link_libraries(milsim_engine ${LUA_LIBRARY})
