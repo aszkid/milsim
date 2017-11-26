@@ -14,7 +14,7 @@ int main(int argc, char** argv)
 {
 	MilSim::Core core;
 
-	auto console = spdlog::stdout_color_mt("console");
+	auto console = spdlog::stdout_color_mt("main");
 	
 	sel::State state;
 	state("x = 5 + 2");
@@ -48,11 +48,12 @@ int main(int argc, char** argv)
 	
 	glfwMakeContextCurrent(window);
 	gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
+
+	core.set_window(window);
+	core.init_systems();
 	
-	while(!glfwWindowShouldClose(window)) {
-		glfwSwapBuffers(window);
-		glfwPollEvents();
-	}
+	// Main loop
+	core.loop();
 	
 	glfwDestroyWindow(window);
 	glfwTerminate();
