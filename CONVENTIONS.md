@@ -13,8 +13,5 @@
 As a codebase grows larger, keeping track of types and ownership is hard. We use a small amount of prefixes to paliate that:
 
 - `m` for members
-- `c` for constants
-- `p` for pointers
-- `s` for static
 
 (from https://stackoverflow.com/questions/1228161/why-use-prefixes-on-member-variables-in-c-classes)
