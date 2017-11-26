@@ -10,8 +10,8 @@
         },
         {
             "label": "run",
-            "type": "process",
-            "command": "build/app/milsim --root /media/data/dev/milsim/run"
+            "type": "shell",
+            "command": "./build/app/milsim --root /media/data/dev/milsim/run"
         }
     ]
 }
