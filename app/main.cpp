@@ -1,6 +1,9 @@
 #include <iostream>
 #include <string>
 
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+
 #include "spdlog/spdlog.h"
 #include "selene.h"
 #include "args.hxx"
@@ -29,6 +32,30 @@ int main(int argc, char** argv)
 	if(root) {
 		console->info("Root is `{}`", args::get(root));
 	}
+	
+	if(!glfwInit()) {
+		console->critical("Failed to initialize GLFW...");
+		return 1;
+	}
+	
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+	GLFWwindow* window = glfwCreateWindow(640, 450, "helo", NULL, NULL);
+	if(!window) {
+		console->critical("Couldn't create window...");
+		return 1;
+	}
+	
+	glfwMakeContextCurrent(window);
+	gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
+	
+	while(!glfwWindowShouldClose(window)) {
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	}
+	
+	glfwDestroyWindow(window);
+	glfwTerminate();
 	
 	return 0;
 }

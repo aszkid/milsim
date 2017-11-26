@@ -21,6 +21,10 @@ include_directories(${LUA_INCLUDE_DIR})
 include_directories(ext/Selene-master/include)
 # Argument parsing (https://github.com/Taywee/args)
 include_directories(ext/args-6.2.0)
+# OpenGL
+find_package(OpenGL REQUIRED)
+include_directories(${OPENGL_INCLUDE_DIR})
+
 
 # =================================================
 # OUR STUFF

@@ -17,3 +17,5 @@ set(SOURCES
 add_library(milsim_engine STATIC ${SOURCES})
 target_link_libraries(milsim_engine ${LUA_LIBRARY})
 target_link_libraries(milsim_engine Threads::Threads)
+target_link_libraries(milsim_engine ${OPENGL_gl_LIBRARY})
+target_link_libraries(milsim_engine glfw ${GLFW_LIBRARIES})
