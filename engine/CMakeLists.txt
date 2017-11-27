@@ -8,6 +8,8 @@ include_directories(include)
 
 set(SOURCES
 	src/core.cpp
+
+	src/scene_graph.cpp
 	
 	src/sys/hermes.cpp
 	src/sys/script.cpp
