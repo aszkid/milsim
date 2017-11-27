@@ -1,6 +1,5 @@
 #include "core.hpp"
 
-#include <chrono>
 #include <thread>
 #include "spdlog/spdlog.h"
 
@@ -15,7 +14,11 @@ Core::Core()
 
 Core::~Core()
 {
-
+	for(const auto& s : m_states) {
+		spdlog::get("main")->info("Killing state `{}`...", s.first);
+		s.second->kill();
+		delete s.second;
+	}
 }
 
 
@@ -23,9 +26,28 @@ void Core::set_window(GLFWwindow* window)
 {
 	m_window = window;
 }
+void Core::set_config(sel::State* cfg)
+{
+	auto video = (*cfg)["video"];
+	auto audio = (*cfg)["audio"];
+	auto controls = (*cfg)["controls"];
+
+	glfwSetWindowSize(m_window, video["width"], video["height"]);
+	glfwSetWindowPos(m_window, 50, 50);
+	glfwSetWindowTitle(m_window, "MilSim");
+}
 void Core::init_systems()
 {
 
+}
+
+void Core::add_state(GameState* state, const std::string id)
+{
+	m_states[id] = state;
+}
+void Core::force_state(const std::string id)
+{
+	m_current_state = m_states[id];
 }
 
 void Core::loop()
@@ -33,54 +55,57 @@ void Core::loop()
 	// Game loop credits due to http://gameprogrammingpatterns.com/game-loop.html
 	// ------
 
-	// Logic loop timestep of 100 Hz
-	const auto MS_PER_UPDATE = std::chrono::milliseconds(10);
-
-	auto t_prev = std::chrono::system_clock::now();
-	auto t_curr = std::chrono::system_clock::now();
-	std::chrono::milliseconds t_lag(0);
+	m_prevtime = std::chrono::system_clock::now();
+	m_currtime = m_prevtime;
 
 	while(!glfwWindowShouldClose(m_window)) {
-		t_curr = std::chrono::system_clock::now();
-		auto t_elapsed = t_curr - t_prev;
-		t_prev = t_curr;
-		t_lag += std::chrono::duration_cast<std::chrono::milliseconds>(t_elapsed);
+		// Chrono stuff
+		m_currtime = std::chrono::system_clock::now();
+		auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(m_currtime - m_prevtime);
+		m_prevtime = m_currtime;
+		m_t_lag += elapsed;
 
 		glfwSwapBuffers(m_window);
 		glfwPollEvents();
 
-		uint fps = 1.0 / (
-			std::chrono::duration_cast<std::chrono::milliseconds>(t_elapsed).count() / 1000.0
-		);
-		spdlog::get("main")->info("Loop took {}ms, lag is {}ms — running at {} FPS.",
-			std::chrono::duration_cast<std::chrono::milliseconds>(t_elapsed).count(),
-			t_lag.count(),
-			fps
+		m_fps = 1.0 / (
+			elapsed.count() / 1000.0
 		);
 
 		// Update systems until catched up with lag
-		while(t_lag >= MS_PER_UPDATE) {
-			spdlog::get("main")->info("Catching up...");
-			// Dispatch events
-			m_hermes.update();
-
-			/* Q: this doesn't quite make sense. Updating a system
-				*    should happen all at once; fetch messages and act
-				*    based on them.
-				*    Maybe have dependency sys -> hermes instead of hermes -> sys?
-				*    and have method `get_events(sub_id)` ?
-				*/
-
-			for(auto& sys : m_systems) {
-				sys->update();
-			}
-
-			t_lag -= MS_PER_UPDATE;
+		while(m_t_lag >= m_MS_PER_UPDATE) {
+			// Logic happens
+			update();
+			// Peel back lag
+			m_t_lag -= m_MS_PER_UPDATE;
 		}
 
-		// Render w/ basic interpolation
-		// m_current_state->render(m_lag.count() / MS_PER_UPDATE)
-
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		// Drawing happens
+		render();
 	}
+}
+
+void Core::update()
+{
+	// Dispatch events
+	m_hermes.update();
+
+	/* Q: this doesn't quite make sense. Updating a system
+		*    should happen all at once; fetch messages and act
+		*    based on them.
+		*    Maybe have dependency sys -> hermes instead of hermes -> sys?
+		*    and have method `get_events(sub_id)` ?
+		*/
+	for(auto& sys : m_systems) {
+		sys->update();
+	}
+
+	// Update the current state
+	m_current_state->update();
+}
+void Core::render()
+{
+	// Render w/ basic interpolation
+	if(m_current_state)
+		m_current_state->render(0.0); // t_lag.count() / MS_PER_UPDATE.count()
 }

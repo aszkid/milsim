@@ -4,8 +4,12 @@ project(milsim_app)
 include_directories(../engine/include)
 include_directories(../ext/glad/4.5-core/include)
 
+include_directories(./include)
+
 set(SOURCES
 	main.cpp
+	states/main_screen.cpp
+
 	# opengl loader
 	../ext/glad/4.5-core/src/glad.c
 )

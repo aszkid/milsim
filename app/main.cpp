@@ -10,18 +10,15 @@
 
 #include "core.hpp"
 
+// Game states
+#include "states/main_screen.hpp"
+
 int main(int argc, char** argv)
 {
 	MilSim::Core core;
-
 	auto console = spdlog::stdout_color_mt("main");
-	
-	sel::State state;
-	state("x = 5 + 2");
-	console->info("Lua says that `x={}`", (int)state["x"]);
-	
 	args::ArgumentParser parser("MilSim");
-	args::ValueFlag<std::string> root(parser, "root", "The root directory", {'r', "root"});
+	args::ValueFlag<std::string> root_arg(parser, "root", "The root directory", {'r', "root"});
 	
 	try {
 		parser.ParseCLI(argc, argv);
@@ -29,8 +26,11 @@ int main(int argc, char** argv)
 		console->error(e.what());
 	}
 	
-	if(root) {
-		console->info("Root is `{}`", args::get(root));
+	std::string root;
+	if(root_arg) {
+		root = args::get(root_arg);
+	} else {
+		root = ".";
 	}
 	
 	if(!glfwInit()) {
@@ -49,8 +49,19 @@ int main(int argc, char** argv)
 	glfwMakeContextCurrent(window);
 	gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
 
+	// Prepare core
 	core.set_window(window);
 	core.init_systems();
+
+	// Load base config
+	sel::State base_conf;
+	base_conf.Load(root + "/base.lua");
+	core.set_config(&base_conf);
+
+	// Add base states -- `Core` dtor cleans up
+	core.add_state(new MainScreen(), "main_screen");
+	core.force_state("main_screen");
+
 	
 	// Main loop
 	core.loop();
