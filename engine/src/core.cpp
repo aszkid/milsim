@@ -3,6 +3,8 @@
 #include <thread>
 #include "spdlog/spdlog.h"
 
+#include "sys/hermes.hpp"
+
 using namespace MilSim;
 
 const char* Core::m_version = "0.1-early-alpha";
@@ -14,8 +16,12 @@ Core::Core()
 
 Core::~Core()
 {
-	for(const auto& s : m_states) {
+	for(auto& s : m_states) {
 		spdlog::get("main")->info("Killing state `{}`...", s.first);
+		s.second->kill();
+	}
+	for(auto& s : m_systems) {
+		spdlog::get("main")->info("Killing system `{}`...", s.first);
 		s.second->kill();
 	}
 }
@@ -37,7 +43,7 @@ void Core::set_config(sel::State* cfg)
 }
 void Core::init_systems()
 {
-
+	Hermes* hermes = add_system(new Hermes(), "hermes");
 }
 
 GameState* Core::add_state(GameState* state, const std::string id)
@@ -101,7 +107,7 @@ void Core::update()
 		*    and have method `get_events(sub_id)` ?
 		*/
 	for(auto& sys : m_systems) {
-		sys->update();
+		sys.second->update();
 	}
 
 	// Update the current state

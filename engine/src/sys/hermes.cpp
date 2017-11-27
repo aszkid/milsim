@@ -1,4 +1,4 @@
-#include "hermes.hpp"
+#include "sys/hermes.hpp"
 
 #include <algorithm>
 #include "spdlog/spdlog.h"
@@ -6,10 +6,20 @@
 using namespace MilSim;
 
 Hermes::Hermes()
+	: Sys::Sys()
 {}
 
 Hermes::~Hermes()
 {}
+
+void Hermes::init()
+{
+
+}
+void Hermes::kill()
+{
+	
+}
 
 
 void Hermes::update()

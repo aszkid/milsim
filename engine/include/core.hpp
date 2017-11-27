@@ -6,11 +6,11 @@
 #include <string>
 #include <chrono>
 #include <GLFW/glfw3.h>
-
 #include "selene.h"
+
 #include "util/types.hpp"
-#include "hermes.hpp"
 #include "sys.hpp"
+#include "sys/hermes.hpp"
 #include "state.hpp"
 
 namespace MilSim {
@@ -45,8 +45,14 @@ namespace MilSim {
 	private:
 		// Systems
 		// ...
-		std::vector<t_sys_ptr> m_systems;
+		std::map<std::string, t_sys_ptr> m_systems;
 		std::map<std::string, t_state_ptr> m_states;
+
+		template <class T>
+		T* add_system(T* system, const std::string id) {
+			m_systems[id] = t_sys_ptr(system);
+			return static_cast<T*>(system);
+		}
 
 		// Various
 		Hermes m_hermes;

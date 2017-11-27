@@ -4,10 +4,13 @@ namespace MilSim {
 
 	class Sys {
 	public:
-		Sys();
-		~Sys();
+		Sys() {};
+		virtual ~Sys() {};
 
-		void update();
+		virtual void init() = 0;
+		virtual void kill() = 0;
+
+		virtual void update() = 0;
 	};
 
 }

@@ -2,6 +2,8 @@
 
 #include <vector>
 
+#include "spdlog/spdlog.h"
+
 #include "util/types.hpp"
 #include "sys.hpp"
 
@@ -22,13 +24,16 @@ namespace MilSim {
 	};
 
 	/**
-	 * Messenger class, implementation of a
+	 * Messenger system, implementation of a
 	 * simple observer pattern.
 	 */
-	class Hermes {
+	class Hermes : public Sys {
 	public:
 		Hermes();
 		~Hermes();
+
+		void init();
+		void kill();
 		
 		/**
 		 * Notifies interest in a set of channels.

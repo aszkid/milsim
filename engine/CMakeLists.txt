@@ -8,9 +8,8 @@ include_directories(include)
 
 set(SOURCES
 	src/core.cpp
-	src/hermes.cpp
-	src/sys.cpp
-
+	
+	src/sys/hermes.cpp
 	src/sys/script.cpp
 	src/sys/audio.cpp
 	src/sys/graph.cpp
