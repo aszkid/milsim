@@ -15,6 +15,9 @@
 
 namespace MilSim {
 	
+	typedef std::unique_ptr<GameState> t_state_ptr;
+	typedef std::unique_ptr<Sys> t_sys_ptr;
+
 	class Core {
 	public:
 		Core();
@@ -24,7 +27,8 @@ namespace MilSim {
 		void set_config(sel::State* cfg);
 		void init_systems();
 
-		void add_state(GameState* state, const std::string id);
+		GameState* add_state(GameState* state, const std::string id);
+		GameState* get_state(const std::string id);
 		void force_state(const std::string id);
 
 		/**
@@ -41,8 +45,8 @@ namespace MilSim {
 	private:
 		// Systems
 		// ...
-		std::vector<std::unique_ptr<Sys>> m_systems;
-		std::map<std::string, GameState*> m_states;
+		std::vector<t_sys_ptr> m_systems;
+		std::map<std::string, t_state_ptr> m_states;
 
 		// Various
 		Hermes m_hermes;

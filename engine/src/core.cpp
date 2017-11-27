@@ -17,7 +17,6 @@ Core::~Core()
 	for(const auto& s : m_states) {
 		spdlog::get("main")->info("Killing state `{}`...", s.first);
 		s.second->kill();
-		delete s.second;
 	}
 }
 
@@ -41,13 +40,18 @@ void Core::init_systems()
 
 }
 
-void Core::add_state(GameState* state, const std::string id)
+GameState* Core::add_state(GameState* state, const std::string id)
 {
-	m_states[id] = state;
+	m_states[id] = t_state_ptr(state);
+	return state;
+}
+GameState* Core::get_state(const std::string id)
+{
+	return m_states[id].get();
 }
 void Core::force_state(const std::string id)
 {
-	m_current_state = m_states[id];
+	m_current_state = m_states[id].get();
 }
 
 void Core::loop()
@@ -101,7 +105,8 @@ void Core::update()
 	}
 
 	// Update the current state
-	m_current_state->update();
+	if(m_current_state)
+		m_current_state->update();
 }
 void Core::render()
 {

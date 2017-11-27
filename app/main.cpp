@@ -25,7 +25,6 @@ int main(int argc, char** argv)
 	} catch(args::ParseError e) {
 		console->error(e.what());
 	}
-	
 	std::string root;
 	if(root_arg) {
 		root = args::get(root_arg);
@@ -58,16 +57,17 @@ int main(int argc, char** argv)
 	base_conf.Load(root + "/base.lua");
 	core.set_config(&base_conf);
 
-	// Add base states -- `Core` dtor cleans up
-	core.add_state(new MainScreen(), "main_screen");
+	// Add base states -- `Core` dtor cleans up `unique_ptr`
+	MainScreen* main_screen = (MainScreen*)core.add_state(new MainScreen(), "main_screen");
 	core.force_state("main_screen");
-
 	
 	// Main loop
 	core.loop();
 	
 	glfwDestroyWindow(window);
 	glfwTerminate();
+
+	console->info("Shutting down...");
 	
 	return 0;
 }
