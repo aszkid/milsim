@@ -7,7 +7,18 @@ This is the entry point of any game. While simple by itself, its function is to 
 
 The communication system is a subscription-based message queue. Every system is given a set of subscription parameters (priorities, frequency, etc) and the communication system balances the load of messages.
 
-# Sys.Comm
+## Sys.Hermes
+
+Messaging system. Lowest level of communication between engine systems.
+
+## Sys.Alexandria
+
+Asset manager. Abstracts away machine-specific paths and handles, and provides a uniform interface to access resources.
+
+- `Alexandria::get("/local/maps/foo.lua", type::map)`
+- `Alexandria::get("/server/maps/bar.lua", type::map)`
+
+Stuff like this.
 
 # Sys.Audio
 
