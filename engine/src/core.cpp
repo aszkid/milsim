@@ -11,17 +11,17 @@ const char* Core::m_version = "0.1-early-alpha";
 
 Core::Core()
 {
-
+	m_log = spdlog::stdout_color_mt("Core");
 }
 
 Core::~Core()
 {
 	for(auto& s : m_states) {
-		spdlog::get("main")->info("Killing state `{}`...", s.first);
+		m_log->info("Killing state `{}`...", s.first);
 		s.second->kill();
 	}
 	for(auto& s : m_systems) {
-		spdlog::get("main")->info("Killing system `{}`...", s.first);
+		m_log->info("Killing system `{}`...", s.first);
 		s.second->kill();
 	}
 }
@@ -43,14 +43,11 @@ void Core::set_config(sel::State* cfg)
 }
 void Core::init_systems()
 {
-	Hermes* hermes = add_system(new Hermes(), "hermes");
+	// `Hermes` has to be the first system initialized
+
+	m_hermes = add_system(new Hermes(), "hermes");
 }
 
-GameState* Core::add_state(GameState* state, const std::string id)
-{
-	m_states[id] = t_state_ptr(state);
-	return state;
-}
 GameState* Core::get_state(const std::string id)
 {
 	return m_states[id].get();
@@ -97,15 +94,7 @@ void Core::loop()
 
 void Core::update()
 {
-	// Dispatch events
-	m_hermes.update();
-
-	/* Q: this doesn't quite make sense. Updating a system
-		*    should happen all at once; fetch messages and act
-		*    based on them.
-		*    Maybe have dependency sys -> hermes instead of hermes -> sys?
-		*    and have method `get_events(sub_id)` ?
-		*/
+	// Update the systems
 	for(auto& sys : m_systems) {
 		sys.second->update();
 	}
@@ -116,7 +105,7 @@ void Core::update()
 }
 void Core::render()
 {
-	// Render w/ basic interpolation
+	// Render current state w/ basic interpolation
 	if(m_current_state)
 		m_current_state->render(0.0); // t_lag.count() / MS_PER_UPDATE.count()
 }

@@ -27,7 +27,11 @@ namespace MilSim {
 		void set_config(sel::State* cfg);
 		void init_systems();
 
-		GameState* add_state(GameState* state, const std::string id);
+		template <class T>
+		T* add_state(T* state, const std::string id) {
+			m_states[id] = t_state_ptr(state);
+			return static_cast<T*>(state);
+		}
 		GameState* get_state(const std::string id);
 		void force_state(const std::string id);
 
@@ -55,9 +59,12 @@ namespace MilSim {
 		}
 
 		// Various
-		Hermes m_hermes;
+		Hermes* m_hermes;
 		GLFWwindow* m_window;
 		GameState* m_current_state;
+
+		// Loggers
+		std::shared_ptr<spdlog::logger> m_log;
 
 		// Loop stuff
 		// Logic timestep of 100 Hz
