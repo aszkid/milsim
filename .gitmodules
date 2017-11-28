@@ -1,3 +1,6 @@
 [submodule "ext/glfw"]
 	path = ext/glfw
 	url = https://github.com/glfw/glfw
+[submodule "ext/glbinding"]
+	path = ext/glbinding
+	url = https://github.com/cginternals/glbinding
