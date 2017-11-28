@@ -8,8 +8,9 @@ include_directories(include)
 
 set(SOURCES
 	src/core.cpp
-
 	src/scene.cpp
+
+	src/util/io.cpp
 	
 	src/sys/hermes.cpp
 	src/sys/alexandria.cpp
