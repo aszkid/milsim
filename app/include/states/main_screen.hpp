@@ -4,10 +4,10 @@
 
 class MainScreen : public MilSim::GameState {
 public:
-	MainScreen();
+	MainScreen(MilSim::Alexandria* alexandria, MilSim::Hermes* hermes);
 	~MainScreen();
 
-	void init();
+	void load();
 	void kill();
 
 	void render(double interp);

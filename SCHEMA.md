@@ -25,8 +25,13 @@ Stuff like this.
 Asset discovery can happen in a few different ways:
 - `Alexandria::load_database(filename)`: this method opens an Alexandria database, i.e. a `Lua` file containing a description of resources in a table. See `run/alexandria.lua` for an example.
 
-
 Assets are referenced by strings with format `Database.Type.Name`. Behind the scenes, the string is hashed and the hash looked up on the resource database, i.e. `map<int, asset>`. (String hashes could be computed at compile-time for hard-coded stuff)
+
+#### Ownership & Memory policy
+
+Alexandria for now does not care about memory efficiency in terms of asset loading. The moment you ask for a resource, it is loaded into memory and a simple pointer handle provided. You can ask for an asset to be unloaded and Alexandria will unload it; other parts of code that might be using it are out of luck.
+
+Future: reference counting (`std::shared_ptr`?). Some profiling.
 
 ### Sys.Audio
 

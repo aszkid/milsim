@@ -29,10 +29,13 @@ namespace MilSim {
 		void set_config(sel::State* cfg);
 		void init_systems();
 
+		Sys* get_system(const std::string id);
+
 		template <class T>
-		T* add_state(T* state, const std::string id) {
-			m_states[id] = t_state_ptr(state);
-			return static_cast<T*>(state);
+		T* add_state(const std::string id) {
+			static_assert(std::is_base_of<GameState, T>::value, "Class passed not derived from `GameState`!");
+			m_states[id] = t_state_ptr(new T(m_alexandria, m_hermes));
+			return static_cast<T*>(m_states[id].get());
 		}
 		GameState* get_state(const std::string id);
 		void force_state(const std::string id);
@@ -60,8 +63,11 @@ namespace MilSim {
 			return static_cast<T*>(system);
 		}
 
-		// Various
+		// System handles
 		Hermes* m_hermes;
+		Alexandria* m_alexandria;
+
+		// Various
 		GLFWwindow* m_window;
 		GameState* m_current_state;
 

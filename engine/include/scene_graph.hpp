@@ -2,6 +2,8 @@
 
 #include <vector>
 
+#include "sys/alexandria.hpp"
+
 namespace MilSim {
 
 	struct SceneNode {

@@ -1,20 +1,23 @@
 #pragma once
 
+#include "sys/alexandria.hpp"
+#include "sys/hermes.hpp"
+
 namespace MilSim {
 
 	/**
 	 * The `GameState` class plays a pivotal role.
 	 * It represents every screen in the game, and controls
 	 * all resources allocated to it.
-	 * Every `GameState` is initialized from a Lua script,
-	 * but it can also be hard-coded in `main()`.
 	 */
 	class GameState {
 	public:
-		GameState() {};
+		GameState(Alexandria* alexandria, Hermes* hermes)
+			: m_alexandria(alexandria), m_hermes(hermes), m_ready(false)
+		{};
 		virtual ~GameState() {};
 
-		virtual void init() = 0;
+		virtual void load() = 0;
 		virtual void kill() = 0;
 
 		virtual void render(double interp) = 0;
@@ -24,6 +27,13 @@ namespace MilSim {
 		// UI
 		// Scripts
 		// ...
+
+	protected:
+		// System handles
+		Alexandria* m_alexandria;
+		Hermes* m_hermes;
+
+		bool m_ready;
 	};
 
 }

@@ -51,6 +51,8 @@ int main(int argc, char** argv)
 	// Prepare core
 	core.set_window(window);
 	core.init_systems();
+	auto alexandria = (MilSim::Alexandria*)core.get_system("alexandria");
+	alexandria->load_database(root + "/alexandria.lua");
 
 	// Load base config
 	sel::State base_conf;
@@ -58,7 +60,8 @@ int main(int argc, char** argv)
 	core.set_config(&base_conf);
 
 	// Add base states -- `Core` dtor cleans up `unique_ptr`
-	MainScreen* main_screen = core.add_state(new MainScreen(), "main_screen");
+	auto main_screen = core.add_state<MainScreen>("main_screen");
+	main_screen->load();
 	core.force_state("main_screen");
 	
 	// Main loop
