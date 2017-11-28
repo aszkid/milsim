@@ -10,8 +10,9 @@ using namespace MilSim;
 const char* Core::m_version = "0.1-early-alpha";
 
 Core::Core()
+	: m_log(spdlog::stdout_color_mt("core"))
 {
-	m_log = spdlog::stdout_color_mt("Core");
+
 }
 
 Core::~Core()

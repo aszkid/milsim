@@ -8,7 +8,9 @@ namespace MilSim {
 
 	class Sys {
 	public:
-		Sys(std::shared_ptr<spdlog::logger> log) : m_log(log) {};
+		Sys(const std::string logname)
+			: m_log(spdlog::stdout_color_mt("sys." + logname))
+		{};
 		virtual ~Sys() {};
 
 		virtual void init() = 0;

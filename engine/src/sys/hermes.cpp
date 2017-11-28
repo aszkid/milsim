@@ -6,7 +6,7 @@
 using namespace MilSim;
 
 Hermes::Hermes()
-	: Sys::Sys(spdlog::stdout_color_mt("hermes"))
+	: Sys::Sys("hermes")
 {}
 
 Hermes::~Hermes()

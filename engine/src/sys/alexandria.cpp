@@ -21,7 +21,7 @@ void FontAsset::load()
 // ALEXANDRIA
 ////////////////////////////////////////
 Alexandria::Alexandria()
-	: Sys::Sys(spdlog::stdout_color_mt("alexandria"))
+	: Sys::Sys("alexandria")
 {
 
 }

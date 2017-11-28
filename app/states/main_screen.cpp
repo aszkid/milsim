@@ -1,7 +1,7 @@
 #include "states/main_screen.hpp"
 
 MainScreen::MainScreen(MilSim::Alexandria* alexandria, MilSim::Hermes* hermes)
-	: MilSim::GameState(alexandria, hermes, spdlog::stdout_color_mt("state:main_screen"))
+	: MilSim::GameState(alexandria, hermes, "main_screen")
 {
 
 }
@@ -23,7 +23,7 @@ void MainScreen::kill()
 
 void MainScreen::render(double interp)
 {
-	
+
 }
 void MainScreen::update()
 {

@@ -13,8 +13,8 @@ namespace MilSim {
 	 */
 	class GameState {
 	public:
-		GameState(Alexandria* alexandria, Hermes* hermes, std::shared_ptr<spdlog::logger> log)
-			: m_alexandria(alexandria), m_hermes(hermes), m_log(log), m_ready(false)
+		GameState(Alexandria* alexandria, Hermes* hermes, const std::string logname)
+			: m_alexandria(alexandria), m_hermes(hermes), m_log(spdlog::stdout_color_mt("state." + logname)), m_ready(false)
 		{};
 		virtual ~GameState() {};
 
