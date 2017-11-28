@@ -1,7 +1,8 @@
 #include <iostream>
 #include <string>
 
-#include <glad/glad.h>
+#include <glbinding/gl/gl.h>
+#include <glbinding/Binding.h>
 #include <GLFW/glfw3.h>
 
 #include "spdlog/spdlog.h"
@@ -46,7 +47,7 @@ int main(int argc, char** argv)
 	}
 	
 	glfwMakeContextCurrent(window);
-	gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
+	glbinding::Binding::initialize();
 
 	// Prepare core
 	core.set_window(window);
