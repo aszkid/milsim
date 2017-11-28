@@ -38,8 +38,8 @@ void Core::set_config(sel::State* cfg)
 	auto audio = (*cfg)["audio"];
 	auto controls = (*cfg)["controls"];
 
-	glfwSetWindowSize(m_window, video["width"], video["height"]);
-	glfwSetWindowPos(m_window, 50, 50);
+	//glfwSetWindowSize(m_window, video["width"], video["height"]);
+	//glfwSetWindowPos(m_window, 50, 50);
 	glfwSetWindowTitle(m_window, "MilSim");
 }
 void Core::init_systems()

@@ -1,5 +1,7 @@
 #include "sys/alexandria.hpp"
 
+#include "util/io.hpp"
+
 using namespace MilSim;
 
 ////////////////////////////////////////
@@ -11,7 +13,69 @@ FontAsset::FontAsset()
 FontAsset::~FontAsset()
 {}
 
-void FontAsset::load()
+bool FontAsset::load()
+{
+
+}
+
+////////////////////////////////////////
+// SHADERPROGRAMASSET
+////////////////////////////////////////
+ShaderProgramAsset::ShaderProgramAsset(const std::string vert_source, const std::string frag_source)
+	: m_vert_source(vert_source), m_frag_source(frag_source)
+{
+
+}
+ShaderProgramAsset::~ShaderProgramAsset()
+{
+	glDeleteShader(m_vert_id);
+	glDeleteShader(m_prog_id);
+}
+
+bool ShaderProgramAsset::load()
+{
+	const char *vert = m_vert_source.c_str();
+	const char *frag = m_frag_source.c_str();
+	
+	m_vert_id = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(m_vert_id, 1, &vert, NULL);
+	glCompileShader(m_vert_id);
+	int ok;
+	char info[512];
+	glGetShaderiv(m_vert_id, GL_COMPILE_STATUS, &ok);
+	if(!ok) {
+		glGetShaderInfoLog(m_vert_id, 512, NULL, info);
+		spdlog::get("core")->error("Vertex shader compilation failed: {}", info);
+	}
+
+	m_frag_id = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(m_frag_id, 1, &frag, NULL);
+	glCompileShader(m_frag_id);
+
+	// Link the shader program
+	m_prog_id = glCreateProgram();
+	glAttachShader(m_prog_id, m_vert_id);
+	glAttachShader(m_prog_id, m_frag_id);
+	glLinkProgram(m_prog_id);
+
+	m_loaded = true;
+
+	return true;
+}
+
+////////////////////////////////////////
+// SCRIPTASSET
+////////////////////////////////////////
+ScriptAsset::ScriptAsset()
+{
+	
+}
+ScriptAsset::~ScriptAsset()
+{
+
+}
+
+bool ScriptAsset::load()
 {
 
 }
@@ -79,14 +143,12 @@ void Alexandria::load_folder(const sel::Selector& root, const std::string old_id
 	}
 }
 
-Asset* Alexandria::get_asset(const std::string id)
+Asset* Alexandria::get_asset(const t_asset_id id)
 {
-	auto hash = HASH(id);
-
 	// Find asset
-	auto asset = m_assets.find(hash);
+	auto asset = m_assets.find(id);
 	if(asset != m_assets.end()) {
-		if(asset->second->loaded == false)
+		if(asset->second->m_loaded == false)
 			asset->second->load();
 		return asset->second.get();
 	}
@@ -94,9 +156,14 @@ Asset* Alexandria::get_asset(const std::string id)
 	m_log->info("Asset `{}` is not in our database!", id);
 	return nullptr;
 }
-void Alexandria::add_asset(const std::string id, const std::string type, const sel::Selector& root)
+Asset* Alexandria::get_asset(const std::string id)
+{
+	return get_asset(HASH(id));
+}
+void Alexandria::add_asset(const std::string id, const std::string type, sel::Selector& root)
 {
 	auto hash = HASH(id);
+
 	if(m_assets.find(hash) != m_assets.end()) {
 		m_log->info("Asset `{}` already in our database, skipping.", id);
 		return;
@@ -105,5 +172,24 @@ void Alexandria::add_asset(const std::string id, const std::string type, const s
 	if(type == "font") {
 		m_log->info("Adding font `{}`...", id);
 		m_assets[hash] = t_asset_ptr(new FontAsset());
+
+	} else if(type == "shader") {
+		m_log->info("Adding shader `{}`...", id);
+		std::string vertpath = root["vertex"];
+		std::string fragpath = root["fragment"];
+
+		auto vert_source = IO::read_file("/media/data/dev/milsim/run/alexandria" + vertpath);
+		auto frag_source = IO::read_file("/media/data/dev/milsim/run/alexandria" + fragpath);
+		
+		m_assets[hash] = t_asset_ptr(new ShaderProgramAsset(
+			vert_source, frag_source
+		));
+
+
+		// this is not optimal; define some sort of loading policy
+		if(!m_assets[hash]->load()) {
+			m_log->error("Failed to compile shader `{}`!", id);
+		}
+
 	}
 }

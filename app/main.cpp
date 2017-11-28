@@ -3,6 +3,7 @@
 
 #include <glbinding/gl/gl.h>
 #include <glbinding/Binding.h>
+#define GLFW_INCLUDE_NONE // avoid glbinding errors
 #include <GLFW/glfw3.h>
 
 #include "spdlog/spdlog.h"
@@ -40,7 +41,7 @@ int main(int argc, char** argv)
 	
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-	GLFWwindow* window = glfwCreateWindow(640, 450, "helo", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(800, 600, "helo", NULL, NULL);
 	if(!window) {
 		console->critical("Couldn't create window...");
 		return 1;
@@ -48,6 +49,7 @@ int main(int argc, char** argv)
 	
 	glfwMakeContextCurrent(window);
 	glbinding::Binding::initialize();
+	glViewport(0, 0, 800, 600);
 
 	// Prepare core
 	core.set_window(window);

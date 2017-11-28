@@ -5,9 +5,9 @@
 #include "spdlog/spdlog.h"
 #include "CRC.h"
 #include "selene.h"
+#include <glbinding/gl/gl.h>
 
-
-#define HASH(str)  CRC::Calculate(str.c_str(), id.length(), CRC::CRC_32())
+using namespace gl;
 
 
 namespace MilSim {
@@ -20,8 +20,8 @@ namespace MilSim {
 		Asset() {};
 		virtual ~Asset() {};
 
-		bool loaded;
-		virtual void load() = 0;
+		bool m_loaded;
+		virtual bool load() = 0;
 	};
 
 	/**
@@ -36,7 +36,7 @@ namespace MilSim {
 			TTF, OTF
 		};
 
-		void load();
+		bool load();
 	private:
 		Format m_format;
 	};
@@ -49,12 +49,49 @@ namespace MilSim {
 		MeshAsset();
 		~MeshAsset();
 
-		void load();
+		bool load();
 	private:
 		// 
 	};
 
+	/**
+	 * Compiles shaders.
+	 */
+	class ShaderProgramAsset : public Asset {
+	public:
+		ShaderProgramAsset(const std::string vert_source, const std::string frag_source);
+		~ShaderProgramAsset();
+
+		bool load();
+
+	// private:?
+		GLuint m_vert_id;
+		GLuint m_frag_id;
+		GLuint m_prog_id;
+		std::string m_vert_source;
+		std::string m_frag_source;
+	};
+
+	/**
+	 * For now, a container for sel::State.
+	 */
+	class ScriptAsset : public Asset {
+	public:
+		ScriptAsset();
+		~ScriptAsset();
+
+		bool load();
+	private:
+		sel::State m_state;
+	};
+
 	typedef std::unique_ptr<Asset> t_asset_ptr;
+	typedef uint32_t t_asset_id;
+
+	// Hashing function
+	inline uint32_t HASH(const std::string str) {
+		return CRC::Calculate(str.c_str(), str.length(), CRC::CRC_32());
+	}
 
 	/**
 	 * Alexandria (the library of). Asset manager.
@@ -71,6 +108,7 @@ namespace MilSim {
 		void load_database(const std::string filename);
 
 		Asset* get_asset(const std::string id);
+		Asset* get_asset(const t_asset_id id);
 
 	private:
 		std::map<uint32_t, t_asset_ptr> m_assets;
@@ -79,7 +117,7 @@ namespace MilSim {
 
 		// Database loading
 		void load_folder(const sel::Selector& root, const std::string old_id);
-		void add_asset(const std::string id, const std::string type, const sel::Selector& root);
+		void add_asset(const std::string id, const std::string type, sel::Selector& root);
 	};
 
 }
