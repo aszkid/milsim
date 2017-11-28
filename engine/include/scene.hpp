@@ -1,5 +1,6 @@
 #pragma once
 
+#include <glbinding/gl/gl.h>
 #include <glm/glm.hpp>
 
 #include "sys/alexandria.hpp"

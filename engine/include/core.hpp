@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include <chrono>
+#define GLFW_INCLUDE_NONE // avoid glbinding errors
 #include <GLFW/glfw3.h>
 #include "selene.h"
 
