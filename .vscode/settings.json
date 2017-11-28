@@ -38,6 +38,12 @@
 		"tuple": "cpp",
 		"type_traits": "cpp",
 		"typeinfo": "cpp",
-		"utility": "cpp"
+		"utility": "cpp",
+		"hash_map": "cpp",
+		"hash_set": "cpp",
+		"bitset": "cpp",
+		"cinttypes": "cpp",
+		"fstream": "cpp",
+		"iomanip": "cpp"
 	}
 }
