@@ -12,6 +12,9 @@
 
 namespace MilSim {
 
+	/**
+	 * Asset: abstract base class for assets.
+	 */
 	class Asset {
 	public:
 		Asset() {};
@@ -21,6 +24,9 @@ namespace MilSim {
 		virtual void load() = 0;
 	};
 
+	/**
+	 * FontAsset: loads font files and prepares texturemaps.
+	 */
 	class FontAsset : public Asset {
 	public:
 		FontAsset();
@@ -35,8 +41,24 @@ namespace MilSim {
 		Format m_format;
 	};
 
+	/**
+	 * MeshAsset: main structure for 3D geometry.
+	 */
+	class MeshAsset : public Asset {
+	public:
+		MeshAsset();
+		~MeshAsset();
+
+		void load();
+	private:
+		// 
+	};
+
 	typedef std::unique_ptr<Asset> t_asset_ptr;
 
+	/**
+	 * Alexandria (the library of). Asset manager.
+	 */
 	class Alexandria : public Sys {
 	public:
 		Alexandria();

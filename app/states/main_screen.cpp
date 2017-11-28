@@ -12,8 +12,6 @@ MainScreen::~MainScreen()
 
 void MainScreen::load()
 {
-	m_alexandria->get_asset("/Base/Fonts/Barlow-Regular.ttf");
-
 	m_ready = true;
 }
 void MainScreen::kill()

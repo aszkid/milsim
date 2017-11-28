@@ -35,7 +35,8 @@ namespace MilSim {
 	private:
 		// Root scene graph node
 		SceneGraphNode m_scene_graph;
-		// drawables
+		// Drawables
+		std::vector<Drawable> m_drawables;
 	};
 
 }
