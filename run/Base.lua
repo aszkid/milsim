@@ -5,11 +5,7 @@ data = {
 		type = "folder",
 		id = "Fonts",
 		contents = {
-			{
-				type = "font",
-				id = "Barlow-Regular.ttf",
-				source = "/Fonts/Barlow/Barlow-Regular.ttf"
-			}
+			
 		}
 	},
 	{
