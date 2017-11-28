@@ -1,5 +1,7 @@
 #pragma once
 
+#include <glm/glm.hpp>
+
 #include "sys/alexandria.hpp"
 #include "sys/hermes.hpp"
 
@@ -15,7 +17,7 @@ namespace MilSim {
 	private:
 		std::vector<SceneGraphNode> m_children;
 		SceneGraphNode* m_parent;
-		// mat4 matrix, and little else
+		glm::mat4 m_matrix;
 	};
 
 	struct Drawable {

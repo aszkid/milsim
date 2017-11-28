@@ -28,6 +28,8 @@ find_package(OpenGL REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIR})
 # Crc32
 include_directories(ext/CRCpp-master/inc)
+# glm
+include_directories(ext/glm-0.9.8.5)
 
 
 # =================================================
