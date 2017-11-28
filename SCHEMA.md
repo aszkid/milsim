@@ -22,6 +22,12 @@ Asset manager. Abstracts away machine-specific paths and handles, and provides a
 
 Stuff like this.
 
+Asset discovery can happen in a few different ways:
+- `Alexandria::load_database(filename)`: this method opens an Alexandria database, i.e. a `Lua` file containing a description of resources in a table. See `run/alexandria.lua` for an example.
+
+
+Assets are referenced by strings with format `Database.Type.Name`. Behind the scenes, the string is hashed and the hash looked up on the resource database, i.e. `map<int, asset>`. (String hashes could be computed at compile-time for hard-coded stuff)
+
 ### Sys.Audio
 
 ### Sys.Graph
