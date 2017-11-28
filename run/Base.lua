@@ -25,9 +25,7 @@ data = {
 		contents = {
 			{
 				type = "shader",
-				id = "Simple",
-				fragment = "/Shaders/simple.frag",
-				vertex = "/Shaders/simple.vert"
+				id = "Simple"
 			}
 		}
 	}

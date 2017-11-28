@@ -98,7 +98,7 @@ namespace MilSim {
 	 */
 	class Alexandria : public Sys {
 	public:
-		Alexandria();
+		Alexandria(const std::string local_root);
 		~Alexandria();
 
 		void init();
@@ -116,8 +116,10 @@ namespace MilSim {
 		void load_asset();
 
 		// Database loading
-		void load_folder(const sel::Selector& root, const std::string old_id);
-		void add_asset(const std::string id, const std::string type, sel::Selector& root);
+		void load_folder(const sel::Selector& root, const std::string old_id, const std::string db_name);
+		void add_asset(const std::string id, const std::string type, sel::Selector& root, const std::string db_name);
+
+		std::string m_local_root;
 	};
 
 }

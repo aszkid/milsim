@@ -53,13 +53,13 @@ int main(int argc, char** argv)
 
 	// Prepare core
 	core.set_window(window);
-	core.init_systems();
+	core.init_systems(root);
 	auto alexandria = (MilSim::Alexandria*)core.get_system("alexandria");
-	alexandria->load_database(root + "/alexandria.lua");
+	alexandria->load_database("Base.lua");
 
 	// Load base config
 	sel::State base_conf;
-	base_conf.Load(root + "/base.lua");
+	base_conf.Load(root + "/config.lua");
 	core.set_config(&base_conf);
 
 	// Add base states -- `Core` dtor cleans up `unique_ptr`

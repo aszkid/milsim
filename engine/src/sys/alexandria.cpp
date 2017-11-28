@@ -84,8 +84,8 @@ bool ScriptAsset::load()
 ////////////////////////////////////////
 // ALEXANDRIA
 ////////////////////////////////////////
-Alexandria::Alexandria()
-	: Sys::Sys("alexandria")
+Alexandria::Alexandria(const std::string local_root)
+	: Sys::Sys("alexandria"), m_local_root(local_root)
 {
 
 }
@@ -110,8 +110,11 @@ void Alexandria::update()
 
 void Alexandria::load_database(const std::string filename)
 {
+	const std::string dbpath = m_local_root + "/" + filename;
+	m_log->info("Loading database `{}`...", filename);
+
 	sel::State lua;
-	lua.Load(filename);
+	lua.Load(dbpath);
 
 	const std::string type = lua["db_type"];
 	const std::string name = lua["db_name"];
@@ -121,12 +124,12 @@ void Alexandria::load_database(const std::string filename)
 
 	if(type == "local") {
 		sel::Selector data = lua["data"];
-		load_folder(data, id_root);
+		load_folder(data, id_root, name);
 	} else {
 		m_log->error("We don't support databases of type `{}` yet!", type);
 	}
 }
-void Alexandria::load_folder(const sel::Selector& root, const std::string old_id)
+void Alexandria::load_folder(const sel::Selector& root, const std::string old_id, const std::string db_name)
 {
 	uint i = 1;
 	sel::Selector node = root[i];
@@ -134,10 +137,10 @@ void Alexandria::load_folder(const sel::Selector& root, const std::string old_id
 	while(node.exists()) {
 		const std::string sub_id = node["id"];
 		if(node["type"] == "folder") {
-			load_folder(node["contents"], old_id + sub_id + "/");
+			load_folder(node["contents"], old_id + sub_id + "/", db_name);
 		}
 		else {
-			add_asset(old_id + sub_id, node["type"], node);
+			add_asset(old_id + sub_id, node["type"], node, db_name);
 		}
 		node = root[++i];
 	}
@@ -160,9 +163,10 @@ Asset* Alexandria::get_asset(const std::string id)
 {
 	return get_asset(HASH(id));
 }
-void Alexandria::add_asset(const std::string id, const std::string type, sel::Selector& root)
+void Alexandria::add_asset(const std::string id, const std::string type, sel::Selector& root, const std::string db_name)
 {
 	auto hash = HASH(id);
+	const std::string path = m_local_root + id;
 
 	if(m_assets.find(hash) != m_assets.end()) {
 		m_log->info("Asset `{}` already in our database, skipping.", id);
@@ -175,16 +179,14 @@ void Alexandria::add_asset(const std::string id, const std::string type, sel::Se
 
 	} else if(type == "shader") {
 		m_log->info("Adding shader `{}`...", id);
-		std::string vertpath = root["vertex"];
-		std::string fragpath = root["fragment"];
 
-		auto vert_source = IO::read_file("/media/data/dev/milsim/run/alexandria" + vertpath);
-		auto frag_source = IO::read_file("/media/data/dev/milsim/run/alexandria" + fragpath);
-		
+		// TODO: catch exceptions...
+		auto vert_source = IO::read_file(path + ".vert");
+		auto frag_source = IO::read_file(path + ".frag");
+
 		m_assets[hash] = t_asset_ptr(new ShaderProgramAsset(
 			vert_source, frag_source
 		));
-
 
 		// this is not optimal; define some sort of loading policy
 		if(!m_assets[hash]->load()) {

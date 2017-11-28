@@ -28,7 +28,7 @@ namespace MilSim {
 
 		void set_window(GLFWwindow* window);
 		void set_config(sel::State* cfg);
-		void init_systems();
+		void init_systems(const std::string local_root);
 
 		Sys* get_system(const std::string id);
 
@@ -71,6 +71,7 @@ namespace MilSim {
 		// Various
 		GLFWwindow* m_window;
 		GameState* m_current_state;
+		std::string m_local_root;
 
 		// Loggers
 		std::shared_ptr<spdlog::logger> m_log;

@@ -42,11 +42,14 @@ void Core::set_config(sel::State* cfg)
 	//glfwSetWindowPos(m_window, 50, 50);
 	glfwSetWindowTitle(m_window, "MilSim");
 }
-void Core::init_systems()
+void Core::init_systems(const std::string local_root = ".")
 {
+	// TODO: use a proper path-handling library...
+	m_local_root = local_root;
+
 	// `Hermes` has to be the first system initialized
 	m_hermes = add_system(new Hermes(), "hermes");
-	m_alexandria = add_system(new Alexandria(), "alexandria");
+	m_alexandria = add_system(new Alexandria(m_local_root), "alexandria");
 }
 Sys* Core::get_system(const std::string id) {
 	auto sys = m_systems.find(id);
