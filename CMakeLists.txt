@@ -26,6 +26,8 @@ include_directories(ext/args-6.2.0)
 # OpenGL
 find_package(OpenGL REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIR})
+# Crc32
+include_directories(ext/CRCpp-master/inc)
 
 
 # =================================================
