@@ -44,8 +44,8 @@ void Core::set_config(sel::State* cfg)
 void Core::init_systems()
 {
 	// `Hermes` has to be the first system initialized
-
 	m_hermes = add_system(new Hermes(), "hermes");
+	add_system(new Alexandria(), "alexandria");
 }
 
 GameState* Core::get_state(const std::string id)

@@ -12,6 +12,7 @@ set(SOURCES
 	src/scene_graph.cpp
 	
 	src/sys/hermes.cpp
+	src/sys/alexandria.cpp
 	src/sys/script.cpp
 	src/sys/audio.cpp
 	src/sys/graph.cpp

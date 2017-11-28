@@ -11,6 +11,8 @@
 #include "util/types.hpp"
 #include "sys.hpp"
 #include "sys/hermes.hpp"
+#include "sys/alexandria.hpp"
+
 #include "state.hpp"
 
 namespace MilSim {
