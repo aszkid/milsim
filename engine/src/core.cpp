@@ -115,5 +115,5 @@ void Core::render()
 {
 	// Render current state w/ basic interpolation
 	if(m_current_state)
-		m_current_state->render(0.0); // t_lag.count() / MS_PER_UPDATE.count()
+		m_current_state->render(m_t_lag.count() / m_MS_PER_UPDATE.count());
 }

@@ -60,9 +60,9 @@ The most powerful system of the engine. It has the ability to communicate with e
 
 Games are essentially finite state machines. Each of these states is represented by a `GameState` instance. It holds (references) to everything in the scene: spatial information, geometry information, etc.
 
-### SceneManager
+### Scene
 
-The top-level structure that holds scenes together. A game state might have multiple `SceneManager`s. The `GameState` plays with the `SceneManager` to instantiate objects; a spatial component is stored (in the `SceneGraph`), a drawable component, if aplicable, is stored.
+The top-level structure that holds scenes together. A game state might have multiple `Scene`s. The `GameState` plays with the `Scene` to instantiate objects; a spatial component is stored (in the `SceneGraph`), a drawable component, if aplicable, is stored.
 
 Things that the scene manager should implement:
 - `add_light`
@@ -71,7 +71,7 @@ Things that the scene manager should implement:
 
 It keeps a list of skeletons, lights, cameras, ... abstracted away in the `SceneGraph`, but made available to the `GameState` that owns it.
 
-(Should the `SceneManager` interface with `Sys.Alexandria` to load all resources??)
+(Should the `Scene` interface with `Sys.Alexandria` to load all resources?? A: OF COURSE!)
 
 Two functions are of utmost important:
 - `render`: does all necessary culling, batching, etc. based on the `SceneGraph` and `SceneDrawable` objects.
@@ -79,7 +79,7 @@ Two functions are of utmost important:
 
 ### SceneGraph
 
-A simple scene graph implementation; directed tree holding *spatial* information about objects in a scene. Every `SceneManager` holds some of them. The important thing is to notice that *there is no single array of ~things~* in the engine: the `SceneGraph` provides a *hirearchical spatial representation* of scene 'objects' (might be cameras, lights, people, bridges...), while other structures hold *renderable representations* of them. It is the combination of them that is powerful.
+A simple scene graph implementation; directed tree holding *spatial* information about objects in a scene. Every `Scene` holds some of them. The important thing is to notice that *there is no single array of ~things~* in the engine: the `SceneGraph` provides a *hirearchical spatial representation* of scene 'objects' (might be cameras, lights, people, bridges...), while other structures hold *renderable representations* of them. It is the combination of them that is powerful.
 
 This separation of concerns is useful, because it allows us to efficiently traverse a scene spatially, and batch geometry to execute few OpenGL calls.
 

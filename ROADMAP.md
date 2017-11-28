@@ -3,7 +3,7 @@
 ## Immediate Priorities
 - [x] Skeleton `Alexandria` implementation.
 - [ ] Simple rendering pipeline implementation (deferred):
-	+ `SceneManager`.
+	+ `Scene`.
 
 ## On the horizon
 - `Sys.Script` + hooks

@@ -2,6 +2,7 @@
 
 #include "sys/alexandria.hpp"
 #include "sys/hermes.hpp"
+#include "scene.hpp"
 
 namespace MilSim {
 
@@ -12,8 +13,8 @@ namespace MilSim {
 	 */
 	class GameState {
 	public:
-		GameState(Alexandria* alexandria, Hermes* hermes)
-			: m_alexandria(alexandria), m_hermes(hermes), m_ready(false)
+		GameState(Alexandria* alexandria, Hermes* hermes, std::shared_ptr<spdlog::logger> log)
+			: m_alexandria(alexandria), m_hermes(hermes), m_log(log), m_ready(false)
 		{};
 		virtual ~GameState() {};
 
@@ -32,6 +33,9 @@ namespace MilSim {
 		// System handles
 		Alexandria* m_alexandria;
 		Hermes* m_hermes;
+
+		// Other
+		std::shared_ptr<spdlog::logger> m_log;
 
 		bool m_ready;
 	};

@@ -12,4 +12,7 @@ public:
 
 	void render(double interp);
 	void update();
+
+private:
+	MilSim::Scene m_scene;
 };
