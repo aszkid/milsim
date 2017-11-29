@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "logger.hpp"
+#include "hermes.hpp"
 
 namespace MilSim {
 
@@ -13,12 +14,17 @@ namespace MilSim {
 		{};
 		virtual ~Sys() {};
 
+		void hook_hermes(Hermes* h) {
+			m_hermes = h;
+		}
+
 		virtual void init() = 0;
 		virtual void kill() = 0;
 
 		virtual void update() = 0;
 	protected:
 		t_logger m_log;
+		Hermes* m_hermes;
 	};
 
 }

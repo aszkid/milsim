@@ -62,6 +62,7 @@ namespace MilSim {
 		template <class T>
 		T* add_system(T* system, const std::string id) {
 			m_systems[id] = t_sys_ptr(system);
+			m_systems[id]->hook_hermes(m_hermes.get());
 			return static_cast<T*>(system);
 		}
 
