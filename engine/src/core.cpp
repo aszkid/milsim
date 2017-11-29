@@ -41,7 +41,8 @@ void Core::init(const std::string local_root = ".")
 	m_hermes = std::unique_ptr<Hermes>(new Hermes());
 
 	m_hermes->subscribe(Crypto::HASH("Core"), {
-		Crypto::HASH("InputKeyMessage")
+		Crypto::HASH("InputKey"),
+		Crypto::HASH("CursorPos")
 	});
 
 	// Init systems
@@ -98,11 +99,16 @@ void Core::loop()
 			// Logic happens
 			update();
 			for(auto e : m_hermes->pull_inbox(Crypto::HASH("Core"))) {
-				if(e->m_chan == Crypto::HASH("InputKeyMessage")) {
+				if(e->m_chan == Crypto::HASH("InputKey")) {
 					auto ikm = static_cast<InputKeyMessage*>(e);
-					if(ikm->m_escape) {
+					if(ikm->m_key == InputKeyMessage::Key::ESCAPE) {
 						should_close = true;
 					}
+					m_log->info("Pressed key {}", ikm->m_key);
+				}
+				if(e->m_chan == Crypto::HASH("CursorPos")) {
+					auto cpos = static_cast<CursorPosMessage*>(e);
+					m_log->info("Cursor: ({},{})", cpos->m_xpos, cpos->m_ypos);
 				}
 			}
 			// Clear message inbox
@@ -114,9 +120,7 @@ void Core::loop()
 		// Drawing happens
 		render();
 
-		m_log->info("FPS: {}", m_fps);
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
-
 		if(should_close)
 			break;
 	}

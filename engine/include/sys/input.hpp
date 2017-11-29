@@ -8,7 +8,8 @@
 
 namespace MilSim {
 
-	static void _handle_key(GLFWwindow* window, int key, int scancode, int action, int mode);
+	static void _handle_key(GLFWwindow* win, int key, int scancode, int action, int mods);
+	static void _handle_cursor_pos(GLFWwindow* win, double xpos, double ypos);
 
 	class Input : public Sys {
 	public:
@@ -19,7 +20,8 @@ namespace MilSim {
 		void kill();
 		void update();
 
-		void key_callback(GLFWwindow* win, int key, int scancode, int action, int mode);
+		void key_callback(GLFWwindow* win, int key, int scancode, int action, int mods);
+		void cursor_pos_callback(GLFWwindow* win, double xpos, double ypos);
 	private:
 		GLFWwindow* m_win;
 	};
