@@ -44,7 +44,7 @@ namespace MilSim {
 		void subscribe(const uint32_t subid, std::vector<t_channel> channels);
 		
 		/**
-		 *
+		 * !!slow, not ideal. think of a better way.
 		 */
 		std::vector<Message> pull_inbox(const uint32_t subid);
 	

@@ -2,14 +2,14 @@
 
 #include <memory>
 
-#include "spdlog/spdlog.h"
+#include "logger.hpp"
 
 namespace MilSim {
 
 	class Sys {
 	public:
 		Sys(const std::string logname)
-			: m_log(spdlog::stdout_color_mt(logname))
+			: m_log(Logger::create(logname))
 		{};
 		virtual ~Sys() {};
 
@@ -18,7 +18,7 @@ namespace MilSim {
 
 		virtual void update() = 0;
 	protected:
-		std::shared_ptr<spdlog::logger> m_log;
+		t_logger m_log;
 	};
 
 }

@@ -17,8 +17,8 @@ void MainScreen::load()
 	// Q?: Build this in the `Object` class, to recursively pass down system hooks
 	m_scene->post_init("Scene", m_alexandria, m_hermes, "MainScreen.Scene");
 
+	// Build our scene
 	m_scene->add_triangle(MilSim::Crypto::HASH("/Base/Shaders/Simple"));
-
 
 	m_ready = true;
 }

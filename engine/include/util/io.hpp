@@ -2,8 +2,10 @@
 
 #include <fstream>
 
-namespace MilSim::IO {
+namespace MilSim {
+namespace IO {
 
 	std::string read_file(const std::string filename);
 
+}
 }
