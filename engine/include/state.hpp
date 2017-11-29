@@ -3,6 +3,7 @@
 #include "sys/alexandria.hpp"
 #include "sys/hermes.hpp"
 #include "scene.hpp"
+#include "object.hpp"
 
 namespace MilSim {
 
@@ -11,10 +12,10 @@ namespace MilSim {
 	 * It represents every screen in the game, and controls
 	 * all resources allocated to it.
 	 */
-	class GameState {
+	class GameState : public Object {
 	public:
-		GameState(Alexandria* alexandria, Hermes* hermes, const std::string logname)
-			: m_alexandria(alexandria), m_hermes(hermes), m_log(spdlog::stdout_color_mt("state." + logname)), m_ready(false)
+		GameState(const std::string name, Alexandria* alexandria, Hermes* hermes)
+			: Object("GameState." + name, alexandria, hermes, "GameState." + name)
 		{};
 		virtual ~GameState() {};
 
@@ -30,13 +31,6 @@ namespace MilSim {
 		// ...
 
 	protected:
-		// System handles
-		Alexandria* m_alexandria;
-		Hermes* m_hermes;
-
-		// Other
-		std::shared_ptr<spdlog::logger> m_log;
-
 		bool m_ready;
 	};
 

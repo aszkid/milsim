@@ -5,6 +5,7 @@
 #include <glbinding/gl/gl.h>
 #include <glm/glm.hpp>
 
+#include "object.hpp"
 #include "sys/alexandria.hpp"
 #include "sys/hermes.hpp"
 
@@ -35,9 +36,9 @@ namespace MilSim {
 	};
 
 
-	class Scene {
+	class Scene : public Object {
 	public:
-		Scene(Alexandria* alexandria);
+		Scene(const std::string name, Alexandria* alexandria, Hermes* hermes);
 		~Scene();
 
 		void update();
@@ -50,9 +51,6 @@ namespace MilSim {
 		SceneGraphNode m_scene_graph;
 		// Drawables
 		std::vector<Drawable> m_drawables;
-
-		// Handle to Alexandria
-		Alexandria* m_alexandria;
 	};
 
 }

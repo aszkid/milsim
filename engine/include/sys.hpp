@@ -9,7 +9,7 @@ namespace MilSim {
 	class Sys {
 	public:
 		Sys(const std::string logname)
-			: m_log(spdlog::stdout_color_mt("sys." + logname))
+			: m_log(spdlog::stdout_color_mt(logname))
 		{};
 		virtual ~Sys() {};
 

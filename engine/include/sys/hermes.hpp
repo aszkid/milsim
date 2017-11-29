@@ -1,17 +1,21 @@
 #pragma once
 
 #include <vector>
+#include <map>
 
 #include "spdlog/spdlog.h"
 
 #include "util/types.hpp"
+#include "util/crypto.hpp"
 #include "sys.hpp"
 
 namespace MilSim {
 
+	typedef uint32_t t_channel;
+
 	struct EventSub {
 		Sys* m_handle;
-		std::vector<uint> m_channels;
+		std::vector<t_channel> m_channels;
 	};
 
 	/**
@@ -20,7 +24,7 @@ namespace MilSim {
 	 * based on Lua payloads.
 	 */
 	struct Event {
-		uint m_channel;
+		t_channel m_chan;
 	};
 
 	/**

@@ -8,21 +8,21 @@ using namespace MilSim;
 // FONTASSET
 ////////////////////////////////////////
 FontAsset::FontAsset()
-	: Asset::Asset()
+	: Asset::Asset("FontAsset")
 {}
 FontAsset::~FontAsset()
 {}
 
 bool FontAsset::load()
 {
-
+	return true;
 }
 
 ////////////////////////////////////////
 // SHADERPROGRAMASSET
 ////////////////////////////////////////
 ShaderProgramAsset::ShaderProgramAsset(const std::string vert_source, const std::string frag_source)
-	: m_vert_source(vert_source), m_frag_source(frag_source)
+	: Asset::Asset("ShaderProgramAsset"), m_vert_source(vert_source), m_frag_source(frag_source)
 {
 
 }
@@ -37,26 +37,37 @@ bool ShaderProgramAsset::load()
 	const char *vert = m_vert_source.c_str();
 	const char *frag = m_frag_source.c_str();
 	
+	int ok;
+	char info[512];
+
 	m_vert_id = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(m_vert_id, 1, &vert, NULL);
 	glCompileShader(m_vert_id);
-	int ok;
-	char info[512];
 	glGetShaderiv(m_vert_id, GL_COMPILE_STATUS, &ok);
 	if(!ok) {
 		glGetShaderInfoLog(m_vert_id, 512, NULL, info);
-		spdlog::get("core")->error("Vertex shader compilation failed: {}", info);
+		m_log->error("Vertex shader compilation failed: {}", info);
 	}
 
 	m_frag_id = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(m_frag_id, 1, &frag, NULL);
 	glCompileShader(m_frag_id);
+	glGetShaderiv(m_frag_id, GL_COMPILE_STATUS, &ok);
+	if(!ok) {
+		glGetShaderInfoLog(m_frag_id, 512, NULL, info);
+		m_log->error("Fragment shader compilation failed: {}", info);
+	}
 
 	// Link the shader program
 	m_prog_id = glCreateProgram();
 	glAttachShader(m_prog_id, m_vert_id);
 	glAttachShader(m_prog_id, m_frag_id);
 	glLinkProgram(m_prog_id);
+	glGetProgramiv(m_prog_id, GL_LINK_STATUS, &ok);
+	if(!ok) {
+		glGetProgramInfoLog(m_prog_id, 512, NULL, info);
+		m_log->error("Shader program failed to link: {}", info);
+	}
 
 	m_loaded = true;
 
@@ -67,6 +78,7 @@ bool ShaderProgramAsset::load()
 // SCRIPTASSET
 ////////////////////////////////////////
 ScriptAsset::ScriptAsset()
+	: Asset::Asset("ScriptAsset")
 {
 	
 }
@@ -77,7 +89,7 @@ ScriptAsset::~ScriptAsset()
 
 bool ScriptAsset::load()
 {
-
+	return true;
 }
 
 
@@ -85,7 +97,7 @@ bool ScriptAsset::load()
 // ALEXANDRIA
 ////////////////////////////////////////
 Alexandria::Alexandria(const std::string local_root)
-	: Sys::Sys("alexandria"), m_local_root(local_root)
+	: Sys::Sys("Alexandria"), m_local_root(local_root)
 {
 
 }
@@ -110,6 +122,8 @@ void Alexandria::update()
 
 void Alexandria::load_database(const std::string filename)
 {
+	// TODO: use JSON instead of Lua for database loading... makes more sense
+
 	const std::string dbpath = m_local_root + "/" + filename;
 	m_log->info("Loading database `{}`...", filename);
 
@@ -161,11 +175,11 @@ Asset* Alexandria::get_asset(const t_asset_id id)
 }
 Asset* Alexandria::get_asset(const std::string id)
 {
-	return get_asset(HASH(id));
+	return get_asset(Crypto::HASH(id));
 }
 void Alexandria::add_asset(const std::string id, const std::string type, sel::Selector& root, const std::string db_name)
 {
-	auto hash = HASH(id);
+	auto hash = Crypto::HASH(id);
 	const std::string path = m_local_root + id;
 
 	if(m_assets.find(hash) != m_assets.end()) {

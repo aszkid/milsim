@@ -10,6 +10,7 @@
 #include "selene.h"
 
 #include "util/types.hpp"
+#include "logger.hpp"
 #include "sys.hpp"
 #include "sys/hermes.hpp"
 #include "sys/alexandria.hpp"
@@ -74,7 +75,7 @@ namespace MilSim {
 		std::string m_local_root;
 
 		// Loggers
-		std::shared_ptr<spdlog::logger> m_log;
+		t_logger m_log;
 
 		// Loop stuff
 		// Logic timestep of 100 Hz

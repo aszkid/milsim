@@ -9,6 +9,8 @@ include_directories(include)
 set(SOURCES
 	src/core.cpp
 	src/scene.cpp
+	src/logger.cpp
+	src/object.cpp
 
 	src/util/io.cpp
 	

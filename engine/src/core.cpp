@@ -1,18 +1,15 @@
 #include "core.hpp"
 
 #include <thread>
-#include "spdlog/spdlog.h"
-
-#include "sys/hermes.hpp"
 
 using namespace MilSim;
 
 const char* Core::m_version = "0.1-early-alpha";
 
 Core::Core()
-	: m_log(spdlog::stdout_color_mt("core"))
+	: m_log(Logger::create("core"))
 {
-
+	
 }
 
 Core::~Core()

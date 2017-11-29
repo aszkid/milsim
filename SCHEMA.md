@@ -11,7 +11,9 @@ The communication system is a subscription-based message queue. Every system is 
 
 ### Sys.Hermes
 
-Messaging system. Lowest level of communication between engine systems.
+Messaging system. The only global/singleton object (so far... hopefully). Everything can be accomplished by asking `Hermes` nicely.
+
+Systems communicate with each other by message passing, because no system 'needs' to load an asset, or play a sound. A `GameState` needs that, hence it inherits from `Object`.
 
 ### Sys.Alexandria
 
@@ -76,6 +78,8 @@ It keeps a list of skeletons, lights, cameras, ... abstracted away in the `Scene
 Two functions are of utmost important:
 - `render`: does all necessary culling, batching, etc. based on the `SceneGraph` and `SceneDrawable` objects.
 - `update`: updates every component of the scene based on policies set at creation (physics? etc.)
+
+On the highest level, a `Scene` object contains a vector of `Scene::Node`s, very much a la Godot. Internally, a `Node` may reference a `Drawable` component, a `Physics` component, etc. by having children.
 
 ### SceneGraph
 

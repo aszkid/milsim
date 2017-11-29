@@ -23,8 +23,8 @@ SceneGraphNode* SceneGraphNode::add_child()
 ////////////////////////////////////////
 // SCENE
 ////////////////////////////////////////
-Scene::Scene(Alexandria* alexandria)
-	: m_alexandria(alexandria)
+Scene::Scene(const std::string name, Alexandria* alexandria, Hermes* hermes)
+	: Object::Object("Scene." + name, alexandria, hermes, "Scene." + name)
 {
 
 }
@@ -39,8 +39,6 @@ void Scene::update()
 }
 void Scene::render(double interp)
 {
-	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
 	for(Drawable& d : m_drawables) {
 		glUseProgram(
 			((ShaderProgramAsset*)m_alexandria->get_asset(d.m_shader))->m_prog_id

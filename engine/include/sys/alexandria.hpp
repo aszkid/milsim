@@ -1,9 +1,9 @@
 #pragma once
 
 #include "sys.hpp"
+#include "util/crypto.hpp"
 
 #include "spdlog/spdlog.h"
-#include "CRC.h"
 #include "selene.h"
 #include <glbinding/gl/gl.h>
 
@@ -17,11 +17,15 @@ namespace MilSim {
 	 */
 	class Asset {
 	public:
-		Asset() {};
+		Asset(const std::string logname)
+			: m_log(spdlog::stdout_color_mt("Alexandria." + logname))
+		{};
 		virtual ~Asset() {};
 
 		bool m_loaded;
 		virtual bool load() = 0;
+	protected:
+		std::shared_ptr<spdlog::logger> m_log;
 	};
 
 	/**
@@ -87,11 +91,6 @@ namespace MilSim {
 
 	typedef std::unique_ptr<Asset> t_asset_ptr;
 	typedef uint32_t t_asset_id;
-
-	// Hashing function
-	inline uint32_t HASH(const std::string str) {
-		return CRC::Calculate(str.c_str(), str.length(), CRC::CRC_32());
-	}
 
 	/**
 	 * Alexandria (the library of). Asset manager.
