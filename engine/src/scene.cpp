@@ -23,8 +23,7 @@ SceneGraphNode* SceneGraphNode::add_child()
 ////////////////////////////////////////
 // SCENE
 ////////////////////////////////////////
-Scene::Scene(const std::string name, Alexandria* alexandria, Hermes* hermes)
-	: Object::Object("Scene." + name, alexandria, hermes, "Scene." + name)
+Scene::Scene()
 {
 
 }

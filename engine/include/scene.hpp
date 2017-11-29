@@ -38,7 +38,7 @@ namespace MilSim {
 
 	class Scene : public Object {
 	public:
-		Scene(const std::string name, Alexandria* alexandria, Hermes* hermes);
+		Scene();
 		~Scene();
 
 		void update();

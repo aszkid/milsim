@@ -63,9 +63,9 @@ int main(int argc, char** argv)
 	core.set_config(&base_conf);
 
 	// Add base states -- `Core` dtor cleans up `unique_ptr`
-	auto main_screen = core.add_state<MainScreen>("main_screen");
+	auto main_screen = core.add_state<MainScreen>("MainScreen");
 	main_screen->load();
-	core.force_state("main_screen");
+	core.force_state("MainScreen");
 	
 	// Main loop
 	core.loop();

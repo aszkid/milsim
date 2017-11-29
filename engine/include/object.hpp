@@ -26,14 +26,14 @@ namespace MilSim {
 	 */
 	class Object {
 	public:
-		Object(const std::string name, Alexandria* alexandria, Hermes* hermes, const std::string logger);
+		Object();
 		virtual ~Object() {};
+		void post_init(const std::string name, Alexandria* alexandria, Hermes* hermes, const std::string logger);
 	
 	protected:
 		Hermes* m_hermes;
 		Alexandria* m_alexandria;
 		t_logger m_logger;
-
 	};
 
 }

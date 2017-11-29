@@ -4,7 +4,7 @@
 
 class MainScreen : public MilSim::GameState {
 public:
-	MainScreen(MilSim::Alexandria* alexandria, MilSim::Hermes* hermes);
+	MainScreen();
 	~MainScreen();
 
 	void load();
@@ -14,5 +14,5 @@ public:
 	void update();
 
 private:
-	MilSim::Scene m_scene;
+	std::unique_ptr<MilSim::Scene> m_scene;
 };

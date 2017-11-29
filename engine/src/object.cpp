@@ -4,7 +4,14 @@
 
 using namespace MilSim;
 
-Object::Object(const std::string name,
+Object::Object()
+{
+	m_alexandria = nullptr;
+	m_hermes = nullptr;
+	m_logger = nullptr;
+}
+
+void Object::post_init(const std::string name,
 	Alexandria* alexandria,
 	Hermes* hermes,
 	const std::string logger)

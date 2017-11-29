@@ -7,6 +7,8 @@
 
 namespace MilSim {
 
+	#define STATE_HOOK()
+
 	/**
 	 * The `GameState` class plays a pivotal role.
 	 * It represents every screen in the game, and controls
@@ -14,9 +16,7 @@ namespace MilSim {
 	 */
 	class GameState : public Object {
 	public:
-		GameState(const std::string name, Alexandria* alexandria, Hermes* hermes)
-			: Object("GameState." + name, alexandria, hermes, "GameState." + name)
-		{};
+		GameState() {};
 		virtual ~GameState() {};
 
 		virtual void load() = 0;
