@@ -14,7 +14,7 @@ MainScreen::~MainScreen()
 void MainScreen::load()
 {
 	m_scene = std::unique_ptr<MilSim::Scene>(new MilSim::Scene());
-	// Build this in the `Object` class, to recursively pass down system hooks
+	// Q?: Build this in the `Object` class, to recursively pass down system hooks
 	m_scene->post_init("Scene", m_alexandria, m_hermes, "MainScreen.Scene");
 
 	m_logger->info("Seems like i am loading...");
