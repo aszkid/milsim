@@ -20,14 +20,27 @@ void Hermes::subscribe(const uint32_t subid, std::vector<t_channel> channels)
 	m_subs[subid].m_channels = channels;
 }
 
-std::vector<Message> Hermes::pull_inbox(const uint32_t subid)
+std::vector<Message*> Hermes::pull_inbox(const uint32_t subid)
 {
 	auto& sub = m_subs[subid];
-	std::vector<Message> res;
+	std::vector<Message*> res;
 	for(auto& m : m_inbox) {
-		if(std::find(sub.m_channels.begin(), sub.m_channels.end(), m.m_chan) != sub.m_channels.end()) {
-			res.push_back(m);
+		for(auto c : sub.m_channels) {
+		}
+		if(std::find(sub.m_channels.begin(), sub.m_channels.end(), m->m_chan) != sub.m_channels.end()) {
+			res.push_back(m.get());
 		}
 	}
 	return res;
+}
+
+void Hermes::send(Message* msg)
+{
+	// now `Hermes` owns the message memory
+	m_inbox.push_back(std::unique_ptr<Message>(msg));
+}
+
+void Hermes::clean()
+{
+	m_inbox.clear();
 }

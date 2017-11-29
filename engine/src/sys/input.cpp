@@ -29,7 +29,9 @@ void Input::update()
 
 void Input::key_callback(GLFWwindow* win, int key, int scancode, int action, int mode)
 {
-	m_log->info("ow lordd!!");
+	if(key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+		m_hermes->send(new InputKeyMessage(true));
+	}
 }
 
 // trickery

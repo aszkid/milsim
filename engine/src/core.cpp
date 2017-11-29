@@ -40,6 +40,10 @@ void Core::init(const std::string local_root = ".")
 	// `Hermes` has to be the first thing to be initialized
 	m_hermes = std::unique_ptr<Hermes>(new Hermes());
 
+	m_hermes->subscribe(Crypto::HASH("Core"), {
+		Crypto::HASH("InputKeyMessage")
+	});
+
 	// Init systems
 	m_input = add_system(new Input(m_window), "input");
 	m_alexandria = add_system(new Alexandria(m_local_root), "alexandria");
@@ -74,6 +78,7 @@ void Core::loop()
 	m_prevtime = std::chrono::system_clock::now();
 	m_currtime = m_prevtime;
 
+	bool should_close = false;
 	while(!glfwWindowShouldClose(m_window)) {
 		// Chrono stuff
 		m_currtime = std::chrono::system_clock::now();
@@ -92,12 +97,28 @@ void Core::loop()
 		while(m_t_lag >= m_MS_PER_UPDATE) {
 			// Logic happens
 			update();
+			for(auto e : m_hermes->pull_inbox(Crypto::HASH("Core"))) {
+				if(e->m_chan == Crypto::HASH("InputKeyMessage")) {
+					auto ikm = static_cast<InputKeyMessage*>(e);
+					if(ikm->m_escape) {
+						should_close = true;
+					}
+				}
+			}
+			// Clear message inbox
+			m_hermes->clean();
 			// Peel back lag
 			m_t_lag -= m_MS_PER_UPDATE;
 		}
 
 		// Drawing happens
 		render();
+
+		m_log->info("FPS: {}", m_fps);
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+		if(should_close)
+			break;
 	}
 }
 
