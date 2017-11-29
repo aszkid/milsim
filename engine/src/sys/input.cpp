@@ -14,12 +14,13 @@ Input::~Input()
 
 void Input::init()
 {
-	glfwSetInputMode(m_win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
+	//glfwSetInputMode(m_win, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetWindowUserPointer(m_win, this);
+
 	// Hook key callbacks
 	glfwSetKeyCallback(m_win, _handle_key);
 	glfwSetCursorPosCallback(m_win, _handle_cursor_pos);
+	glfwSetMouseButtonCallback(m_win, _handle_mouse_button);
 }
 void Input::kill()
 {
@@ -33,6 +34,38 @@ void Input::update()
 void Input::cursor_pos_callback(GLFWwindow* win, double xpos, double ypos)
 {
 	m_hermes->send(new CursorPosMessage(xpos, ypos));
+}
+void Input::cursor_enter_callback(GLFWwindow* win, int entered)
+{
+	m_hermes->send(new CursorEnterMessage(entered));
+}
+void Input::mouse_button_callback(GLFWwindow* win, int button, int action, int mods)
+{
+	MouseButtonMessage::Button b;
+	MouseButtonMessage::Action a;
+
+	switch(button) {
+	case GLFW_MOUSE_BUTTON_RIGHT:
+		b = MouseButtonMessage::Button::RIGHT;
+		break;
+	case GLFW_MOUSE_BUTTON_LEFT:
+		b = MouseButtonMessage::Button::LEFT;
+		break;
+	case GLFW_MOUSE_BUTTON_MIDDLE:
+		b = MouseButtonMessage::Button::MIDDLE;
+		break;
+	}
+
+	switch(action) {
+	case GLFW_PRESS:
+		a = MouseButtonMessage::Action::PRESS;
+		break;
+	case GLFW_RELEASE:
+		a = MouseButtonMessage::Action::RELEASE;
+		break;
+	}
+
+	m_hermes->send(new MouseButtonMessage(b, a));
 }
 
 void Input::key_callback(GLFWwindow* win,
@@ -388,4 +421,14 @@ void MilSim::_handle_cursor_pos(GLFWwindow* win, double xpos, double ypos)
 {
 	Input* i = static_cast<Input*>(glfwGetWindowUserPointer(win));
 	i->cursor_pos_callback(win, xpos, ypos);
+}
+void MilSim::_handle_cursor_enter(GLFWwindow* win, int entered)
+{
+	Input* i = static_cast<Input*>(glfwGetWindowUserPointer(win));
+	i->cursor_enter_callback(win, entered);
+}
+void MilSim::_handle_mouse_button(GLFWwindow* win, int button, int action, int mods)
+{
+	Input* i = static_cast<Input*>(glfwGetWindowUserPointer(win));
+	i->mouse_button_callback(win, button, action, mods);
 }

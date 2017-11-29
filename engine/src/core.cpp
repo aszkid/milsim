@@ -42,7 +42,8 @@ void Core::init(const std::string local_root = ".")
 
 	m_hermes->subscribe(Crypto::HASH("Core"), {
 		Crypto::HASH("InputKey"),
-		Crypto::HASH("CursorPos")
+		Crypto::HASH("CursorPos"),
+		Crypto::HASH("MouseButton")
 	});
 
 	// Init systems
@@ -109,6 +110,9 @@ void Core::loop()
 				if(e->m_chan == Crypto::HASH("CursorPos")) {
 					auto cpos = static_cast<CursorPosMessage*>(e);
 					m_log->info("Cursor: ({},{})", cpos->m_xpos, cpos->m_ypos);
+				}
+				if(e->m_chan == Crypto::HASH("MouseButton")) {
+					m_log->info("Pressed button!");
 				}
 			}
 			// Clear message inbox

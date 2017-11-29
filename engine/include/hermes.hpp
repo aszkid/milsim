@@ -63,6 +63,31 @@ namespace MilSim {
 		double m_xpos, m_ypos;
 	};
 
+	class CursorEnterMessage : public Message {
+	public:
+		CursorEnterMessage(bool entered)
+			: Message::Message(Crypto::HASH("CursorEnter")),
+			  m_entered(entered)
+		{};
+		bool m_entered;
+	};
+
+	class MouseButtonMessage : public Message {
+	public:
+		enum Button {
+			LEFT, RIGHT, MIDDLE
+		};
+		enum Action {
+			PRESS, RELEASE
+		};
+		MouseButtonMessage(Button b, Action a)
+			: Message::Message(Crypto::HASH("MouseButton")), m_button(b), m_action(a)
+		{};
+
+		Button m_button;
+		Action m_action;
+	};
+
 	/**
 	 * Subscription class, holds a list of interested channels. 
 	 * The interested party is responsible for pulling events
