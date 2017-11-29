@@ -72,8 +72,6 @@ int main(int argc, char** argv)
 	
 	glfwDestroyWindow(window);
 	glfwTerminate();
-
-	console->info("Shutting down...");
 	
 	return 0;
 }

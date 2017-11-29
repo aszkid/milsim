@@ -14,14 +14,7 @@ Core::Core()
 
 Core::~Core()
 {
-	for(auto& s : m_states) {
-		m_log->info("Killing state `{}`...", s.first);
-		s.second->kill();
-	}
-	for(auto& s : m_systems) {
-		m_log->info("Killing system `{}`...", s.first);
-		s.second->kill();
-	}
+	m_log->info("Shutting down...");
 }
 
 
