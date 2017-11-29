@@ -1,8 +1,7 @@
 #pragma once
 
 #include "logger.hpp"
-
-#include "sys/hermes.hpp"
+#include "hermes.hpp"
 #include "sys/alexandria.hpp"
 
 namespace MilSim {

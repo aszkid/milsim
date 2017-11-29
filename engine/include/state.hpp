@@ -1,7 +1,7 @@
 #pragma once
 
 #include "sys/alexandria.hpp"
-#include "sys/hermes.hpp"
+#include "hermes.hpp"
 #include "scene.hpp"
 #include "object.hpp"
 

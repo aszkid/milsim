@@ -11,10 +11,10 @@ set(SOURCES
 	src/scene.cpp
 	src/logger.cpp
 	src/object.cpp
+	src/hermes.cpp
 
 	src/util/io.cpp
 	
-	src/sys/hermes.cpp
 	src/sys/alexandria.cpp
 	src/sys/script.cpp
 	src/sys/audio.cpp

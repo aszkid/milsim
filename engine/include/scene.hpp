@@ -6,8 +6,8 @@
 #include <glm/glm.hpp>
 
 #include "object.hpp"
+#include "hermes.hpp"
 #include "sys/alexandria.hpp"
-#include "sys/hermes.hpp"
 
 using namespace gl;
 

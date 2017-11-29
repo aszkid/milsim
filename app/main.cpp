@@ -53,7 +53,7 @@ int main(int argc, char** argv)
 
 	// Prepare core
 	core.set_window(window);
-	core.init_systems(root);
+	core.init(root);
 	auto alexandria = (MilSim::Alexandria*)core.get_system("alexandria");
 	alexandria->load_database("Base.lua");
 

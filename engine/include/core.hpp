@@ -7,12 +7,11 @@
 #include <chrono>
 #define GLFW_INCLUDE_NONE // avoid glbinding errors
 #include <GLFW/glfw3.h>
-#include "selene.h"
+#include <selene.h>
 
 #include "util/types.hpp"
 #include "logger.hpp"
-#include "sys.hpp"
-#include "sys/hermes.hpp"
+#include "hermes.hpp"
 #include "sys/alexandria.hpp"
 
 #include "state.hpp"
@@ -29,7 +28,7 @@ namespace MilSim {
 
 		void set_window(GLFWwindow* window);
 		void set_config(sel::State* cfg);
-		void init_systems(const std::string local_root);
+		void init(const std::string local_root);
 
 		Sys* get_system(const std::string id);
 
@@ -37,7 +36,7 @@ namespace MilSim {
 		T* add_state(const std::string id) {
 			static_assert(std::is_base_of<GameState, T>::value, "Class passed not derived from `GameState`!");
 			m_states[id] = t_state_ptr(new T());
-			m_states[id]->post_init(id, m_alexandria, m_hermes, "State." + id);
+			m_states[id]->post_init(id, m_alexandria, m_hermes.get(), "State." + id);
 			return static_cast<T*>(m_states[id].get());
 		}
 		GameState* get_state(const std::string id);
@@ -66,8 +65,8 @@ namespace MilSim {
 			return static_cast<T*>(system);
 		}
 
-		// System handles
-		Hermes* m_hermes;
+		// Handles
+		std::unique_ptr<Hermes> m_hermes;
 		Alexandria* m_alexandria;
 
 		// Various
