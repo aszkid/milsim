@@ -16,6 +16,7 @@ set(SOURCES
 	src/util/io.cpp
 	
 	src/sys/alexandria.cpp
+	src/sys/input.cpp
 	src/sys/script.cpp
 	src/sys/audio.cpp
 	src/sys/graph.cpp

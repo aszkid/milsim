@@ -12,9 +12,10 @@
 #include "util/types.hpp"
 #include "logger.hpp"
 #include "hermes.hpp"
-#include "sys/alexandria.hpp"
-
 #include "state.hpp"
+#include "sys/alexandria.hpp"
+#include "sys/input.hpp"
+
 
 namespace MilSim {
 	
@@ -69,6 +70,7 @@ namespace MilSim {
 		// Handles
 		std::unique_ptr<Hermes> m_hermes;
 		Alexandria* m_alexandria;
+		Input* m_input;
 
 		// Various
 		GLFWwindow* m_window;
