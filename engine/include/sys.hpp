@@ -9,7 +9,7 @@ namespace MilSim {
 	class Sys {
 	public:
 		Sys(const std::string logname)
-			: m_log(Logger::create(logname))
+			: m_log(Logger::create("Sys." + logname))
 		{};
 		virtual ~Sys() {};
 

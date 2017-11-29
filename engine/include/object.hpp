@@ -14,7 +14,7 @@ namespace MilSim {
 	 *  - Alexandria
 	 * for which message passing is less-than-ideal:
 	 *  - Message passing a log message is dumb
-	 *  - Message passing ... a message pass, is ...
+	 *  - Message passing ... a message, is ...
 	 *  - Message passing resources is slow.
 	 * The rest of operations can be modeled by message passing,
 	 * and that's why pretty much everyone needs a handle to
