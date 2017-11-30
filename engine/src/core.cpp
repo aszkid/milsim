@@ -23,17 +23,13 @@ void Core::set_window(GLFWwindow* window)
 	m_window = window;
 	m_winx = 800;
 	m_winy = 600;
-	glViewport(0, 0, m_winx, m_winy);
-}
-void Core::set_config(sel::State* cfg)
-{
-	auto video = (*cfg)["video"];
-	auto audio = (*cfg)["audio"];
-	auto controls = (*cfg)["controls"];
-
-	//glfwSetWindowSize(m_window, video["width"], video["height"]);
-	//glfwSetWindowPos(m_window, 50, 50);
+	glfwSetWindowSize(m_window, m_winx, m_winy);
+	glfwSetWindowPos(m_window, 50, 50);
 	glfwSetWindowTitle(m_window, "MilSim");
+
+	glfwMakeContextCurrent(m_window);
+	glbinding::Binding::initialize();
+	glViewport(0, 0, m_winx, m_winy);
 }
 void Core::init(const std::string local_root = ".")
 {
@@ -57,6 +53,8 @@ void Core::init(const std::string local_root = ".")
 	for(auto& s : m_systems) {
 		s.second->init();
 	}
+
+	glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);  
 }
 Sys* Core::get_system(const std::string id) {
 	auto sys = m_systems.find(id);
@@ -135,7 +133,7 @@ void Core::update()
 
 	// Update the current state with elapsed time ("delta" in seconds)
 	if(m_current_state)
-		m_current_state->update(m_delta.count() / 1000.0);
+		m_current_state->update(m_MS_PER_UPDATE.count() / 1000.0);
 }
 void Core::render()
 {

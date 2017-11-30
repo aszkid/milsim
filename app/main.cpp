@@ -1,14 +1,8 @@
 #include <iostream>
 #include <string>
-
-#include <glbinding/gl/gl.h>
-#include <glbinding/Binding.h>
 #define GLFW_INCLUDE_NONE // avoid glbinding errors
 #include <GLFW/glfw3.h>
-
-#include "spdlog/spdlog.h"
-#include "selene.h"
-#include "args.hxx"
+#include <args.hxx>
 
 #include "core.hpp"
 
@@ -18,16 +12,16 @@
 int main(int argc, char** argv)
 {
 	MilSim::Core core;
-	auto console = spdlog::stdout_color_mt("main");
+	auto console = MilSim::Logger::create("main()");
 	args::ArgumentParser parser("MilSim");
 	args::ValueFlag<std::string> root_arg(parser, "root", "The root directory", {'r', "root"});
+	std::string root;
 	
 	try {
 		parser.ParseCLI(argc, argv);
 	} catch(args::ParseError e) {
 		console->error(e.what());
 	}
-	std::string root;
 	if(root_arg) {
 		root = args::get(root_arg);
 	} else {
@@ -46,9 +40,6 @@ int main(int argc, char** argv)
 		console->critical("Couldn't create window...");
 		return 1;
 	}
-	
-	glfwMakeContextCurrent(window);
-	glbinding::Binding::initialize();
 
 	// Prepare core
 	core.set_window(window);
@@ -56,12 +47,7 @@ int main(int argc, char** argv)
 	auto alexandria = (MilSim::Alexandria*)core.get_system("alexandria");
 	alexandria->load_database("Base.lua");
 
-	// Load base config
-	sel::State base_conf;
-	base_conf.Load(root + "/config.lua");
-	core.set_config(&base_conf);
-
-	// Add base states -- `Core` dtor cleans up `unique_ptr`
+	// Add base states -- `Core` dtor cleans up for us
 	auto main_screen = core.add_state<MainScreen>("MainScreen");
 	main_screen->load();
 	core.force_state("MainScreen");
@@ -69,6 +55,7 @@ int main(int argc, char** argv)
 	// Main loop
 	core.loop();
 	
+	// We are responsible for window handles
 	glfwDestroyWindow(window);
 	glfwTerminate();
 	

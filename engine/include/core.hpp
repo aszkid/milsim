@@ -5,6 +5,8 @@
 #include <map>
 #include <string>
 #include <chrono>
+#include <glbinding/gl/gl.h>
+#include <glbinding/Binding.h>
 #define GLFW_INCLUDE_NONE // avoid glbinding errors
 #include <GLFW/glfw3.h>
 #include <selene.h>
@@ -28,7 +30,6 @@ namespace MilSim {
 		~Core();
 
 		void set_window(GLFWwindow* window);
-		void set_config(sel::State* cfg);
 		void init(const std::string local_root);
 
 		Sys* get_system(const std::string id);
