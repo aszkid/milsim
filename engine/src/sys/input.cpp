@@ -84,6 +84,8 @@ void Input::key_callback(GLFWwindow* win,
 	case GLFW_RELEASE:
 		a = InputKeyMessage::Action::RELEASE;
 		break;
+	case GLFW_REPEAT:
+		a = InputKeyMessage::Action::REPEAT;
 	}
 
 	// Now I am become Death, the destroyer of worlds.

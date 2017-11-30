@@ -2,18 +2,26 @@
 
 The engine is a library. Every application loads the engine, and initializes it.
 
-## Core
-This is the entry point of any game. While simple by itself, its function is to load every engine system and hook them up for effective communication.
+## `Core`
+This is the entry point of any game.
 
-The communication system is a subscription-based message queue. Every system is given a set of subscription parameters (priorities, frequency, etc) and the communication system balances the load of messages.
+## `Object`
+Abstract base class that provides a few very important things (one of them, debatable):
++ A handle to `Sys.Hermes` to receive messages
++ A handle to `Logger` to log stuff
++ A handle to `Sys.Alexandria` to load resources
+	- This is the point of (internal) debate... does everyone need to access `Alexandria`? Probably not.
++ An identifier string and its hash.
+
+Every conceivable object will probably have the need to (a) send/receive messages and/or (b) log stuff. This base class provides that. An `Object` is *not safe for use* until `post_init()` has been called, passing handles to systems and providing name information. `post_init()` then calls the pure virtual function `inner_post_init()` specific to each object instance: from that point on, an `Object` is safe for use.
+
+About dependency injection: the general rule is that (a) *whoever creates an `Object` is responible for injecting the necessary handles* and (b) *any object must assume that its handles are valid*. Since injection chain really begins in `Core`, which owns the systems, the issue is practically solved. The `Object` class contains a helper function `post_init_child(Object* o, string name)` that injects handles and name information to the specificed object. This way, Objects can create other Objects and pass references transparently.
 
 ## Systems
 
 ### Sys.Hermes
 
-Messaging system. The only global/singleton object (so far... hopefully). Everything can be accomplished by asking `Hermes` nicely.
 
-Systems communicate with each other by message passing, because no system 'needs' to load an asset, or play a sound. A `GameState` needs that, hence it inherits from `Object`.
 
 ### Sys.Alexandria
 

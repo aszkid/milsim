@@ -44,7 +44,7 @@ namespace MilSim {
 			MENU,UNKNOWN
 		};
 		enum Action {
-			PRESS, RELEASE
+			PRESS, RELEASE, REPEAT
 		};
 		InputKeyMessage(Key k, Action a)
 			: Message::Message(Crypto::HASH("InputKey")),

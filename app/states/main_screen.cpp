@@ -35,6 +35,12 @@ void MainScreen::render(double interp)
 void MainScreen::update()
 {
 	MILSIM_MSG_LOOP(msg) {
-		m_logger->info("I am handling an event...");
+		if(msg->m_chan == MilSim::Crypto::HASH("InputKey")) {
+			auto ik = static_cast<MilSim::InputKeyMessage*>(msg);
+			if(ik->m_key == MilSim::InputKeyMessage::Key::W &&
+			  ik->m_action == MilSim::InputKeyMessage::Action::PRESS) {
+				m_logger->info("Moving forward....");
+			}
+		}
 	}
 }
