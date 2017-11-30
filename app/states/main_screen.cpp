@@ -15,6 +15,7 @@ void MainScreen::load()
 {
 	m_scene = std::unique_ptr<MilSim::Scene>(new MilSim::Scene());
 	post_init_child(m_scene.get(), "Scene");
+	m_scene->set_viewport(m_winx, m_winy);
 
 	// Build our scene
 	m_scene->add_triangle();

@@ -22,6 +22,12 @@ namespace MilSim {
 
 		virtual void render(double interp) = 0;
 		virtual void update() = 0;
+
+		void set_viewport(const uint winx, const uint winy) {
+			m_winx = winx;
+			m_winy = winy;
+		};
+
 	private:
 		// SceneGraph
 		// UI
@@ -39,6 +45,7 @@ namespace MilSim {
 
 	protected:
 		bool m_ready;
+		uint m_winx, m_winy;
 	};
 
 }

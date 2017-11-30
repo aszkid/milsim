@@ -37,6 +37,7 @@ namespace MilSim {
 		T* add_state(const std::string id) {
 			static_assert(std::is_base_of<GameState, T>::value, "Class passed not derived from `GameState`!");
 			m_states[id] = t_state_ptr(new T());
+			m_states[id]->set_viewport(m_winx, m_winy);
 			m_states[id]->post_init("State." + id, m_alexandria, m_hermes.get(), "State." + id);
 			return static_cast<T*>(m_states[id].get());
 		}
@@ -76,6 +77,7 @@ namespace MilSim {
 		GLFWwindow* m_window;
 		GameState* m_current_state;
 		std::string m_local_root;
+		uint m_winx, m_winy;
 
 		// Loggers
 		t_logger m_log;

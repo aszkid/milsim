@@ -49,7 +49,6 @@ int main(int argc, char** argv)
 	
 	glfwMakeContextCurrent(window);
 	glbinding::Binding::initialize();
-	glViewport(0, 0, 800, 600);
 
 	// Prepare core
 	core.set_window(window);

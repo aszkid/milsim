@@ -37,6 +37,11 @@ void Scene::inner_post_init()
 {
 
 }
+void Scene::set_viewport(const uint winx, const uint winy)
+{
+	m_winx = winx;
+	m_winy = winy;
+}
 
 void Scene::update()
 {
@@ -45,6 +50,10 @@ void Scene::update()
 void Scene::render(double interp)
 {
 	ShaderProgramAsset* shader = nullptr;
+	glm::mat4 view(1.0);
+	view = glm::translate(view, glm::vec3(0.0, 0.0, -3.0));
+	glm::mat4 proj(1.0);
+	//proj = glm::perspective(glm::radians(45.0f), )
 
 	for(Drawable& d : m_drawables) {
 		// get shader and bind it
@@ -74,9 +83,9 @@ Drawable* Scene::add_triangle()
 		0.5f, -0.5f, 0.0f,
 		-0.5f, -0.5f, 0.0f
 	};
-	glm::mat4 trans(1.0);
-	trans = glm::rotate(trans, glm::radians(45.0f), glm::vec3(0.0, 0.0, 1.0));
-	triangle.m_transform = trans;
+	glm::mat4 model(1.0);
+	model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0, 0.0, 0.0));
+	triangle.m_transform = model;
 
 	// Upload vertex data
 	glGenVertexArrays(1, &triangle.m_vao);
@@ -99,6 +108,8 @@ Drawable* Scene::add_triangle()
 		3 * sizeof(float), (void*)0
 	);
 	glEnableVertexAttribArray(0);
+
+	m_logger->info("Viewport is {}x{}", m_winx, m_winy);
 
 	return &m_drawables.back();
 }

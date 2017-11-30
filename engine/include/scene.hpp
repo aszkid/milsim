@@ -51,6 +51,8 @@ namespace MilSim {
 		void update();
 		void render(double interp);
 
+		void set_viewport(const uint winx, const uint winy);
+
 		Drawable* add_triangle();
 	
 	private:
@@ -58,6 +60,8 @@ namespace MilSim {
 		SceneGraphNode m_scene_graph;
 		// Drawables
 		std::vector<Drawable> m_drawables;
+		// Viewport
+		uint m_winx, m_winy;
 
 		void inner_post_init();
 	};

@@ -21,6 +21,9 @@ Core::~Core()
 void Core::set_window(GLFWwindow* window)
 {
 	m_window = window;
+	m_winx = 800;
+	m_winy = 600;
+	glViewport(0, 0, m_winx, m_winy);
 }
 void Core::set_config(sel::State* cfg)
 {
