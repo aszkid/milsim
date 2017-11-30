@@ -44,24 +44,39 @@ void Scene::update()
 }
 void Scene::render(double interp)
 {
+	ShaderProgramAsset* shader = nullptr;
+
 	for(Drawable& d : m_drawables) {
+		// get shader and bind it
+		shader = static_cast<ShaderProgramAsset*>(m_alexandria->get_asset(d.m_shader));
 		glUseProgram(
-			((ShaderProgramAsset*)m_alexandria->get_asset(d.m_shader))->m_prog_id
+			shader->m_prog_id
 		);
+		// set shader uniforms
+		for(auto& uni : shader->m_uniforms) {
+			if(uni.first == "transform") {
+				glUniformMatrix4fv(uni.second, 1, GL_FALSE, glm::value_ptr(d.m_transform));
+			}
+		}
+		// bind vao
 		glBindVertexArray(d.m_vao);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 	}
 }
 
-Drawable* Scene::add_triangle(const t_asset_id shader)
+Drawable* Scene::add_triangle()
 {
+	// set up data
 	m_drawables.push_back(Drawable());
 	auto& triangle = m_drawables.back();
 	triangle.m_vertices = {
-		-0.5f, -0.5f, 0.0f,
+		0.5f,  0.5f, 0.0f,
 		0.5f, -0.5f, 0.0f,
-		0.0f,  0.5f, 0.0f
+		-0.5f, -0.5f, 0.0f
 	};
+	glm::mat4 trans(1.0);
+	trans = glm::rotate(trans, glm::radians(45.0f), glm::vec3(0.0, 0.0, 1.0));
+	triangle.m_transform = trans;
 
 	// Upload vertex data
 	glGenVertexArrays(1, &triangle.m_vao);
@@ -76,7 +91,8 @@ Drawable* Scene::add_triangle(const t_asset_id shader)
 	);
 
 	// Attach shader
-	triangle.m_shader = shader;
+	t_asset_id shader_id = Crypto::HASH("/Base/Shaders/Simple");
+	triangle.m_shader = shader_id;
 
 	// Link vertex data
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,

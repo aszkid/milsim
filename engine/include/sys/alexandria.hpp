@@ -74,6 +74,7 @@ namespace MilSim {
 		GLuint m_prog_id;
 		std::string m_vert_source;
 		std::string m_frag_source;
+		std::map<std::string, GLuint> m_uniforms;
 	};
 
 	/**

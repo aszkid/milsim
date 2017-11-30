@@ -71,6 +71,27 @@ bool ShaderProgramAsset::load()
 
 	m_loaded = true;
 
+	// Lookup uniforms
+	GLint num_uniforms = 0;
+	glGetProgramInterfaceiv(m_prog_id, GL_UNIFORM, GL_ACTIVE_RESOURCES, &num_uniforms);
+	static const GLenum props[4] = {
+		GL_BLOCK_INDEX,
+		GL_TYPE,
+		GL_NAME_LENGTH,
+		GL_LOCATION
+	};
+	for(int i = 0; i < num_uniforms; i++) {
+		GLint values[4];
+		glGetProgramResourceiv(m_prog_id, GL_UNIFORM, i, 4, props, 4, NULL, values);
+		// skip block uniforms
+		if(values[0] != -1)
+			continue;
+		std::string name(values[2], ' ');
+		glGetProgramResourceName(m_prog_id, GL_UNIFORM, i, name.size(), NULL, &name[0]);
+		name.pop_back(); // pop null character
+		m_uniforms[name] = values[3];
+	}
+
 	return true;
 }
 

@@ -4,6 +4,8 @@
 
 #include <glbinding/gl/gl.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "object.hpp"
 #include "hermes.hpp"
@@ -33,10 +35,11 @@ namespace MilSim {
 	struct Drawable {
 		SceneGraphNode* m_node;
 		// MeshAsset* m_mesh
-		std::vector<float> m_vertices;
+		std::vector<float> m_vertices; // temporal... will use ref. to mesh asset
 		t_asset_id m_shader;
 		GLuint m_vbo;
 		GLuint m_vao;
+		glm::mat4 m_transform;
 	};
 
 
@@ -48,7 +51,7 @@ namespace MilSim {
 		void update();
 		void render(double interp);
 
-		Drawable* add_triangle(const t_asset_id shader);
+		Drawable* add_triangle();
 	
 	private:
 		// Root scene graph node

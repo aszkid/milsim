@@ -17,7 +17,7 @@ void MainScreen::load()
 	post_init_child(m_scene.get(), "Scene");
 
 	// Build our scene
-	m_scene->add_triangle(MilSim::Crypto::HASH("/Base/Shaders/Simple"));
+	m_scene->add_triangle();
 
 	m_ready = true;
 }
