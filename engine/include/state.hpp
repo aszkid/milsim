@@ -39,7 +39,8 @@ namespace MilSim {
 				Crypto::HASH("InputKey"),
 				Crypto::HASH("CursorPos"),
 				Crypto::HASH("CursorEnter"),
-				Crypto::HASH("MouseButton")
+				Crypto::HASH("MouseButton"),
+				Crypto::HASH("WindowSize")
 			});
 		};
 

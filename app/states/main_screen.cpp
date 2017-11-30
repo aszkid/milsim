@@ -44,4 +44,5 @@ void MainScreen::update()
 			}
 		}
 	}
+	m_scene->update();
 }

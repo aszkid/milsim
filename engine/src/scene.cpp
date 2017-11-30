@@ -35,7 +35,9 @@ Scene::~Scene()
 }
 void Scene::inner_post_init()
 {
-
+	m_hermes->subscribe(m_name_hash, {
+		Crypto::HASH("WindowSize")
+	});
 }
 void Scene::set_viewport(const uint winx, const uint winy)
 {
@@ -45,7 +47,14 @@ void Scene::set_viewport(const uint winx, const uint winy)
 
 void Scene::update()
 {
-
+	MILSIM_MSG_LOOP(msg) {
+		if(msg->m_chan == Crypto::HASH("WindowSize")) {
+			auto ws = static_cast<WindowSizeMessage*>(msg);
+			m_winx = ws->m_width;
+			m_winy = ws->m_height;
+			glViewport(0, 0, m_winx, m_winy);
+		}
+	}
 }
 void Scene::render(double interp)
 {
@@ -53,7 +62,11 @@ void Scene::render(double interp)
 	glm::mat4 view(1.0);
 	view = glm::translate(view, glm::vec3(0.0, 0.0, -3.0));
 	glm::mat4 proj(1.0);
-	//proj = glm::perspective(glm::radians(45.0f), )
+	proj = glm::perspective(
+		glm::radians(45.0f),
+		m_winx / (float)m_winy,
+		0.1f, 100.0f
+	);
 
 	for(Drawable& d : m_drawables) {
 		// get shader and bind it
@@ -63,13 +76,17 @@ void Scene::render(double interp)
 		);
 		// set shader uniforms
 		for(auto& uni : shader->m_uniforms) {
-			if(uni.first == "transform") {
+			if(uni.first == "model") {
 				glUniformMatrix4fv(uni.second, 1, GL_FALSE, glm::value_ptr(d.m_transform));
+			} else if(uni.first == "view") {
+				glUniformMatrix4fv(uni.second, 1, GL_FALSE, glm::value_ptr(view));
+			} else if(uni.first == "projection") {
+				glUniformMatrix4fv(uni.second, 1, GL_FALSE, glm::value_ptr(proj));
 			}
 		}
 		// bind vao
 		glBindVertexArray(d.m_vao);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
 }
 
@@ -81,7 +98,11 @@ Drawable* Scene::add_triangle()
 	triangle.m_vertices = {
 		0.5f,  0.5f, 0.0f,
 		0.5f, -0.5f, 0.0f,
-		-0.5f, -0.5f, 0.0f
+		-0.5f, -0.5f, 0.0f,
+
+		-0.5f, -0.5f, 0.0f,
+		-0.5f, 0.5f, 0.0f,
+		0.5f,  0.5f, 0.0f
 	};
 	glm::mat4 model(1.0);
 	model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0, 0.0, 0.0));
@@ -108,8 +129,6 @@ Drawable* Scene::add_triangle()
 		3 * sizeof(float), (void*)0
 	);
 	glEnableVertexAttribArray(0);
-
-	m_logger->info("Viewport is {}x{}", m_winx, m_winy);
 
 	return &m_drawables.back();
 }

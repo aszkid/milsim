@@ -18,7 +18,7 @@ void Hermes::subscribe(const uint32_t subid, std::vector<t_channel> channels)
 {
 	Subscription* sub;
 	if(m_subs.find(subid) != m_subs.end()) {
-		m_log->debug("Subscription `{:x}` already exists; appending new channels...");
+		m_log->info("Subscription `{:x}` already exists; appending new channels...");
 	} else {
 		m_subs[subid] = Subscription();
 	}
