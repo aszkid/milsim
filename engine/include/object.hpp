@@ -31,6 +31,10 @@ namespace MilSim {
 	
 	protected:
 		virtual void inner_post_init() = 0;
+		/**
+		 * Helper function to call `post_init` on a child `Object` instance.
+		 */
+		void post_init_child(Object* o, const std::string name);
 
 		Hermes* m_hermes;
 		Alexandria* m_alexandria;

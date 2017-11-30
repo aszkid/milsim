@@ -7,8 +7,6 @@
 
 namespace MilSim {
 
-	#define STATE_HOOK()
-
 	/**
 	 * The `GameState` class plays a pivotal role.
 	 * It represents every screen in the game, and controls

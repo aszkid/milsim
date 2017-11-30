@@ -32,3 +32,8 @@ void Object::post_init(const std::string name,
 	// Call object-specific post_init
 	inner_post_init();
 }
+
+void Object::post_init_child(Object* o, const std::string name)
+{
+	o->post_init(name, m_alexandria, m_hermes, m_name + "." + name);
+}
