@@ -40,6 +40,22 @@ namespace MilSim {
 		GLuint m_vbo;
 		GLuint m_vao;
 		glm::mat4 m_transform;
+		glm::vec3 m_pos;
+	};
+	struct Camera {
+		Camera();
+
+		glm::vec3 m_pos;
+		glm::vec3 m_dir;
+		glm::vec3 m_up;
+		glm::vec3 m_right;
+		glm::mat4 m_view;
+
+		void look_at(glm::vec3 target);
+		void set_position(glm::vec3 pos);
+		void move(glm::vec3 delta);
+
+		void _update_view();
 	};
 
 
@@ -48,8 +64,10 @@ namespace MilSim {
 		Scene();
 		~Scene();
 
-		void update();
+		void update(double delta);
 		void render(double interp);
+
+		Camera& get_camera();
 
 		void set_viewport(const uint winx, const uint winy);
 
@@ -62,6 +80,8 @@ namespace MilSim {
 		std::vector<Drawable> m_drawables;
 		// Viewport
 		uint m_winx, m_winy;
+
+		Camera m_camera;
 
 		void inner_post_init();
 	};

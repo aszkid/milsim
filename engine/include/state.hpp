@@ -21,7 +21,7 @@ namespace MilSim {
 		virtual void kill() = 0;
 
 		virtual void render(double interp) = 0;
-		virtual void update() = 0;
+		virtual void update(double delta) = 0;
 
 		void set_viewport(const uint winx, const uint winy) {
 			m_winx = winx;

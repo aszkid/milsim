@@ -88,15 +88,15 @@ void Core::loop()
 	while(!glfwWindowShouldClose(m_window)) {
 		// Chrono stuff
 		m_currtime = std::chrono::system_clock::now();
-		auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(m_currtime - m_prevtime);
+		m_delta = std::chrono::duration_cast<std::chrono::milliseconds>(m_currtime - m_prevtime);
 		m_prevtime = m_currtime;
-		m_t_lag += elapsed;
+		m_t_lag += m_delta;
 
 		glfwSwapBuffers(m_window);
 		glfwPollEvents();
 
 		m_fps = 1.0 / (
-			elapsed.count() / 1000.0
+			m_delta.count() / 1000.0
 		);
 
 		// Update systems until catched up with lag
@@ -133,9 +133,9 @@ void Core::update()
 		sys.second->update();
 	}
 
-	// Update the current state
+	// Update the current state with elapsed time ("delta" in seconds)
 	if(m_current_state)
-		m_current_state->update();
+		m_current_state->update(m_delta.count() / 1000.0);
 }
 void Core::render()
 {

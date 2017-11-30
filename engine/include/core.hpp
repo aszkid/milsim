@@ -87,6 +87,7 @@ namespace MilSim {
 		const std::chrono::milliseconds m_MS_PER_UPDATE {10};
 		std::chrono::time_point<std::chrono::system_clock> m_prevtime;
 		std::chrono::time_point<std::chrono::system_clock> m_currtime;
+		std::chrono::milliseconds m_delta;
 		std::chrono::milliseconds m_t_lag {0};
 		uint m_fps;
 

@@ -19,6 +19,10 @@ void MainScreen::load()
 
 	// Build our scene
 	m_scene->add_triangle();
+	m_walking[0] = false;
+	m_walking[1] = false;
+	m_walking[2] = false;
+	m_walking[3] = false;
 
 	m_ready = true;
 }
@@ -31,16 +35,52 @@ void MainScreen::render(double interp)
 {
 	m_scene->render(interp);
 }
-void MainScreen::update()
+void MainScreen::update(double delta)
 {
 	MILSIM_MSG_LOOP(msg) {
 		if(msg->m_chan == MilSim::Crypto::HASH("InputKey")) {
 			auto ik = static_cast<MilSim::InputKeyMessage*>(msg);
-			if(ik->m_key == MilSim::InputKeyMessage::Key::W &&
-			  ik->m_action == MilSim::InputKeyMessage::Action::PRESS) {
-				m_logger->info("Moving forward....");
+			switch(ik->m_key) {
+			case MilSim::InputKeyMessage::Key::W:
+				if(ik->m_action == MilSim::InputKeyMessage::Action::PRESS)
+					m_walking[0] = true;
+				if(ik->m_action == MilSim::InputKeyMessage::Action::RELEASE)
+					m_walking[0] = false;
+				break;
+			case MilSim::InputKeyMessage::Key::S:
+				if(ik->m_action == MilSim::InputKeyMessage::Action::PRESS)
+					m_walking[1] = true;
+				if(ik->m_action == MilSim::InputKeyMessage::Action::RELEASE)
+					m_walking[1] = false;
+				break;
+			case MilSim::InputKeyMessage::Key::D:
+				if(ik->m_action == MilSim::InputKeyMessage::Action::PRESS)
+					m_walking[2] = true;
+				if(ik->m_action == MilSim::InputKeyMessage::Action::RELEASE)
+					m_walking[2] = false;
+				break;
+			case MilSim::InputKeyMessage::Key::A:
+				if(ik->m_action == MilSim::InputKeyMessage::Action::PRESS)
+					m_walking[3] = true;
+				if(ik->m_action == MilSim::InputKeyMessage::Action::RELEASE)
+					m_walking[3] = false;
+				break;
 			}
 		}
 	}
-	m_scene->update();
+
+	if(m_walking[0]) {
+		m_scene->get_camera().move((float)delta * glm::vec3(0.0, 0.0, -1.0));
+	}
+	if(m_walking[1]) {
+		m_scene->get_camera().move((float)delta * glm::vec3(0.0, 0.0, 1.0));
+	}
+	if(m_walking[2]) {
+		m_scene->get_camera().move((float)delta * glm::vec3(1.0, 0.0, 0.0));
+	}
+	if(m_walking[3]) {
+		m_scene->get_camera().move((float)delta * glm::vec3(-1.0, 0.0, 0.0));
+	}
+
+	m_scene->update(delta);
 }

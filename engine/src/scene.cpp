@@ -1,5 +1,7 @@
 #include "scene.hpp"
 
+#include <glm/ext.hpp>
+
 using namespace MilSim;
 
 ////////////////////////////////////////
@@ -22,6 +24,38 @@ SceneGraphNode* SceneGraphNode::add_child()
 }
 
 ////////////////////////////////////////
+// CAMERA
+////////////////////////////////////////
+Camera::Camera()
+{
+
+}
+
+void Camera::look_at(glm::vec3 target)
+{
+	m_dir = glm::normalize(m_pos - target);
+	_update_view();
+}
+void Camera::move(glm::vec3 delta)
+{
+	m_pos += delta;
+	_update_view();
+}
+void Camera::set_position(glm::vec3 pos)
+{
+	m_pos = pos;
+	_update_view();
+}
+
+void Camera::_update_view()
+{
+	auto right = glm::normalize(glm::cross(glm::vec3(0.0, 1.0, 0.0), m_dir));
+	m_up = glm::cross(m_dir, right);
+	m_view = glm::lookAt(m_pos, m_pos - m_dir, m_up);
+}
+
+
+////////////////////////////////////////
 // SCENE
 ////////////////////////////////////////
 Scene::Scene()
@@ -39,6 +73,9 @@ void Scene::inner_post_init()
 		Crypto::HASH("WindowSize")
 	});
 
+	m_camera.set_position(glm::vec3(0.0, 0.0, 5.0));
+	m_camera.look_at(glm::vec3(0.0, 0.0, 0.0));
+
 	glEnable(GL_DEPTH_TEST);
 }
 void Scene::set_viewport(const uint winx, const uint winy)
@@ -46,8 +83,12 @@ void Scene::set_viewport(const uint winx, const uint winy)
 	m_winx = winx;
 	m_winy = winy;
 }
+Camera& Scene::get_camera()
+{
+	return m_camera;
+}
 
-void Scene::update()
+void Scene::update(double delta)
 {
 	MILSIM_MSG_LOOP(msg) {
 		if(msg->m_chan == Crypto::HASH("WindowSize")) {
@@ -61,8 +102,6 @@ void Scene::update()
 void Scene::render(double interp)
 {
 	ShaderProgramAsset* shader = nullptr;
-	glm::mat4 view(1.0);
-	view = glm::translate(view, glm::vec3(0.0, 0.0, -3.0));
 	glm::mat4 proj(1.0);
 	proj = glm::perspective(
 		glm::radians(45.0f),
@@ -84,7 +123,7 @@ void Scene::render(double interp)
 			if(uni.first == "model") {
 				glUniformMatrix4fv(uni.second, 1, GL_FALSE, glm::value_ptr(d.m_transform));
 			} else if(uni.first == "view") {
-				glUniformMatrix4fv(uni.second, 1, GL_FALSE, glm::value_ptr(view));
+				glUniformMatrix4fv(uni.second, 1, GL_FALSE, glm::value_ptr(m_camera.m_view));
 			} else if(uni.first == "projection") {
 				glUniformMatrix4fv(uni.second, 1, GL_FALSE, glm::value_ptr(proj));
 			}
