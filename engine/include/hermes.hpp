@@ -88,6 +88,14 @@ namespace MilSim {
 		Action m_action;
 	};
 
+	class WindowSizeMessage : public Message {
+	public:
+		WindowSizeMessage(int width, int height)
+			: Message::Message(Crypto::HASH("WindowSize")), m_width(width), m_height(height)
+		{};
+		int m_width, m_height;
+	};
+
 	/**
 	 * Subscription class, holds a list of interested channels. 
 	 * The interested party is responsible for pulling events

@@ -21,6 +21,7 @@ void Input::init()
 	glfwSetKeyCallback(m_win, _handle_key);
 	glfwSetCursorPosCallback(m_win, _handle_cursor_pos);
 	glfwSetMouseButtonCallback(m_win, _handle_mouse_button);
+	glfwSetWindowSizeCallback(m_win, _handle_window_size);
 }
 void Input::kill()
 {
@@ -31,6 +32,11 @@ void Input::update()
 
 }
 
+
+void Input::window_size_callback(GLFWwindow* win, int width, int height)
+{
+	m_hermes->send(new WindowSizeMessage(width, height));
+}
 void Input::cursor_pos_callback(GLFWwindow* win, double xpos, double ypos)
 {
 	m_hermes->send(new CursorPosMessage(xpos, ypos));
@@ -433,4 +439,9 @@ void MilSim::_handle_mouse_button(GLFWwindow* win, int button, int action, int m
 {
 	Input* i = static_cast<Input*>(glfwGetWindowUserPointer(win));
 	i->mouse_button_callback(win, button, action, mods);
+}
+void MilSim::_handle_window_size(GLFWwindow* win, int w, int h)
+{
+	Input* i = static_cast<Input*>(glfwGetWindowUserPointer(win));
+	i->window_size_callback(win, w, h);
 }
