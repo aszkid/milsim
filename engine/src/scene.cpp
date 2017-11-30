@@ -38,6 +38,8 @@ void Scene::inner_post_init()
 	m_hermes->subscribe(m_name_hash, {
 		Crypto::HASH("WindowSize")
 	});
+
+	glEnable(GL_DEPTH_TEST);
 }
 void Scene::set_viewport(const uint winx, const uint winy)
 {
@@ -67,6 +69,9 @@ void Scene::render(double interp)
 		m_winx / (float)m_winy,
 		0.1f, 100.0f
 	);
+
+	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	for(Drawable& d : m_drawables) {
 		// get shader and bind it
