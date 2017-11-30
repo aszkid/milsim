@@ -34,5 +34,7 @@ void MainScreen::render(double interp)
 }
 void MainScreen::update()
 {
-
+	MILSIM_MSG_LOOP(msg) {
+		m_logger->info("I am handling an event...");
+	}
 }

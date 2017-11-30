@@ -6,6 +6,8 @@
 
 namespace MilSim {
 
+	#define MILSIM_MSG_LOOP(h) for(auto& h : m_hermes->pull_inbox(m_name_hash))
+
 	/**
 	 * Base class from which many engine classes derive.
 	 * It provides a handle to important systems:
@@ -40,6 +42,7 @@ namespace MilSim {
 		Alexandria* m_alexandria;
 		t_logger m_logger;
 		std::string m_name;
+		uint32_t m_name_hash;
 	};
 
 }

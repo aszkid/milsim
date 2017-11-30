@@ -13,9 +13,13 @@ using namespace gl;
 
 namespace MilSim {
 
+	/**
+	 * Scene graph node, used *exclusively* for 
+	 * basic spatial information storage.
+	 */
 	class SceneGraphNode {
 	public:
-		SceneGraphNode();
+		SceneGraphNode(SceneGraphNode* parent);
 		~SceneGraphNode();
 
 		SceneGraphNode* add_child();

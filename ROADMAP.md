@@ -7,7 +7,8 @@
 - [x] Macro for `Objects` to initialize sub-`Objects` in a nice way (i.e. don't have to manually pass `m_hermes`, etc).
 
 - [ ] Simple rendering pipeline implementation (_not_ deferred, calm down boy).
-	+ [ ] Task 1
+	+ [ ] `.obj` loader for Alexandria
+	+ [ ] `MeshDrawable` or similar scene node
 	+ [ ] Task 2
 - [ ] `Scene::Node` component-based, i.e. every scene node has a list of `Scene::Component`s?
 	+ [ ] Task 3

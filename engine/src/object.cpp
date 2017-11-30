@@ -18,6 +18,7 @@ void Object::post_init(const std::string name,
 	const std::string logger)
 {
 	m_name = name;
+	m_name_hash = Crypto::HASH(m_name);
 
 	if(alexandria == nullptr) {
 		throw std::runtime_error("`Alexandria` pointer passed to `Object` constructor is NULL!");

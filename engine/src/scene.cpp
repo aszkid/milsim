@@ -5,7 +5,8 @@ using namespace MilSim;
 ////////////////////////////////////////
 // SCENEGRAPHNODE
 ////////////////////////////////////////
-SceneGraphNode::SceneGraphNode()
+SceneGraphNode::SceneGraphNode(SceneGraphNode* parent)
+	: m_parent(parent)
 {
 
 }
@@ -16,7 +17,7 @@ SceneGraphNode::~SceneGraphNode()
 
 SceneGraphNode* SceneGraphNode::add_child()
 {
-	m_children.push_back(SceneGraphNode());
+	m_children.push_back(SceneGraphNode(this));
 	return &m_children.back();
 }
 
@@ -24,6 +25,7 @@ SceneGraphNode* SceneGraphNode::add_child()
 // SCENE
 ////////////////////////////////////////
 Scene::Scene()
+	: m_scene_graph(nullptr)
 {
 
 }
@@ -33,7 +35,7 @@ Scene::~Scene()
 }
 void Scene::inner_post_init()
 {
-	
+
 }
 
 void Scene::update()
