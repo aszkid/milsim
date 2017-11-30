@@ -30,6 +30,15 @@ namespace MilSim {
 		// Scripts
 		// ...
 
+		void inner_post_init() {
+			m_hermes->subscribe(Crypto::HASH(m_name), {
+				Crypto::HASH("InputKey"),
+				Crypto::HASH("CursorPos"),
+				Crypto::HASH("CursorEnter"),
+				Crypto::HASH("MouseButton")
+			});
+		};
+
 	protected:
 		bool m_ready;
 	};

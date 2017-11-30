@@ -9,6 +9,7 @@ Object::Object()
 	m_alexandria = nullptr;
 	m_hermes = nullptr;
 	m_logger = nullptr;
+	m_name = "_NULL_";
 }
 
 void Object::post_init(const std::string name,
@@ -16,6 +17,8 @@ void Object::post_init(const std::string name,
 	Hermes* hermes,
 	const std::string logger)
 {
+	m_name = name;
+
 	if(alexandria == nullptr) {
 		throw std::runtime_error("`Alexandria` pointer passed to `Object` constructor is NULL!");
 	}
@@ -24,6 +27,8 @@ void Object::post_init(const std::string name,
 	}
 	m_alexandria = alexandria;
 	m_hermes = hermes;
-
 	m_logger = Logger::create(logger);
+
+	// Call object-specific post_init
+	inner_post_init();
 }

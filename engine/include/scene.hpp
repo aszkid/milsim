@@ -51,6 +51,8 @@ namespace MilSim {
 		SceneGraphNode m_scene_graph;
 		// Drawables
 		std::vector<Drawable> m_drawables;
+
+		void inner_post_init();
 	};
 
 }

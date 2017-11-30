@@ -40,6 +40,7 @@ void Core::init(const std::string local_root = ".")
 	// `Hermes` has to be the first thing to be initialized
 	m_hermes = std::unique_ptr<Hermes>(new Hermes());
 
+	// `Core` needs to subscribe to some stuff
 	m_hermes->subscribe(Crypto::HASH("Core"), {
 		Crypto::HASH("InputKey"),
 		Crypto::HASH("CursorPos"),
@@ -105,14 +106,6 @@ void Core::loop()
 					if(ikm->m_key == InputKeyMessage::Key::ESCAPE) {
 						should_close = true;
 					}
-					m_log->info("Pressed key {}", ikm->m_key);
-				}
-				if(e->m_chan == Crypto::HASH("CursorPos")) {
-					auto cpos = static_cast<CursorPosMessage*>(e);
-					m_log->info("Cursor: ({},{})", cpos->m_xpos, cpos->m_ypos);
-				}
-				if(e->m_chan == Crypto::HASH("MouseButton")) {
-					m_log->info("Pressed button!");
 				}
 			}
 			// Clear message inbox

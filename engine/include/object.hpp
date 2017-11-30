@@ -30,9 +30,12 @@ namespace MilSim {
 		void post_init(const std::string name, Alexandria* alexandria, Hermes* hermes, const std::string logger);
 	
 	protected:
+		virtual void inner_post_init() = 0;
+
 		Hermes* m_hermes;
 		Alexandria* m_alexandria;
 		t_logger m_logger;
+		std::string m_name;
 	};
 
 }

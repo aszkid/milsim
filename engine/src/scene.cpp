@@ -31,6 +31,10 @@ Scene::~Scene()
 {
 	
 }
+void Scene::inner_post_init()
+{
+	
+}
 
 void Scene::update()
 {

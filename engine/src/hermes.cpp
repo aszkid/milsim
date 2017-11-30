@@ -16,8 +16,17 @@ Hermes::~Hermes()
 
 void Hermes::subscribe(const uint32_t subid, std::vector<t_channel> channels)
 {
-	m_subs[subid] = Subscription();
-	m_subs[subid].m_channels = channels;
+	m_log->info("New subscription: {:x}", subid);
+
+	Subscription* sub;
+	if(m_subs.find(subid) != m_subs.end()) {
+		m_log->debug("Subscription `{:x}` already exists; appending new channels...");
+	} else {
+		m_subs[subid] = Subscription();
+	}
+
+	sub = &m_subs[subid];
+	sub->m_channels.insert(sub->m_channels.end(), channels.begin(), channels.end());
 }
 
 std::vector<Message*> Hermes::pull_inbox(const uint32_t subid)
