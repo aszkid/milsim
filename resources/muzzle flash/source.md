@@ -1,0 +1,1 @@
+https://www.ar15.com/forums/general/How_about_that_muzzle_flash_____Night_shooting_photos__MORE_Pics_towards_bottom_pg_1/5-1840450/
