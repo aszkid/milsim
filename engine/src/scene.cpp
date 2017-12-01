@@ -156,7 +156,7 @@ void Scene::render(double interp)
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	for(Drawable& d : m_drawables) {
+	/*for(Drawable& d : m_drawables) {
 		// get shader and bind it
 		shader = static_cast<ShaderProgramAsset*>(m_alexandria->get_asset(d.m_shader));
 		glUseProgram(
@@ -175,7 +175,7 @@ void Scene::render(double interp)
 		// bind vao
 		glBindVertexArray(d.m_vao);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
-	}
+	}*/
 
 	// models use same shader
 	shader = static_cast<ShaderProgramAsset*>(m_alexandria->get_asset("/Base/Shaders/Simple"));
@@ -194,6 +194,8 @@ void Scene::render(double interp)
 			glUniform3fv(uni.second, 1, glm::value_ptr(m_lightcolor));
 		} else if(uni.first == "lightPos") {
 			glUniform3fv(uni.second, 1, glm::value_ptr(m_lightpos));
+		} else if(uni.first == "cameraPos") {
+			glUniform3fv(uni.second, 1, glm::value_ptr(m_camera.m_pos));
 		}
 	}
 	// draw models

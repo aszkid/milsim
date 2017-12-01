@@ -19,6 +19,10 @@ data = {
 			{
 				type = "model",
 				id = "lion.obj"
+			},
+			{
+				type = "model",
+				id = "engel.obj"
 			}
 		}
 	},
