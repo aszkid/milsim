@@ -174,22 +174,24 @@ void Scene::render(double interp)
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
 
+	// models use same shader
 	shader = static_cast<ShaderProgramAsset*>(m_alexandria->get_asset("/Base/Shaders/Simple"));
+	glUseProgram(shader->m_prog_id);
+	const glm::vec3 color(1.0f, 0.5f, 0.31f);
+	for(auto& uni : shader->m_uniforms) {
+		if(uni.first == "model") {
+			glUniformMatrix4fv(uni.second, 1, GL_FALSE, glm::value_ptr(placeholder));
+		} else if(uni.first == "view") {
+			glUniformMatrix4fv(uni.second, 1, GL_FALSE, glm::value_ptr(m_camera.m_view));
+		} else if(uni.first == "projection") {
+			glUniformMatrix4fv(uni.second, 1, GL_FALSE, glm::value_ptr(proj));
+		} else if(uni.first == "objectColor") {
+			glUniform3fv(uni.second, 1, glm::value_ptr(color));
+		}
+	}
+	// draw models
 	for(auto id : m_models) {
 		auto model = static_cast<ModelAsset*>(m_alexandria->get_asset(id));
-	
-		// recycle shader from last pass... hack
-		glUseProgram(shader->m_prog_id);
-		// set shader uniforms -- copied from last pass
-		for(auto& uni : shader->m_uniforms) {
-			if(uni.first == "model") {
-				glUniformMatrix4fv(uni.second, 1, GL_FALSE, glm::value_ptr(placeholder));
-			} else if(uni.first == "view") {
-				glUniformMatrix4fv(uni.second, 1, GL_FALSE, glm::value_ptr(m_camera.m_view));
-			} else if(uni.first == "projection") {
-				glUniformMatrix4fv(uni.second, 1, GL_FALSE, glm::value_ptr(proj));
-			}
-		}
 		for(auto& mesh : model->m_meshes) {
 			glBindVertexArray(mesh.m_vao);
 			glDrawArrays(GL_TRIANGLES, 0, mesh.m_verts.size());
