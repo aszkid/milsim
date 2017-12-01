@@ -31,6 +31,7 @@ void Core::set_window(GLFWwindow* window)
 	glbinding::Binding::initialize();
 	glfwSwapInterval(1); // not working on my system...
 	glViewport(0, 0, m_winx, m_winy);
+	glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);  
 }
 void Core::init(const std::string local_root = ".")
 {
@@ -54,8 +55,6 @@ void Core::init(const std::string local_root = ".")
 	for(auto& s : m_systems) {
 		s.second->init();
 	}
-
-	glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);  
 }
 Sys* Core::get_system(const std::string id) {
 	auto sys = m_systems.find(id);
@@ -97,7 +96,7 @@ void Core::loop()
 		m_fps = 1.0 / (
 			m_delta.count() / 1000.0
 		);
-		m_log->info("{} fps", m_fps);
+		//m_log->info("{} fps", m_fps);
 
 		// Update systems until catched up with lag
 		while(m_t_lag >= m_MS_PER_UPDATE) {

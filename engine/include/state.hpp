@@ -1,5 +1,7 @@
 #pragma once
 
+#include <glm/ext.hpp>
+
 #include "sys/alexandria.hpp"
 #include "hermes.hpp"
 #include "scene.hpp"

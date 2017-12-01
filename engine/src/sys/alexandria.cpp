@@ -22,10 +22,9 @@ bool FontAsset::load()
 ////////////////////////////////////////
 // MODELASSET
 ////////////////////////////////////////
-ModelAsset::ModelAsset(std::vector<Mesh> meshes)
-	: Asset::Asset("ModelAsset"), m_meshes(meshes)
+ModelAsset::ModelAsset(const std::string name, std::vector<Mesh> meshes)
+	: Asset::Asset("ModelAsset." + name), m_meshes(meshes)
 {
-
 }
 ModelAsset::~ModelAsset()
 {
@@ -57,6 +56,7 @@ bool ModelAsset::load()
 			GL_FLOAT, GL_FALSE,
 			sizeof(Vertex), (void*)0
 		);
+		glEnableVertexAttribArray(1);
 		glVertexAttribPointer(1, 3,
 			GL_FLOAT, GL_FALSE,
 			sizeof(Vertex), (void*)offsetof(Vertex, m_normal)
@@ -251,6 +251,7 @@ void Alexandria::add_asset(const std::string id, const std::string type, sel::Se
 {
 	auto hash = Crypto::HASH(id);
 	const std::string path = m_local_root + id;
+	std::string short_id = root["id"];
 
 	if(m_assets.find(hash) != m_assets.end()) {
 		m_log->info("Asset `{}` already in our database, skipping.", id);
@@ -271,15 +272,9 @@ void Alexandria::add_asset(const std::string id, const std::string type, sel::Se
 		m_assets[hash] = t_asset_ptr(new ShaderProgramAsset(
 			vert_source, frag_source
 		));
-		m_assets[hash]->set_hash(hash);
-
-		// this is not optimal; define some sort of loading policy
-		/*if(!m_assets[hash]->load()) {
-			m_log->error("Failed to compile shader `{}`!", id);
-		}*/
 
 	} else if(type == "model") {
-		m_log->info("Adding model `{}`...", id);
+		m_log->info("Adding model `{}` from path `{}`...", id, path);
 
 		tinyobj::attrib_t attrib;
 		std::vector<tinyobj::shape_t> shapes;
@@ -295,10 +290,15 @@ void Alexandria::add_asset(const std::string id, const std::string type, sel::Se
 		}
 
 		Mesh mesh;
+		/*m_log->info("{} vertices", attrib.vertices.size() / 3);
+		m_log->info("{} normals", attrib.normals.size() / 3);
+		m_log->info("{} materials", materials.size());
+		m_log->info("{} shapes", shapes.size());*/
+
 		// loop shapes
 		for(size_t s = 0; s < shapes.size(); s++) {
 			// loop faces
-			size_t index_off = 0;
+ 			size_t index_off = 0;
 			for(size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
 				// loop vertices
 				int fv = shapes[s].mesh.num_face_vertices[f];
@@ -307,17 +307,18 @@ void Alexandria::add_asset(const std::string id, const std::string type, sel::Se
 					tinyobj::real_t vx = attrib.vertices[3*idx.vertex_index+0];
 					tinyobj::real_t vy = attrib.vertices[3*idx.vertex_index+1];
 					tinyobj::real_t vz = attrib.vertices[3*idx.vertex_index+2];
-					tinyobj::real_t nx = attrib.vertices[3*idx.normal_index+0];
-					tinyobj::real_t ny = attrib.vertices[3*idx.normal_index+1];
-					tinyobj::real_t nz = attrib.vertices[3*idx.normal_index+2];
-					tinyobj::real_t tx = attrib.vertices[2*idx.texcoord_index+0];
-					tinyobj::real_t ty = attrib.vertices[2*idx.texcoord_index+1];
+					tinyobj::real_t nx = attrib.normals[3*idx.normal_index+0];
+					tinyobj::real_t ny = attrib.normals[3*idx.normal_index+1];
+					tinyobj::real_t nz = attrib.normals[3*idx.normal_index+2];
+					/*tinyobj::real_t tx = attrib.texcoords[2*idx.texcoord_index+0];
+					tinyobj::real_t ty = attrib.texcoords[2*idx.texcoord_index+1];*/
 					mesh.m_verts.emplace_back(glm::vec3(vx, vy, vz), glm::vec3(nx, ny, nz));
 				}
 				index_off += fv;
 			}
 		}
-		m_assets[hash] = t_asset_ptr(new ModelAsset({mesh}));
-		m_assets[hash]->set_hash(hash);
+		m_assets[hash] = t_asset_ptr(new ModelAsset(short_id, {mesh}));
 	}
+	
+	m_assets[hash]->set_hash(hash);
 }

@@ -21,8 +21,10 @@ namespace MilSim {
 	class Asset {
 	public:
 		Asset(const std::string logname)
-			: m_log(Logger::create("Alexandria." + logname))
-		{};
+			: m_name("Alexandria." + logname)
+		{
+			m_log = Logger::create(m_name);
+		};
 		virtual ~Asset() {};
 
 		void set_hash(t_asset_id hash) {
@@ -33,6 +35,7 @@ namespace MilSim {
 		virtual bool load() = 0;
 	protected:
 		t_logger m_log;
+		std::string m_name;
 		t_asset_id m_hash;
 	};
 
@@ -82,7 +85,7 @@ namespace MilSim {
 	 */
 	class ModelAsset : public Asset {
 	public:
-		ModelAsset(std::vector<Mesh> meshes);
+		ModelAsset(const std::string name, std::vector<Mesh> meshes);
 		~ModelAsset();
 		bool load();
 

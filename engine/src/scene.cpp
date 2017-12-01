@@ -116,7 +116,7 @@ void Scene::inner_post_init()
 	m_camera.set_position(glm::vec3(0.0, 0.0, 5.0));
 	m_camera.look_at(glm::vec3(0.0, 0.0, 0.0));
 
-	m_lightpos = m_camera.m_pos;
+	m_lightpos = glm::vec3(63.578186, 42.779179, 93.705467);
 	m_lightcolor = glm::vec3(1.0, 1.0, 1.0);
 
 	glEnable(GL_DEPTH_TEST);
@@ -149,7 +149,7 @@ void Scene::render(double interp)
 	proj = glm::perspective(
 		glm::radians(45.0f),
 		m_winx / (float)m_winy,
-		0.1f, 100.0f
+		0.1f, 10000.0f
 	);
 	glm::mat4 placeholder(1.0);
 

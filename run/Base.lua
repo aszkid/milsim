@@ -14,7 +14,11 @@ data = {
 		contents = {
 			{
 				type = "model",
-				id = "Teapot.obj"
+				id = "greek.obj"
+			},
+			{
+				type = "model",
+				id = "lion.obj"
 			}
 		}
 	},

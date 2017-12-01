@@ -19,7 +19,7 @@ void MainScreen::load()
 
 	// Build our scene
 	//m_scene->add_triangle();
-	m_scene->add_model(MilSim::Crypto::HASH("/Base/Models/Teapot.obj"));
+	m_scene->add_model(MilSim::Crypto::HASH("/Base/Models/greek.obj"));
 	
 	m_walking[0] = false;
 	m_walking[1] = false;
@@ -68,6 +68,10 @@ void MainScreen::update(double delta)
 				if(ik->m_action == MilSim::InputKeyMessage::Action::RELEASE)
 					m_walking[3] = false;
 				break;
+			case MilSim::InputKeyMessage::Key::P:
+				if(ik->m_action == MilSim::InputKeyMessage::Action::PRESS)
+					m_logger->info("Camera position: {}", glm::to_string(m_scene->get_camera().m_pos));
+				break;
 			default:
 				break;
 			}
@@ -77,7 +81,7 @@ void MainScreen::update(double delta)
 		}
 	}
 
-	static const float vchange = 5.0f * delta;
+	static const float vchange = 50.0f * delta;
 	if(m_walking[0]) {
 		m_scene->get_camera().move(vchange * glm::vec3(0.0, 0.0, -1.0));
 	}
