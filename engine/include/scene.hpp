@@ -91,6 +91,9 @@ namespace MilSim {
 		// Viewport
 		uint m_winx, m_winy;
 
+		glm::vec3 m_lightpos;
+		glm::vec3 m_lightcolor;
+
 		Camera m_camera;
 
 		void inner_post_init();

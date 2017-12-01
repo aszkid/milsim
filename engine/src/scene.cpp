@@ -116,6 +116,9 @@ void Scene::inner_post_init()
 	m_camera.set_position(glm::vec3(0.0, 0.0, 5.0));
 	m_camera.look_at(glm::vec3(0.0, 0.0, 0.0));
 
+	m_lightpos = m_camera.m_pos;
+	m_lightcolor = glm::vec3(1.0, 1.0, 1.0);
+
 	glEnable(GL_DEPTH_TEST);
 }
 void Scene::set_viewport(const uint winx, const uint winy)
@@ -187,6 +190,10 @@ void Scene::render(double interp)
 			glUniformMatrix4fv(uni.second, 1, GL_FALSE, glm::value_ptr(proj));
 		} else if(uni.first == "objectColor") {
 			glUniform3fv(uni.second, 1, glm::value_ptr(color));
+		} else if(uni.first == "lightColor") {
+			glUniform3fv(uni.second, 1, glm::value_ptr(m_lightcolor));
+		} else if(uni.first == "lightPos") {
+			glUniform3fv(uni.second, 1, glm::value_ptr(m_lightpos));
 		}
 	}
 	// draw models
