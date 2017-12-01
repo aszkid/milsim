@@ -80,12 +80,14 @@ namespace MilSim {
 		void set_viewport(const uint winx, const uint winy);
 
 		Drawable* add_triangle();
+		void add_model(const t_asset_id name);
 	
 	private:
 		// Root scene graph node
 		SceneGraphNode m_scene_graph;
 		// Drawables
 		std::vector<Drawable> m_drawables;
+		std::vector<t_asset_id> m_models; // temporal!! integrate into `Drawable`
 		// Viewport
 		uint m_winx, m_winy;
 

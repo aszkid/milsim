@@ -1,0 +1,26 @@
+{
+    "rdocCaptureSettings": 1,
+    "settings": {
+        "AutoStart": false,
+        "CmdLine": "--root /media/data/dev/milsim/run",
+        "Environment": [
+        ],
+        "Executable": "/media/data/dev/milsim/build/app/milsim",
+        "Inject": false,
+        "Options": {
+            "APIValidation": 0,
+            "AllowFullscreen": 1,
+            "AllowVSync": 1,
+            "CaptureAllCmdLists": 0,
+            "CaptureCallstacks": 1,
+            "CaptureCallstacksOnlyDraws": 0,
+            "DebugOutputMute": 1,
+            "DelayForDebugger": 0,
+            "HookIntoChildren": 0,
+            "RefAllResources": 0,
+            "SaveAllInitials": 1,
+            "VerifyMapWrites": 0
+        },
+        "WorkingDir": ""
+    }
+}

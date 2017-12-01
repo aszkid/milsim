@@ -148,6 +148,7 @@ void Scene::render(double interp)
 		m_winx / (float)m_winy,
 		0.1f, 100.0f
 	);
+	glm::mat4 placeholder(1.0);
 
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -171,6 +172,28 @@ void Scene::render(double interp)
 		// bind vao
 		glBindVertexArray(d.m_vao);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
+	}
+
+	shader = static_cast<ShaderProgramAsset*>(m_alexandria->get_asset("/Base/Shaders/Simple"));
+	for(auto id : m_models) {
+		auto model = static_cast<ModelAsset*>(m_alexandria->get_asset(id));
+	
+		// recycle shader from last pass... hack
+		glUseProgram(shader->m_prog_id);
+		// set shader uniforms -- copied from last pass
+		for(auto& uni : shader->m_uniforms) {
+			if(uni.first == "model") {
+				glUniformMatrix4fv(uni.second, 1, GL_FALSE, glm::value_ptr(placeholder));
+			} else if(uni.first == "view") {
+				glUniformMatrix4fv(uni.second, 1, GL_FALSE, glm::value_ptr(m_camera.m_view));
+			} else if(uni.first == "projection") {
+				glUniformMatrix4fv(uni.second, 1, GL_FALSE, glm::value_ptr(proj));
+			}
+		}
+		for(auto& mesh : model->m_meshes) {
+			glBindVertexArray(mesh.m_vao);
+			glDrawArrays(GL_TRIANGLES, 0, mesh.m_verts.size());
+		}
 	}
 }
 
@@ -215,4 +238,14 @@ Drawable* Scene::add_triangle()
 	glEnableVertexAttribArray(0);
 
 	return &m_drawables.back();
+}
+void Scene::add_model(const t_asset_id name)
+{
+	auto model = m_alexandria->get_asset(name);
+	if(model == nullptr) {
+		m_logger->info("Can't load this model boy...");
+		return;
+	}
+
+	m_models.push_back(name);
 }

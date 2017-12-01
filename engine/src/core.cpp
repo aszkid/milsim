@@ -97,7 +97,7 @@ void Core::loop()
 		m_fps = 1.0 / (
 			m_delta.count() / 1000.0
 		);
-		//m_log->info("{} fps", m_fps);
+		m_log->info("{} fps", m_fps);
 
 		// Update systems until catched up with lag
 		while(m_t_lag >= m_MS_PER_UPDATE) {

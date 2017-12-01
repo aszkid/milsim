@@ -3,14 +3,17 @@
 #include "sys.hpp"
 #include "util/crypto.hpp"
 
-#include "spdlog/spdlog.h"
-#include "selene.h"
+#include <selene.h>
 #include <glbinding/gl/gl.h>
+#include <tiny_obj_loader.h>
+#include <glm/glm.hpp>
 
 using namespace gl;
 
 
 namespace MilSim {
+
+	typedef uint32_t t_asset_id;
 
 	/**
 	 * Asset: abstract base class for assets.
@@ -18,15 +21,23 @@ namespace MilSim {
 	class Asset {
 	public:
 		Asset(const std::string logname)
-			: m_log(spdlog::stdout_color_mt("Alexandria." + logname))
+			: m_log(Logger::create("Alexandria." + logname))
 		{};
 		virtual ~Asset() {};
+
+		void set_hash(t_asset_id hash) {
+			m_hash = hash;
+		};
 
 		bool m_loaded;
 		virtual bool load() = 0;
 	protected:
-		std::shared_ptr<spdlog::logger> m_log;
+		t_logger m_log;
+		t_asset_id m_hash;
 	};
+
+	// helper types
+	typedef std::unique_ptr<Asset> t_asset_ptr;
 
 	/**
 	 * FontAsset: loads font files and prepares texturemaps.
@@ -46,16 +57,36 @@ namespace MilSim {
 	};
 
 	/**
-	 * MeshAsset: main structure for 3D geometry.
+	 * Vertex base data structure, minimal.
 	 */
-	class MeshAsset : public Asset {
-	public:
-		MeshAsset();
-		~MeshAsset();
+	struct Vertex {
+		Vertex(glm::vec3 pos, glm::vec3 norm) {
+			m_position = pos;
+			m_normal = norm;
+		};
 
+		glm::vec3 m_position;
+		glm::vec3 m_normal;
+	};
+	/**
+	 * Mesh: main structure for 3D geometry.
+	 */
+	struct Mesh {
+		std::vector<Vertex> m_verts;
+		GLuint m_vao, m_vbo, m_ebo;
+	};
+	/**
+	 * ModelAsset: lowest level of 3D organization,
+	 * since Meshes are *not* accessible by ID
+	 * (should they?...)
+	 */
+	class ModelAsset : public Asset {
+	public:
+		ModelAsset(std::vector<Mesh> meshes);
+		~ModelAsset();
 		bool load();
-	private:
-		// 
+
+		std::vector<Mesh> m_meshes;
 	};
 
 	/**
@@ -89,9 +120,6 @@ namespace MilSim {
 	private:
 		sel::State m_state;
 	};
-
-	typedef std::unique_ptr<Asset> t_asset_ptr;
-	typedef uint32_t t_asset_id;
 
 	/**
 	 * Alexandria (the library of). Asset manager.

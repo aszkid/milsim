@@ -12,7 +12,10 @@ data = {
 		type = "folder",
 		id = "Models",
 		contents = {
-
+			{
+				type = "model",
+				id = "Teapot.obj"
+			}
 		}
 	},
 	{

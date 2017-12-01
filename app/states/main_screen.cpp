@@ -18,11 +18,14 @@ void MainScreen::load()
 	m_scene->set_viewport(m_winx, m_winy);
 
 	// Build our scene
-	m_scene->add_triangle();
+	//m_scene->add_triangle();
+	m_scene->add_model(MilSim::Crypto::HASH("/Base/Models/Teapot.obj"));
+	
 	m_walking[0] = false;
 	m_walking[1] = false;
 	m_walking[2] = false;
 	m_walking[3] = false;
+
 
 	m_ready = true;
 }
@@ -65,6 +68,8 @@ void MainScreen::update(double delta)
 				if(ik->m_action == MilSim::InputKeyMessage::Action::RELEASE)
 					m_walking[3] = false;
 				break;
+			default:
+				break;
 			}
 		} else if(msg->m_chan == MilSim::Crypto::HASH("CursorPos")) {
 			auto cp = static_cast<MilSim::CursorPosMessage*>(msg);
@@ -72,17 +77,18 @@ void MainScreen::update(double delta)
 		}
 	}
 
+	static const float vchange = 5.0f * delta;
 	if(m_walking[0]) {
-		m_scene->get_camera().move((float)delta * glm::vec3(0.0, 0.0, -1.0));
+		m_scene->get_camera().move(vchange * glm::vec3(0.0, 0.0, -1.0));
 	}
 	if(m_walking[1]) {
-		m_scene->get_camera().move((float)delta * glm::vec3(0.0, 0.0, 1.0));
+		m_scene->get_camera().move(vchange * glm::vec3(0.0, 0.0, 1.0));
 	}
 	if(m_walking[2]) {
-		m_scene->get_camera().move((float)delta * glm::vec3(1.0, 0.0, 0.0));
+		m_scene->get_camera().move(vchange * glm::vec3(1.0, 0.0, 0.0));
 	}
 	if(m_walking[3]) {
-		m_scene->get_camera().move((float)delta * glm::vec3(-1.0, 0.0, 0.0));
+		m_scene->get_camera().move(vchange * glm::vec3(-1.0, 0.0, 0.0));
 	}
 
 	m_scene->update(delta);
