@@ -95,7 +95,7 @@ bool ShaderProgramAsset::load()
 	glGetShaderiv(m_vert_id, GL_COMPILE_STATUS, &ok);
 	if(!ok) {
 		glGetShaderInfoLog(m_vert_id, 512, NULL, info);
-		m_log->error("Vertex shader compilation failed: {}", info);
+		m_logger->error("Vertex shader compilation failed: {}", info);
 	}
 
 	m_frag_id = glCreateShader(GL_FRAGMENT_SHADER);
@@ -104,7 +104,7 @@ bool ShaderProgramAsset::load()
 	glGetShaderiv(m_frag_id, GL_COMPILE_STATUS, &ok);
 	if(!ok) {
 		glGetShaderInfoLog(m_frag_id, 512, NULL, info);
-		m_log->error("Fragment shader compilation failed: {}", info);
+		m_logger->error("Fragment shader compilation failed: {}", info);
 	}
 
 	// Link the shader program
@@ -115,7 +115,7 @@ bool ShaderProgramAsset::load()
 	glGetProgramiv(m_prog_id, GL_LINK_STATUS, &ok);
 	if(!ok) {
 		glGetProgramInfoLog(m_prog_id, 512, NULL, info);
-		m_log->error("Shader program failed to link: {}", info);
+		m_logger->error("Shader program failed to link: {}", info);
 	}
 
 	m_loaded = true;
@@ -194,37 +194,39 @@ void Alexandria::load_database(const std::string filename)
 {
 	// TODO: use JSON instead of Lua for database loading... makes more sense
 
-	const std::string dbpath = m_local_root + "/" + filename;
+	apathy::Path dbpath(m_local_root);
+	dbpath.append(filename).sanitize();
 	m_log->info("Loading database `{}`...", filename);
 
 	sel::State lua;
-	lua.Load(dbpath);
+	lua.Load(dbpath.string());
 
-	const std::string type = lua["db_type"];
-	const std::string name = lua["db_name"];
-	std::string id_root = "/" + name + "/";
+	const std::string dbtype = lua["db_type"];
+	const std::string dbname = lua["db_name"];
+	apathy::Path id_root("/" + dbname + "/");
 
 	// dont forget to normalize paths...
 
-	if(type == "local") {
+	if(dbtype == "local") {
 		sel::Selector data = lua["data"];
-		load_folder(data, id_root, name);
+		load_folder(data, id_root, dbname);
 	} else {
-		m_log->error("We don't support databases of type `{}` yet!", type);
+		m_log->error("We don't support databases of type `{}` yet!", dbtype);
 	}
 }
-void Alexandria::load_folder(const sel::Selector& root, const std::string old_id, const std::string db_name)
+void Alexandria::load_folder(const sel::Selector& root, apathy::Path path, const std::string db_name)
 {
 	uint i = 1;
 	sel::Selector node = root[i];
 
 	while(node.exists()) {
-		const std::string sub_id = node["id"];
+		const std::string new_id = node["id"];
+
 		if(node["type"] == "folder") {
-			load_folder(node["contents"], old_id + sub_id + "/", db_name);
+			load_folder(node["contents"], apathy::Path(path).append(new_id).directory(), db_name);
 		}
 		else {
-			add_asset(old_id + sub_id, node["type"], node, db_name);
+			add_asset(apathy::Path(path).append(new_id), node["type"], node, db_name);
 		}
 		node = root[++i];
 	}
@@ -247,40 +249,46 @@ Asset* Alexandria::get_asset(const std::string id)
 {
 	return get_asset(Crypto::HASH(id));
 }
-void Alexandria::add_asset(const std::string id, const std::string type, sel::Selector& root, const std::string db_name)
+void Alexandria::add_asset(apathy::Path path, const std::string type, sel::Selector& root, const std::string db_name)
 {
+	const std::string id = path.sanitize().string();
+	const std::string stem = path.stem().string();
 	auto hash = Crypto::HASH(id);
-	const std::string path = m_local_root + id;
-	std::string short_id = root["id"];
+	const std::string short_id = root["id"];
+
+	m_log->info("Adding asset `{}` of type `{}`...", id, type);
 
 	if(m_assets.find(hash) != m_assets.end()) {
 		m_log->info("Asset `{}` already in our database, skipping.", id);
 		return;
 	}
 
+	apathy::Path working_path(m_local_root);
+	working_path.append(path).sanitize();
+
 	if(type == "font") {
-		m_log->info("Adding font `{}`...", id);
 		m_assets[hash] = t_asset_ptr(new FontAsset());
 
 	} else if(type == "shader") {
-		m_log->info("Adding shader `{}`...", id);
-
 		// TODO: catch exceptions...
-		auto vert_source = IO::read_file(path + ".vert");
-		auto frag_source = IO::read_file(path + ".frag");
+		auto vert_source = IO::read_file(apathy::Path(working_path).string() + ".vert");
+		auto frag_source = IO::read_file(apathy::Path(working_path).string() + ".frag");
 
 		m_assets[hash] = t_asset_ptr(new ShaderProgramAsset(
 			vert_source, frag_source
 		));
 
 	} else if(type == "model") {
-		m_log->info("Adding model `{}` from path `{}`...", id, path);
-
 		tinyobj::attrib_t attrib;
 		std::vector<tinyobj::shape_t> shapes;
 		std::vector<tinyobj::material_t> materials;
 		std::string err;
-		bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, path.c_str());
+
+		bool ret = tinyobj::LoadObj(
+			&attrib, &shapes, &materials, &err,
+			working_path.string().c_str(),
+			apathy::Path(working_path).parent().string().c_str()
+		);
 		if(!err.empty()) {
 			m_log->info("Warning: {}", err);
 		}
@@ -290,10 +298,17 @@ void Alexandria::add_asset(const std::string id, const std::string type, sel::Se
 		}
 
 		Mesh mesh;
-		/*m_log->info("{} vertices", attrib.vertices.size() / 3);
+		m_log->info("{} vertices", attrib.vertices.size() / 3);
 		m_log->info("{} normals", attrib.normals.size() / 3);
 		m_log->info("{} materials", materials.size());
-		m_log->info("{} shapes", shapes.size());*/
+		m_log->info("{} shapes", shapes.size());
+
+		// loop materials
+		for(size_t m = 0; m < materials.size(); m++) {
+			// gotcha! create a `Texture` asset; we could even do `Material` assets
+			// on top of that.
+			m_log->info("material [{}] = {}", m, materials[m].diffuse_texname);
+		}
 
 		// loop shapes
 		for(size_t s = 0; s < shapes.size(); s++) {
@@ -310,9 +325,13 @@ void Alexandria::add_asset(const std::string id, const std::string type, sel::Se
 					tinyobj::real_t nx = attrib.normals[3*idx.normal_index+0];
 					tinyobj::real_t ny = attrib.normals[3*idx.normal_index+1];
 					tinyobj::real_t nz = attrib.normals[3*idx.normal_index+2];
-					/*tinyobj::real_t tx = attrib.texcoords[2*idx.texcoord_index+0];
-					tinyobj::real_t ty = attrib.texcoords[2*idx.texcoord_index+1];*/
-					mesh.m_verts.emplace_back(glm::vec3(vx, vy, vz), glm::vec3(nx, ny, nz));
+					tinyobj::real_t tx = attrib.texcoords[2*idx.texcoord_index+0];
+					tinyobj::real_t ty = attrib.texcoords[2*idx.texcoord_index+1];
+					mesh.m_verts.emplace_back(
+						glm::vec3(vx, vy, vz),
+						glm::vec3(nx, ny, nz),
+						glm::vec2(tx, ty)
+					);
 				}
 				index_off += fv;
 			}

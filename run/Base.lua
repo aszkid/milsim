@@ -15,7 +15,7 @@ data = {
 			{
 				type = "model",
 				id = "greek.obj"
-			},
+			}--[[,
 			{
 				type = "model",
 				id = "lion.obj"
@@ -23,7 +23,7 @@ data = {
 			{
 				type = "model",
 				id = "engel.obj"
-			}
+			}--]]
 		}
 	},
 	{

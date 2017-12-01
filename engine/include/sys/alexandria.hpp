@@ -7,6 +7,7 @@
 #include <glbinding/gl/gl.h>
 #include <tiny_obj_loader.h>
 #include <glm/glm.hpp>
+#include <apathy/path.hpp>
 
 using namespace gl;
 
@@ -23,18 +24,22 @@ namespace MilSim {
 		Asset(const std::string logname)
 			: m_name("Alexandria." + logname)
 		{
-			m_log = Logger::create(m_name);
+			m_logger = Logger::create(m_name);
 		};
 		virtual ~Asset() {};
 
 		void set_hash(t_asset_id hash) {
 			m_hash = hash;
 		};
+		void set_path(apathy::Path path) {
+			m_path = path;
+		};
 
 		bool m_loaded;
 		virtual bool load() = 0;
 	protected:
-		t_logger m_log;
+		t_logger m_logger;
+		apathy::Path m_path;
 		std::string m_name;
 		t_asset_id m_hash;
 	};
@@ -63,13 +68,15 @@ namespace MilSim {
 	 * Vertex base data structure, minimal.
 	 */
 	struct Vertex {
-		Vertex(glm::vec3 pos, glm::vec3 norm) {
+		Vertex(glm::vec3 pos, glm::vec3 norm, glm::vec2 tex) {
 			m_position = pos;
 			m_normal = norm;
+			m_texture = tex;
 		};
 
 		glm::vec3 m_position;
 		glm::vec3 m_normal;
+		glm::vec2 m_texture;
 	};
 	/**
 	 * Mesh: main structure for 3D geometry.
@@ -147,10 +154,10 @@ namespace MilSim {
 		void load_asset();
 
 		// Database loading
-		void load_folder(const sel::Selector& root, const std::string old_id, const std::string db_name);
-		void add_asset(const std::string id, const std::string type, sel::Selector& root, const std::string db_name);
+		void load_folder(const sel::Selector& root, apathy::Path path, const std::string db_name);
+		void add_asset(apathy::Path path, const std::string type, sel::Selector& root, const std::string db_name);
 
-		std::string m_local_root;
+		apathy::Path m_local_root;
 	};
 
 }

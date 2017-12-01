@@ -8,3 +8,5 @@
 - [Good channel of OpenGL tutorials](https://www.youtube.com/watch?v=lW_iqrtJORc).
 - [Raycasting with `Bullet`](http://www.opengl-tutorial.org/miscellaneous/clicking-on-objects/picking-with-a-physics-library/).
 - [Bounding box basics](https://en.wikibooks.org/wiki/OpenGL_Programming/Bounding_box).
+- [`stb` single-file libraries](https://github.com/nothings/stb).
+- [`CUDA` for GPGU `.obj` loading](https://researchonline.jcu.edu.au/42515/1/2015.CVM.OBJCUDA.pdf).
