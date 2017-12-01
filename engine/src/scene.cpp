@@ -28,7 +28,15 @@ SceneGraphNode* SceneGraphNode::add_child()
 ////////////////////////////////////////
 Camera::Camera()
 {
-
+	m_pos = glm::vec3(0.0);
+	m_dir = glm::vec3(0.0);
+	m_up = glm::vec3(0.0, 1.0, 0.0);
+	m_right = glm::vec3(1.0, 0.0, 0.0);
+	m_view = glm::mat4(1.0);
+	m_pitch = 0.0f;
+	m_yaw = 90.0f;
+	m_sensitivity = 0.2f;
+	m_first = true;
 }
 
 void Camera::look_at(glm::vec3 target)
@@ -38,7 +46,11 @@ void Camera::look_at(glm::vec3 target)
 }
 void Camera::move(glm::vec3 delta)
 {
-	m_pos += delta;
+	// walk straight
+	m_pos += m_dir * (delta.z);
+	// walk sideways
+	m_pos += m_right * (delta.x);
+
 	_update_view();
 }
 void Camera::set_position(glm::vec3 pos)
@@ -46,11 +58,39 @@ void Camera::set_position(glm::vec3 pos)
 	m_pos = pos;
 	_update_view();
 }
+void Camera::set_direction(glm::vec3 dir)
+{
+	m_dir = glm::normalize(dir);
+	_update_view();
+}
+void Camera::look_delta(glm::vec2 delta)
+{
+	if(m_first) {
+		m_first = false;
+		return;
+	}
+
+	delta *= m_sensitivity;
+	m_yaw += delta.x;
+	m_pitch += delta.y;
+
+	if(m_pitch > 89.0f) {
+		m_pitch = 89.0f;
+	} else if (m_pitch < -89.0f) {
+		m_pitch = -89.0f;
+	}
+
+	set_direction(glm::normalize(glm::vec3(
+		cos(glm::radians(m_pitch)) * cos(glm::radians(m_yaw)),
+		sin(glm::radians(m_pitch)),
+		cos(glm::radians(m_pitch)) * sin(glm::radians(m_yaw))
+	)));
+}
 
 void Camera::_update_view()
 {
-	auto right = glm::normalize(glm::cross(glm::vec3(0.0, 1.0, 0.0), m_dir));
-	m_up = glm::cross(m_dir, right);
+	m_right = glm::normalize(glm::cross(glm::vec3(0.0, 1.0, 0.0), m_dir));
+	m_up = glm::cross(m_dir, m_right);
 	m_view = glm::lookAt(m_pos, m_pos - m_dir, m_up);
 }
 

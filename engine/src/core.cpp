@@ -21,14 +21,15 @@ Core::~Core()
 void Core::set_window(GLFWwindow* window)
 {
 	m_window = window;
-	m_winx = 800;
-	m_winy = 600;
+	m_winx = 1280;
+	m_winy = 720;
 	glfwSetWindowSize(m_window, m_winx, m_winy);
 	glfwSetWindowPos(m_window, 50, 50);
 	glfwSetWindowTitle(m_window, "MilSim");
 
 	glfwMakeContextCurrent(m_window);
 	glbinding::Binding::initialize();
+	glfwSwapInterval(1); // not working on my system...
 	glViewport(0, 0, m_winx, m_winy);
 }
 void Core::init(const std::string local_root = ".")
@@ -96,6 +97,7 @@ void Core::loop()
 		m_fps = 1.0 / (
 			m_delta.count() / 1000.0
 		);
+		//m_log->info("{} fps", m_fps);
 
 		// Update systems until catched up with lag
 		while(m_t_lag >= m_MS_PER_UPDATE) {

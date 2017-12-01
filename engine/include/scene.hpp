@@ -53,9 +53,15 @@ namespace MilSim {
 		glm::vec3 m_right;
 		glm::mat4 m_view;
 
+		float m_yaw, m_pitch;
+		float m_sensitivity;
+		bool m_first;
+
 		void look_at(glm::vec3 target);
 		void set_position(glm::vec3 pos);
+		void set_direction(glm::vec3 dir);
 		void move(glm::vec3 delta);
+		void look_delta(glm::vec2 delta);
 
 		void _update_view();
 	};
