@@ -82,6 +82,7 @@ namespace MilSim {
 
 		Camera& get_camera();
 		Light& get_light();
+		void toggle_wireframe();
 
 		void set_viewport(const uint winx, const uint winy);
 
@@ -98,8 +99,9 @@ namespace MilSim {
 		uint m_winx, m_winy;
 
 		Light m_light;
-
 		Camera m_camera;
+
+		bool m_wireframe;
 
 		void inner_post_init();
 	};

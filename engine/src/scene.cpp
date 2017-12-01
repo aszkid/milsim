@@ -119,6 +119,8 @@ void Scene::inner_post_init()
 	m_light.m_position = glm::vec3(63.578186, 42.779179, 93.705467);
 	m_light.m_color = glm::vec3(1.0, 1.0, 1.0);
 
+	m_wireframe = false;
+
 	glEnable(GL_DEPTH_TEST);
 }
 void Scene::set_viewport(const uint winx, const uint winy)
@@ -133,6 +135,10 @@ Camera& Scene::get_camera()
 Light& Scene::get_light()
 {
 	return m_light;
+}
+void Scene::toggle_wireframe()
+{
+	m_wireframe ^= true;
 }
 
 void Scene::update(double delta)
@@ -159,6 +165,12 @@ void Scene::render(double interp)
 
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	if(m_wireframe) {
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	} else {
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	}
 
 	/*for(Drawable& d : m_drawables) {
 		// get shader and bind it

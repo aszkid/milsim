@@ -77,6 +77,10 @@ void MainScreen::update(double delta)
 				if(ik->m_action == MilSim::InputKeyMessage::Action::PRESS)
 					m_scene->get_light().m_position = m_scene->get_camera().m_pos;
 				break;
+			case MilSim::InputKeyMessage::Key::M:
+				if(ik->m_action == MilSim::InputKeyMessage::Action::PRESS)
+					m_scene->toggle_wireframe();
+				break;
 			case MilSim::InputKeyMessage::Key::KP_ADD:
 				if(ik->m_action == MilSim::InputKeyMessage::Action::PRESS || ik->m_action == MilSim::InputKeyMessage::Action::REPEAT) {
 					m_walking_spd += 1.0f;

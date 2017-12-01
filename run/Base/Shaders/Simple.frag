@@ -23,7 +23,7 @@ void main()
     vec3 ambient = ambientStrength * lightColor;
 
     // specular light
-    float specularStrength = 0.5;
+    float specularStrength = 0.25;
     vec3 cameraDir = normalize(cameraPos - FragPos);
     vec3 reflectDir = reflect(-lightDir, norm);
     float spec = pow(max(dot(cameraDir, reflectDir), 0.0), 32);
