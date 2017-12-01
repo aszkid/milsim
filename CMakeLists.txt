@@ -32,6 +32,8 @@ include_directories(${OPENGL_INCLUDE_DIR})
 include_directories(ext/CRCpp-master/inc)
 # glm
 include_directories(ext/glm-0.9.8.5)
+# path handling
+include_directories(ext/apathy-master)
 
 
 # =================================================
