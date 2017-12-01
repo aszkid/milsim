@@ -8,12 +8,11 @@
 
 - [x] Control camera with mouse
 - [ ] "Simple" rendering pipeline implementation (_not_ deferred, calm down boy).
-	+ [ ] `.obj` loader for Alexandria
-	+ [ ] `MeshDrawable` or similar scene node
-	+ [ ] Task 2
-- [ ] `Scene::Node` component-based, i.e. every scene node has a list of `Scene::Component`s?
-	+ [ ] Task 3
-	+ [ ] Task 4
+	+ [x] `.obj` loader for Alexandria
+	+ [ ] Support for textures!
+	+ [ ] Figure out scene architecture (`Drawable`? how generic? how does scene graph fit in?)
+
+- [ ] Multi-thread `Alexandria` asset loading to avoid loading hell at game launch
 
 ## Kinda out there
 - [ ] Look up `std::multimap` for faster `Hermes`?
