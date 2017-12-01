@@ -22,6 +22,9 @@ void Input::init()
 	glfwSetCursorPosCallback(m_win, _handle_cursor_pos);
 	glfwSetMouseButtonCallback(m_win, _handle_mouse_button);
 	glfwSetWindowSizeCallback(m_win, _handle_window_size);
+
+	m_last_cursor[0] = 0.0;
+	m_last_cursor[1] = 0.0;
 }
 void Input::kill()
 {
@@ -39,7 +42,9 @@ void Input::window_size_callback(GLFWwindow* win, int width, int height)
 }
 void Input::cursor_pos_callback(GLFWwindow* win, double xpos, double ypos)
 {
-	m_hermes->send(new CursorPosMessage(xpos, ypos));
+	m_hermes->send(new CursorPosMessage(xpos, ypos, xpos - m_last_cursor[0], ypos - m_last_cursor[1]));
+	m_last_cursor[0] = xpos;
+	m_last_cursor[1] = ypos;
 }
 void Input::cursor_enter_callback(GLFWwindow* win, int entered)
 {

@@ -66,6 +66,9 @@ void MainScreen::update(double delta)
 					m_walking[3] = false;
 				break;
 			}
+		} else if(msg->m_chan == MilSim::Crypto::HASH("CursorPos")) {
+			auto cp = static_cast<MilSim::CursorPosMessage*>(msg);
+			m_logger->info("cursor_delta = ({}, {})", cp->m_xdelta, cp->m_ydelta);
 		}
 	}
 

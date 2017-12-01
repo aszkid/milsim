@@ -56,11 +56,13 @@ namespace MilSim {
 
 	class CursorPosMessage : public Message {
 	public:
-		CursorPosMessage(double xpos, double ypos)
+		CursorPosMessage(double xpos, double ypos, double xdelta, double ydelta)
 			: Message::Message(Crypto::HASH("CursorPos")),
-			  m_xpos(xpos), m_ypos(ypos)
+			  m_xpos(xpos), m_ypos(ypos),
+			  m_xdelta(xdelta), m_ydelta(ydelta)
 		{};
 		double m_xpos, m_ypos;
+		double m_xdelta, m_ydelta;
 	};
 
 	class CursorEnterMessage : public Message {

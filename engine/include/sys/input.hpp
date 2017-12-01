@@ -30,6 +30,8 @@ namespace MilSim {
 		void window_size_callback(GLFWwindow* win, int width, int height);
 	private:
 		GLFWwindow* m_win;
+		// 0: x, 1: y
+		double m_last_cursor[2];
 	};
 
 }
