@@ -65,6 +65,11 @@ namespace MilSim {
 
 		void _update_view();
 	};
+	
+	struct Light {
+		glm::vec3 m_position;
+		glm::vec3 m_color;
+	};
 
 
 	class Scene : public Object {
@@ -76,6 +81,7 @@ namespace MilSim {
 		void render(double interp);
 
 		Camera& get_camera();
+		Light& get_light();
 
 		void set_viewport(const uint winx, const uint winy);
 
@@ -91,8 +97,7 @@ namespace MilSim {
 		// Viewport
 		uint m_winx, m_winy;
 
-		glm::vec3 m_lightpos;
-		glm::vec3 m_lightcolor;
+		Light m_light;
 
 		Camera m_camera;
 

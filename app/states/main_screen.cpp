@@ -26,6 +26,7 @@ void MainScreen::load()
 	m_walking[2] = false;
 	m_walking[3] = false;
 
+	m_walking_spd = 10.0f; // x 3d space units per second
 
 	m_ready = true;
 }
@@ -72,6 +73,24 @@ void MainScreen::update(double delta)
 				if(ik->m_action == MilSim::InputKeyMessage::Action::PRESS)
 					m_logger->info("Camera position: {}", glm::to_string(m_scene->get_camera().m_pos));
 				break;
+			case MilSim::InputKeyMessage::Key::L:
+				if(ik->m_action == MilSim::InputKeyMessage::Action::PRESS)
+					m_scene->get_light().m_position = m_scene->get_camera().m_pos;
+				break;
+			case MilSim::InputKeyMessage::Key::KP_ADD:
+				if(ik->m_action == MilSim::InputKeyMessage::Action::PRESS || ik->m_action == MilSim::InputKeyMessage::Action::REPEAT) {
+					m_walking_spd += 1.0f;
+					if(m_walking_spd > 50.0f)
+						m_walking_spd = 50.0f;
+				}
+				break;
+			case MilSim::InputKeyMessage::Key::KP_SUBTRACT:
+				if(ik->m_action == MilSim::InputKeyMessage::Action::PRESS || ik->m_action == MilSim::InputKeyMessage::Action::REPEAT) {
+					m_walking_spd -= 1.0f;
+					if(m_walking_spd < 0.0f)
+						m_walking_spd = 0.0f;
+				}
+				break;
 			default:
 				break;
 			}
@@ -81,7 +100,7 @@ void MainScreen::update(double delta)
 		}
 	}
 
-	static const float vchange = 50.0f * delta;
+	float vchange = m_walking_spd * delta;
 	if(m_walking[0]) {
 		m_scene->get_camera().move(vchange * glm::vec3(0.0, 0.0, -1.0));
 	}

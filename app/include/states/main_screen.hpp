@@ -21,4 +21,5 @@ private:
 	// 2 - right
 	// 3 - left
 	bool m_walking[4];
+	float m_walking_spd;
 };

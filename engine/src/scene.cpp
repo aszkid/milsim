@@ -116,8 +116,8 @@ void Scene::inner_post_init()
 	m_camera.set_position(glm::vec3(0.0, 0.0, 5.0));
 	m_camera.look_at(glm::vec3(0.0, 0.0, 0.0));
 
-	m_lightpos = glm::vec3(63.578186, 42.779179, 93.705467);
-	m_lightcolor = glm::vec3(1.0, 1.0, 1.0);
+	m_light.m_position = glm::vec3(63.578186, 42.779179, 93.705467);
+	m_light.m_color = glm::vec3(1.0, 1.0, 1.0);
 
 	glEnable(GL_DEPTH_TEST);
 }
@@ -129,6 +129,10 @@ void Scene::set_viewport(const uint winx, const uint winy)
 Camera& Scene::get_camera()
 {
 	return m_camera;
+}
+Light& Scene::get_light()
+{
+	return m_light;
 }
 
 void Scene::update(double delta)
@@ -191,9 +195,9 @@ void Scene::render(double interp)
 		} else if(uni.first == "objectColor") {
 			glUniform3fv(uni.second, 1, glm::value_ptr(color));
 		} else if(uni.first == "lightColor") {
-			glUniform3fv(uni.second, 1, glm::value_ptr(m_lightcolor));
+			glUniform3fv(uni.second, 1, glm::value_ptr(m_light.m_color));
 		} else if(uni.first == "lightPos") {
-			glUniform3fv(uni.second, 1, glm::value_ptr(m_lightpos));
+			glUniform3fv(uni.second, 1, glm::value_ptr(m_light.m_position));
 		} else if(uni.first == "cameraPos") {
 			glUniform3fv(uni.second, 1, glm::value_ptr(m_camera.m_pos));
 		}
