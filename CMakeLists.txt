@@ -10,7 +10,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
-set(CMAKE_BUILD_TYPE Debug)
+#set(CMAKE_BUILD_TYPE Debug)
 
 # =================================================
 # EXTERNAL LIBRARIES
@@ -34,6 +34,8 @@ include_directories(ext/CRCpp-master/inc)
 include_directories(ext/glm-0.9.8.5)
 # path handling
 include_directories(ext/apathy-master)
+# image loading
+include_directories(ext/stb-master)
 
 
 # =================================================

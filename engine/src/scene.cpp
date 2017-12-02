@@ -212,11 +212,18 @@ void Scene::render(double interp)
 			glUniform3fv(uni.second, 1, glm::value_ptr(m_light.m_position));
 		} else if(uni.first == "cameraPos") {
 			glUniform3fv(uni.second, 1, glm::value_ptr(m_camera.m_pos));
+		} else if(uni.first == "myTexture") {
+			glUniform1i(uni.second, 0);
 		}
 	}
 	// draw models
 	for(auto id : m_models) {
 		auto model = static_cast<ModelAsset*>(m_alexandria->get_asset(id));
+		auto tex = static_cast<TextureAsset*>(m_alexandria->get_asset(
+			model->m_texture
+		))->m_tex_id;
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, tex);
 		for(auto& mesh : model->m_meshes) {
 			glBindVertexArray(mesh.m_vao);
 			glDrawArrays(GL_TRIANGLES, 0, mesh.m_verts.size());

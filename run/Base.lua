@@ -14,16 +14,16 @@ data = {
 		contents = {
 			{
 				type = "model",
-				id = "greek.obj"
-			}--[[,
-			{
-				type = "model",
-				id = "lion.obj"
+				id = "gladiato.obj"
 			},
 			{
 				type = "model",
+				id = "fortuna.obj"
+			}--[[,
+			{
+				type = "model",
 				id = "engel.obj"
-			}--]]
+			}]]
 		}
 	},
 	{

@@ -2,6 +2,9 @@
 #include "util/io.hpp"
 
 #include <glm/ext.hpp>
+#include <tiny_obj_loader.h>
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/stb_image.h>
 
 using namespace MilSim;
 
@@ -14,27 +17,49 @@ FontAsset::FontAsset()
 FontAsset::~FontAsset()
 {}
 
-bool FontAsset::load()
+bool FontAsset::inner_load()
 {
 	return true;
 }
 
 ////////////////////////////////////////
+// TEXTUREASSET
+////////////////////////////////////////
+TextureAsset::TextureAsset(const std::string name, unsigned char* data, int width, int height, int channels)
+	: Asset::Asset("TextureAsset." + name), m_data(data), m_width(width), m_height(height), m_channels(channels)
+{
+
+}
+TextureAsset::~TextureAsset()
+{
+	stbi_image_free(m_data);
+}
+bool TextureAsset::inner_load()
+{
+	glGenTextures(1, &m_tex_id);
+	glBindTexture(GL_TEXTURE_2D, m_tex_id);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_width, m_height, 0, GL_RGB, GL_UNSIGNED_BYTE, m_data);
+	//glGenerateMipmap(GL_TEXTURE_2D);
+
+	return true;
+}
+
+
+////////////////////////////////////////
 // MODELASSET
 ////////////////////////////////////////
 ModelAsset::ModelAsset(const std::string name, std::vector<Mesh> meshes)
-	: Asset::Asset("ModelAsset." + name), m_meshes(meshes)
+	: Asset::Asset("ModelAsset." + name), m_meshes(meshes), m_texture(0)
 {
 }
 ModelAsset::~ModelAsset()
 {
 	
 }
-bool ModelAsset::load()
+bool ModelAsset::inner_load()
 {
-	if(m_loaded)
-		return true;
-
 	for(auto& m : m_meshes) {
 		glGenVertexArrays(1, &m.m_vao);
 		glGenBuffers(1, &m.m_vbo);
@@ -54,16 +79,20 @@ bool ModelAsset::load()
 		glEnableVertexAttribArray(0);
 		glVertexAttribPointer(0, 3,
 			GL_FLOAT, GL_FALSE,
-			sizeof(Vertex), (void*)0
+			sizeof(Vertex), (void*)offsetof(Vertex, m_position)
 		);
 		glEnableVertexAttribArray(1);
 		glVertexAttribPointer(1, 3,
 			GL_FLOAT, GL_FALSE,
 			sizeof(Vertex), (void*)offsetof(Vertex, m_normal)
 		);
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 2,
+			GL_FLOAT, GL_FALSE,
+			sizeof(Vertex), (void*)offsetof(Vertex, m_texture)
+		);
 	}
 
-	m_loaded = true;
 	return true;
 }
 
@@ -77,11 +106,10 @@ ShaderProgramAsset::ShaderProgramAsset(const std::string vert_source, const std:
 }
 ShaderProgramAsset::~ShaderProgramAsset()
 {
-	glDeleteShader(m_vert_id);
 	glDeleteShader(m_prog_id);
 }
 
-bool ShaderProgramAsset::load()
+bool ShaderProgramAsset::inner_load()
 {
 	const char *vert = m_vert_source.c_str();
 	const char *frag = m_frag_source.c_str();
@@ -117,8 +145,6 @@ bool ShaderProgramAsset::load()
 		glGetProgramInfoLog(m_prog_id, 512, NULL, info);
 		m_logger->error("Shader program failed to link: {}", info);
 	}
-
-	m_loaded = true;
 
 	// Lookup uniforms
 	GLint num_uniforms = 0;
@@ -157,7 +183,7 @@ ScriptAsset::~ScriptAsset()
 
 }
 
-bool ScriptAsset::load()
+bool ScriptAsset::inner_load()
 {
 	return true;
 }
@@ -213,11 +239,16 @@ void Alexandria::load_database(const std::string filename)
 	} else {
 		m_log->error("We don't support databases of type `{}` yet!", dbtype);
 	}
+
+	m_log->info("Finished loading database!");
 }
 void Alexandria::load_folder(const sel::Selector& root, apathy::Path path, const std::string db_name)
 {
+	m_log->info("Loading folder `{}`", path.string());
+
 	uint i = 1;
 	sel::Selector node = root[i];
+
 
 	while(node.exists()) {
 		const std::string new_id = node["id"];
@@ -226,18 +257,18 @@ void Alexandria::load_folder(const sel::Selector& root, apathy::Path path, const
 			load_folder(node["contents"], apathy::Path(path).append(new_id).directory(), db_name);
 		}
 		else {
-			add_asset(apathy::Path(path).append(new_id), node["type"], node, db_name);
+			add_asset(apathy::Path(path).append(new_id), node["type"], &node, db_name);
 		}
 		node = root[++i];
 	}
 }
 
-Asset* Alexandria::get_asset(const t_asset_id id)
+Asset* Alexandria::get_asset(const t_asset_id id, const GetFlag flag)
 {
 	// Find asset
 	auto asset = m_assets.find(id);
 	if(asset != m_assets.end()) {
-		if(asset->second->m_loaded == false)
+		if(asset->second->m_loaded == false && flag == LOAD)
 			asset->second->load();
 		return asset->second.get();
 	}
@@ -245,18 +276,18 @@ Asset* Alexandria::get_asset(const t_asset_id id)
 	m_log->info("Asset `{}` is not in our database!", id);
 	return nullptr;
 }
-Asset* Alexandria::get_asset(const std::string id)
+Asset* Alexandria::get_asset(const std::string id, const GetFlag flag)
 {
-	return get_asset(Crypto::HASH(id));
+	return get_asset(Crypto::HASH(id), flag);
 }
-void Alexandria::add_asset(apathy::Path path, const std::string type, sel::Selector& root, const std::string db_name)
+void Alexandria::add_asset(apathy::Path path, const std::string type, sel::Selector* root, const std::string db_name)
 {
 	const std::string id = path.sanitize().string();
 	const std::string stem = path.stem().string();
 	auto hash = Crypto::HASH(id);
-	const std::string short_id = root["id"];
+	const std::string short_id = (root == nullptr) ? path.filename() : (*root)["id"];
 
-	m_log->info("Adding asset `{}` of type `{}`...", id, type);
+	m_log->info("Adding asset `{}` of type `{}` -- `{:x}`...", id, type, hash);
 
 	if(m_assets.find(hash) != m_assets.end()) {
 		m_log->info("Asset `{}` already in our database, skipping.", id);
@@ -274,7 +305,7 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, sel::Selec
 		auto vert_source = IO::read_file(apathy::Path(working_path).string() + ".vert");
 		auto frag_source = IO::read_file(apathy::Path(working_path).string() + ".frag");
 
-		m_assets[hash] = t_asset_ptr(new ShaderProgramAsset(
+		place_asset(hash, new ShaderProgramAsset(
 			vert_source, frag_source
 		));
 
@@ -298,16 +329,24 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, sel::Selec
 		}
 
 		Mesh mesh;
-		m_log->info("{} vertices", attrib.vertices.size() / 3);
+		/*m_log->info("{} vertices", attrib.vertices.size() / 3);
 		m_log->info("{} normals", attrib.normals.size() / 3);
 		m_log->info("{} materials", materials.size());
-		m_log->info("{} shapes", shapes.size());
+		m_log->info("{} shapes", shapes.size());*/
+
+		// last texture used
+		t_asset_id tex = 0;
 
 		// loop materials
 		for(size_t m = 0; m < materials.size(); m++) {
 			// gotcha! create a `Texture` asset; we could even do `Material` assets
 			// on top of that.
-			m_log->info("material [{}] = {}", m, materials[m].diffuse_texname);
+			apathy::Path tex_id(path);
+			tex_id = tex_id.parent().append(materials[m].diffuse_texname);
+			add_asset(tex_id, "texture", nullptr, db_name);
+			tex = Crypto::HASH(tex_id.sanitize().string());
+			// force texture load for now
+			get_asset(tex);
 		}
 
 		// loop shapes
@@ -336,8 +375,22 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, sel::Selec
 				index_off += fv;
 			}
 		}
-		m_assets[hash] = t_asset_ptr(new ModelAsset(short_id, {mesh}));
+		//m_assets[hash] = t_asset_ptr(new ModelAsset(short_id, {mesh}));
+		place_asset(hash, new ModelAsset(short_id, {mesh}));
+		((ModelAsset*)get_asset(hash, NO_LOAD))->m_texture = tex;
+
+	} else if(type == "texture") {
+		int width, height, channels;
+		unsigned char* data = stbi_load(working_path.string().c_str(), &width, &height, &channels, 0);
+		/*m_assets[hash] = t_asset_ptr(new TextureAsset(
+			short_id, data, width, height, channels
+		));*/
+		m_log->info("Texture has {} channels", channels);
+
+		place_asset(hash, new TextureAsset(
+			short_id, data, width, height, channels
+		));
 	}
 	
-	m_assets[hash]->set_hash(hash);
+	//m_assets[hash]->set_path(path); ??
 }

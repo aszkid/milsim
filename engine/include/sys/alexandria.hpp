@@ -5,7 +5,6 @@
 
 #include <selene.h>
 #include <glbinding/gl/gl.h>
-#include <tiny_obj_loader.h>
 #include <glm/glm.hpp>
 #include <apathy/path.hpp>
 
@@ -36,12 +35,17 @@ namespace MilSim {
 		};
 
 		bool m_loaded;
-		virtual bool load() = 0;
+		bool load() {
+			m_loaded = inner_load();
+			return m_loaded;
+		};
 	protected:
 		t_logger m_logger;
 		apathy::Path m_path;
 		std::string m_name;
 		t_asset_id m_hash;
+
+		virtual bool inner_load() = 0;
 	};
 
 	// helper types
@@ -59,9 +63,27 @@ namespace MilSim {
 			TTF, OTF
 		};
 
-		bool load();
 	private:
+		bool inner_load();
 		Format m_format;
+	};
+
+	/**
+	 * Texture asset.
+	 */
+	class TextureAsset : public Asset {
+	public:
+		TextureAsset(const std::string name,
+			unsigned char* data,
+			int width, int height, int channels);
+		~TextureAsset();
+
+		GLuint m_tex_id;
+		unsigned char* m_data;
+		int m_width, m_height, m_channels;
+	
+	private:
+		bool inner_load();
 	};
 
 	/**
@@ -94,9 +116,12 @@ namespace MilSim {
 	public:
 		ModelAsset(const std::string name, std::vector<Mesh> meshes);
 		~ModelAsset();
-		bool load();
 
 		std::vector<Mesh> m_meshes;
+		t_asset_id m_texture;
+
+	private:
+		bool inner_load();
 	};
 
 	/**
@@ -107,8 +132,6 @@ namespace MilSim {
 		ShaderProgramAsset(const std::string vert_source, const std::string frag_source);
 		~ShaderProgramAsset();
 
-		bool load();
-
 	// private:?
 		GLuint m_vert_id;
 		GLuint m_frag_id;
@@ -116,6 +139,9 @@ namespace MilSim {
 		std::string m_vert_source;
 		std::string m_frag_source;
 		std::map<std::string, GLuint> m_uniforms;
+	
+	private:
+		bool inner_load();
 	};
 
 	/**
@@ -126,9 +152,9 @@ namespace MilSim {
 		ScriptAsset();
 		~ScriptAsset();
 
-		bool load();
 	private:
 		sel::State m_state;
+		bool inner_load();
 	};
 
 	/**
@@ -145,8 +171,13 @@ namespace MilSim {
 
 		void load_database(const std::string filename);
 
-		Asset* get_asset(const std::string id);
-		Asset* get_asset(const t_asset_id id);
+		enum GetFlag {
+			NO_LOAD,
+			LOAD
+		};
+	
+		Asset* get_asset(const std::string id, const GetFlag flag = LOAD);
+		Asset* get_asset(const t_asset_id id, const GetFlag flag = LOAD);
 
 	private:
 		std::map<uint32_t, t_asset_ptr> m_assets;
@@ -155,7 +186,16 @@ namespace MilSim {
 
 		// Database loading
 		void load_folder(const sel::Selector& root, apathy::Path path, const std::string db_name);
-		void add_asset(apathy::Path path, const std::string type, sel::Selector& root, const std::string db_name);
+		void add_asset(apathy::Path path, const std::string type, sel::Selector* root, const std::string db_name);
+
+		void place_asset(const t_asset_id hash, Asset* asset) {
+			if(m_assets.find(hash) != m_assets.end()) {
+				m_log->warn("Asset `{:x}` already exists, skipping...");
+				return;
+			}
+			m_assets[hash] = t_asset_ptr(asset);
+			m_assets[hash]->set_hash(hash);
+		}
 
 		apathy::Path m_local_root;
 	};
