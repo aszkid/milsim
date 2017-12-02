@@ -12,10 +12,10 @@ data = {
 		type = "folder",
 		id = "Models",
 		contents = {
-			{
+			--[[{
 				type = "model",
 				id = "gladiato.obj"
-			},
+			},]]
 			{
 				type = "model",
 				id = "fortuna.obj"

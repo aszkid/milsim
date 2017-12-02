@@ -21,7 +21,7 @@ namespace MilSim {
 	class Asset {
 	public:
 		Asset(const std::string logname)
-			: m_name("Alexandria." + logname)
+			: m_name("Alexandria." + logname), m_loaded(false)
 		{
 			m_logger = Logger::create(m_name);
 		};

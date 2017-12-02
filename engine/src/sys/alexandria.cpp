@@ -40,8 +40,15 @@ bool TextureAsset::inner_load()
 	glBindTexture(GL_TEXTURE_2D, m_tex_id);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_width, m_height, 0, GL_RGB, GL_UNSIGNED_BYTE, m_data);
-	//glGenerateMipmap(GL_TEXTURE_2D);
+	if(m_channels == 3) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_width, m_height, 0, GL_RGB, GL_UNSIGNED_BYTE, m_data);
+	} else if(m_channels == 4) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_data);
+	} else {
+		m_logger->error("Texture is not RGB nor RGBA! Aborting...");
+		abort();
+	}
+	glGenerateMipmap(GL_TEXTURE_2D);
 
 	return true;
 }
@@ -124,6 +131,7 @@ bool ShaderProgramAsset::inner_load()
 	if(!ok) {
 		glGetShaderInfoLog(m_vert_id, 512, NULL, info);
 		m_logger->error("Vertex shader compilation failed: {}", info);
+		abort();
 	}
 
 	m_frag_id = glCreateShader(GL_FRAGMENT_SHADER);
@@ -133,6 +141,7 @@ bool ShaderProgramAsset::inner_load()
 	if(!ok) {
 		glGetShaderInfoLog(m_frag_id, 512, NULL, info);
 		m_logger->error("Fragment shader compilation failed: {}", info);
+		abort();
 	}
 
 	// Link the shader program
@@ -144,6 +153,7 @@ bool ShaderProgramAsset::inner_load()
 	if(!ok) {
 		glGetProgramInfoLog(m_prog_id, 512, NULL, info);
 		m_logger->error("Shader program failed to link: {}", info);
+		abort();
 	}
 
 	// Lookup uniforms
@@ -238,6 +248,7 @@ void Alexandria::load_database(const std::string filename)
 		load_folder(data, id_root, dbname);
 	} else {
 		m_log->error("We don't support databases of type `{}` yet!", dbtype);
+		abort();
 	}
 
 	m_log->info("Finished loading database!");
@@ -324,8 +335,8 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, sel::Selec
 			m_log->info("Warning: {}", err);
 		}
 		if(!ret) {
-			m_log->error("Failed to log model {}!", id);
-			return ;
+			m_log->error("Failed to load model {}!", id);
+			abort();
 		}
 
 		Mesh mesh;

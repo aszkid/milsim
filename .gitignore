@@ -1,1 +1,7 @@
 build/*
+cmake-build-debug/*
+.codelite/*
+.idea/*
+run/Base/Models/*
+milsim.workspace
+milsim.project
