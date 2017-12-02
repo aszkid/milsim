@@ -32,7 +32,7 @@ TextureAsset::TextureAsset(const std::string name, unsigned char* data, int widt
 }
 TextureAsset::~TextureAsset()
 {
-	stbi_image_free(m_data);
+	//stbi_image_free(m_data);
 }
 bool TextureAsset::inner_load()
 {
@@ -106,14 +106,14 @@ bool ModelAsset::inner_load()
 ////////////////////////////////////////
 // SHADERPROGRAMASSET
 ////////////////////////////////////////
-ShaderProgramAsset::ShaderProgramAsset(const std::string vert_source, const std::string frag_source)
-	: Asset::Asset("ShaderProgramAsset"), m_vert_source(vert_source), m_frag_source(frag_source)
+ShaderProgramAsset::ShaderProgramAsset(const std::string name, const std::string vert_source, const std::string frag_source)
+	: Asset::Asset("ShaderProgramAsset." + name), m_vert_source(vert_source), m_frag_source(frag_source)
 {
 
 }
 ShaderProgramAsset::~ShaderProgramAsset()
 {
-	glDeleteShader(m_prog_id);
+	//glDeleteShader(m_prog_id);
 }
 
 bool ShaderProgramAsset::inner_load()
@@ -317,7 +317,7 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, sel::Selec
 		auto frag_source = IO::read_file(apathy::Path(working_path).string() + ".frag");
 
 		place_asset(hash, new ShaderProgramAsset(
-			vert_source, frag_source
+			short_id, vert_source, frag_source
 		));
 
 	} else if(type == "model") {
@@ -340,10 +340,10 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, sel::Selec
 		}
 
 		Mesh mesh;
-		/*m_log->info("{} vertices", attrib.vertices.size() / 3);
+		m_log->info("{} vertices", attrib.vertices.size() / 3);
 		m_log->info("{} normals", attrib.normals.size() / 3);
 		m_log->info("{} materials", materials.size());
-		m_log->info("{} shapes", shapes.size());*/
+		m_log->info("{} shapes", shapes.size());
 
 		// last texture used
 		t_asset_id tex = 0;
@@ -375,8 +375,12 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, sel::Selec
 					tinyobj::real_t nx = attrib.normals[3*idx.normal_index+0];
 					tinyobj::real_t ny = attrib.normals[3*idx.normal_index+1];
 					tinyobj::real_t nz = attrib.normals[3*idx.normal_index+2];
-					tinyobj::real_t tx = attrib.texcoords[2*idx.texcoord_index+0];
-					tinyobj::real_t ty = attrib.texcoords[2*idx.texcoord_index+1];
+					tinyobj::real_t tx = 0;
+					tinyobj::real_t ty = 0;
+					if(attrib.texcoords.size() > 0) {
+						tx = attrib.texcoords[2 * idx.texcoord_index + 0];
+						ty = attrib.texcoords[2 * idx.texcoord_index + 1];
+					}
 					mesh.m_verts.emplace_back(
 						glm::vec3(vx, vy, vz),
 						glm::vec3(nx, ny, nz),

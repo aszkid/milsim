@@ -25,7 +25,9 @@ namespace MilSim {
 		{
 			m_logger = Logger::create(m_name);
 		};
-		virtual ~Asset() {};
+		virtual ~Asset() {
+			m_logger->info("Dying peacefully...");
+		};
 
 		void set_hash(t_asset_id hash) {
 			m_hash = hash;
@@ -129,7 +131,7 @@ namespace MilSim {
 	 */
 	class ShaderProgramAsset : public Asset {
 	public:
-		ShaderProgramAsset(const std::string vert_source, const std::string frag_source);
+		ShaderProgramAsset(const std::string name, const std::string vert_source, const std::string frag_source);
 		~ShaderProgramAsset();
 
 	// private:?

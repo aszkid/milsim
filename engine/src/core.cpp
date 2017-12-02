@@ -90,7 +90,6 @@ void Core::loop()
 		m_prevtime = m_currtime;
 		m_t_lag += m_delta;
 
-		glfwSwapBuffers(m_window);
 		glfwPollEvents();
 
 		m_fps = 1.0 / (
@@ -118,6 +117,8 @@ void Core::loop()
 
 		// Drawing happens
 		render();
+
+		glfwSwapBuffers(m_window);
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		if(should_close)

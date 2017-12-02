@@ -12,17 +12,21 @@ data = {
 		type = "folder",
 		id = "Models",
 		contents = {
-			--[[{
-				type = "model",
-				id = "gladiato.obj"
-			},]]
 			{
 				type = "model",
-				id = "fortuna.obj"
+				id = "gladiato.obj"
 			}--[[,
 			{
 				type = "model",
-				id = "engel.obj"
+				id = "fortuna.obj"
+			},
+			{
+				type = "model",
+				id = "Teapot2.obj"
+			},
+			{
+				type = "model",
+				id = "greek.obj"
 			}]]
 		}
 	},
@@ -33,6 +37,10 @@ data = {
 			{
 				type = "shader",
 				id = "Simple"
+			},
+			{
+				type = "shader",
+				id = "Simple2"
 			}
 		}
 	}

@@ -172,7 +172,7 @@ void Scene::render(double interp)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
 
-	/*for(Drawable& d : m_drawables) {
+	for(Drawable& d : m_drawables) {
 		// get shader and bind it
 		shader = static_cast<ShaderProgramAsset*>(m_alexandria->get_asset(d.m_shader));
 		glUseProgram(
@@ -191,9 +191,9 @@ void Scene::render(double interp)
 		// bind vao
 		glBindVertexArray(d.m_vao);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
-	}*/
+	}
 
-	// models use same shader
+	// models use same shader -- how to handle textured-untextured models?
 	shader = static_cast<ShaderProgramAsset*>(m_alexandria->get_asset("/Base/Shaders/Simple"));
 	glUseProgram(shader->m_prog_id);
 	const glm::vec3 color(1.0f, 0.5f, 0.31f);
@@ -219,11 +219,14 @@ void Scene::render(double interp)
 	// draw models
 	for(auto id : m_models) {
 		auto model = static_cast<ModelAsset*>(m_alexandria->get_asset(id));
-		auto tex = static_cast<TextureAsset*>(m_alexandria->get_asset(
-			model->m_texture
-		))->m_tex_id;
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, tex);
+		// use texture if any
+		if(model->m_texture != 0) {
+			auto tex = static_cast<TextureAsset*>(m_alexandria->get_asset(
+					model->m_texture
+			))->m_tex_id;
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, tex);
+		}
 		for(auto& mesh : model->m_meshes) {
 			glBindVertexArray(mesh.m_vao);
 			glDrawArrays(GL_TRIANGLES, 0, mesh.m_verts.size());
