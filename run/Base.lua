@@ -19,11 +19,11 @@ data = {
 			{
 				type = "model",
 				id = "fortuna.obj"
-			},
+			}--[[,
 			{
 				type = "model",
 				id = "gladiato.obj"
-			}--[[,
+			},
 			{
 				type = "model",
 				id = "Teapot2.obj"

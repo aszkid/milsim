@@ -361,10 +361,10 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, sel::Selec
 		}
 
 		Mesh mesh;
-		m_log->info("{} vertices", attrib.vertices.size() / 3);
+		/*m_log->info("{} vertices", attrib.vertices.size() / 3);
 		m_log->info("{} normals", attrib.normals.size() / 3);
 		m_log->info("{} materials", materials.size());
-		m_log->info("{} shapes", shapes.size());
+		m_log->info("{} shapes", shapes.size());*/
 
 		// last texture used
 		t_asset_id tex = 0;

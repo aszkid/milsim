@@ -15,6 +15,9 @@ Core::Core()
 Core::~Core()
 {
 	m_log->info("Shutting down...");
+	// this boi vs. an entire application
+	//Logger::drop();
+	// still don't know where our exit crash comes from
 }
 
 
@@ -32,6 +35,8 @@ void Core::set_window(GLFWwindow* window)
 	glfwSwapInterval(1); // not working on my system...
 	glViewport(0, 0, m_winx, m_winy);
 	glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+	m_log->info("Using OpenGL `{}`", glGetString(GL_VERSION));
 }
 void Core::init(const std::string local_root = ".")
 {
@@ -60,7 +65,9 @@ void Core::deinit()
 {
 	m_states.clear();
 	m_systems.clear();
-	Logger::drop();
+
+	glfwDestroyWindow(m_window);
+	glfwTerminate();
 }
 Sys* Core::get_system(const std::string id) {
 	auto sys = m_systems.find(id);
@@ -96,8 +103,6 @@ void Core::loop()
 		m_prevtime = m_currtime;
 		m_t_lag += m_delta;
 
-		glfwPollEvents();
-
 		m_fps = 1.0 / (
 			m_delta.count() / 1000.0
 		);
@@ -106,6 +111,7 @@ void Core::loop()
 		// Update systems until catched up with lag
 		while(m_t_lag >= m_MS_PER_UPDATE) {
 			// Logic happens
+			glfwPollEvents();
 			update();
 			for(auto e : m_hermes->pull_inbox(Crypto::HASH("Core"))) {
 				if(e->m_chan == Crypto::HASH("InputKey")) {
@@ -119,6 +125,9 @@ void Core::loop()
 			m_hermes->clean();
 			// Peel back lag
 			m_t_lag -= m_MS_PER_UPDATE;
+
+			if(should_close)
+				break;
 		}
 
 		// Drawing happens
