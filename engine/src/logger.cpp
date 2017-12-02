@@ -19,3 +19,8 @@ t_logger Logger::get(const std::string name)
 {
 	return spdlog::get(name);
 }
+
+void Logger::drop()
+{
+	spdlog::drop_all();
+}

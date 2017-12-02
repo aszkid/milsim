@@ -54,9 +54,9 @@ int main(int argc, char** argv)
 	
 	// Main loop
 	core.loop();
-	
+	core.deinit();
 	// We are responsible for window handles
-	glfwDestroyWindow(window);
+	//glfwDestroyWindow(window);
 	glfwTerminate();
 	
 	return 0;

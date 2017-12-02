@@ -22,6 +22,10 @@ data = {
 			},
 			{
 				type = "model",
+				id = "greek.obj"
+			},
+			{
+				type = "model",
 				id = "Teapot2.obj"
 			},
 			{

@@ -56,6 +56,12 @@ void Core::init(const std::string local_root = ".")
 		s.second->init();
 	}
 }
+void Core::deinit()
+{
+	m_states.clear();
+	m_systems.clear();
+	Logger::drop();
+}
 Sys* Core::get_system(const std::string id) {
 	auto sys = m_systems.find(id);
 	if(sys != m_systems.end()) {

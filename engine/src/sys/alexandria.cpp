@@ -32,7 +32,9 @@ TextureAsset::TextureAsset(const std::string name, unsigned char* data, int widt
 }
 TextureAsset::~TextureAsset()
 {
-	//stbi_image_free(m_data);
+	if(m_loaded) {
+		stbi_image_free(m_data);
+	}
 }
 bool TextureAsset::inner_load()
 {
@@ -51,6 +53,10 @@ bool TextureAsset::inner_load()
 	glGenerateMipmap(GL_TEXTURE_2D);
 
 	return true;
+}
+void TextureAsset::inner_free()
+{
+	glDeleteTextures(1, &m_tex_id);
 }
 
 
@@ -102,6 +108,14 @@ bool ModelAsset::inner_load()
 
 	return true;
 }
+void ModelAsset::inner_free()
+{
+	for(auto& m : m_meshes) {
+		glDeleteBuffers(1, &m.m_vbo);
+		glDeleteVertexArrays(1, &m.m_vao);
+	}
+	m_meshes.clear();
+}
 
 ////////////////////////////////////////
 // SHADERPROGRAMASSET
@@ -113,7 +127,7 @@ ShaderProgramAsset::ShaderProgramAsset(const std::string name, const std::string
 }
 ShaderProgramAsset::~ShaderProgramAsset()
 {
-	//glDeleteShader(m_prog_id);
+
 }
 
 bool ShaderProgramAsset::inner_load()
@@ -179,6 +193,10 @@ bool ShaderProgramAsset::inner_load()
 
 	return true;
 }
+void ShaderProgramAsset::inner_free()
+{
+	glDeleteShader(m_prog_id);
+}
 
 ////////////////////////////////////////
 // SCRIPTASSET
@@ -209,7 +227,10 @@ Alexandria::Alexandria(const std::string local_root)
 }
 Alexandria::~Alexandria()
 {
-
+	for(auto& a : m_assets) {
+		a.second->free();
+	}
+	m_assets.clear();
 }
 
 void Alexandria::init()
@@ -309,7 +330,7 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, sel::Selec
 	working_path.append(path).sanitize();
 
 	if(type == "font") {
-		m_assets[hash] = t_asset_ptr(new FontAsset());
+		//m_assets[hash] = t_asset_ptr(new FontAsset());
 
 	} else if(type == "shader") {
 		// TODO: catch exceptions...
@@ -366,7 +387,7 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, sel::Selec
  			size_t index_off = 0;
 			for(size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
 				// loop vertices
-				int fv = shapes[s].mesh.num_face_vertices[f];
+				size_t fv = shapes[s].mesh.num_face_vertices[f];
 				for(size_t v = 0; v < fv; v++) {
 					tinyobj::index_t idx = shapes[s].mesh.indices[index_off + v];
 					tinyobj::real_t vx = attrib.vertices[3*idx.vertex_index+0];
@@ -396,12 +417,8 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, sel::Selec
 
 	} else if(type == "texture") {
 		int width, height, channels;
+		stbi_set_flip_vertically_on_load(true);
 		unsigned char* data = stbi_load(working_path.string().c_str(), &width, &height, &channels, 0);
-		/*m_assets[hash] = t_asset_ptr(new TextureAsset(
-			short_id, data, width, height, channels
-		));*/
-		m_log->info("Texture has {} channels", channels);
-
 		place_asset(hash, new TextureAsset(
 			short_id, data, width, height, channels
 		));

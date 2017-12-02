@@ -20,14 +20,12 @@ namespace MilSim {
 	 */
 	class Asset {
 	public:
-		Asset(const std::string logname)
-			: m_name("Alexandria." + logname), m_loaded(false)
-		{
+		Asset(const std::string logname) {
+			m_loaded = false;
+			m_name = "Alexandria." + logname;
 			m_logger = Logger::create(m_name);
 		};
-		virtual ~Asset() {
-			m_logger->info("Dying peacefully...");
-		};
+		virtual ~Asset() {};
 
 		void set_hash(t_asset_id hash) {
 			m_hash = hash;
@@ -41,6 +39,11 @@ namespace MilSim {
 			m_loaded = inner_load();
 			return m_loaded;
 		};
+		void free() {
+			if(m_loaded) {
+				inner_free();
+			}
+		};
 	protected:
 		t_logger m_logger;
 		apathy::Path m_path;
@@ -48,6 +51,8 @@ namespace MilSim {
 		t_asset_id m_hash;
 
 		virtual bool inner_load() = 0;
+		virtual void inner_free() = 0;
+
 	};
 
 	// helper types
@@ -86,6 +91,7 @@ namespace MilSim {
 	
 	private:
 		bool inner_load();
+		void inner_free();
 	};
 
 	/**
@@ -124,6 +130,7 @@ namespace MilSim {
 
 	private:
 		bool inner_load();
+		void inner_free();
 	};
 
 	/**
@@ -144,6 +151,7 @@ namespace MilSim {
 	
 	private:
 		bool inner_load();
+		void inner_free();
 	};
 
 	/**

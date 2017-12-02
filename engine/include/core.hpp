@@ -31,6 +31,7 @@ namespace MilSim {
 
 		void set_window(GLFWwindow* window);
 		void init(const std::string local_root);
+		void deinit();
 
 		Sys* get_system(const std::string id);
 

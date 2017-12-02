@@ -12,6 +12,8 @@ namespace MilSim {
 		t_logger create(const std::string name);
 		t_logger get(const std::string name);
 
+		void drop();
+
 	}
 
 }

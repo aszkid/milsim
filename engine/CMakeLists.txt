@@ -29,3 +29,5 @@ target_link_libraries(milsim_engine ${OPENGL_gl_LIBRARY})
 target_link_libraries(milsim_engine glfw ${GLFW_LIBRARIES})
 target_link_libraries(milsim_engine glbinding::glbinding)
 target_link_libraries(milsim_engine tinyobjloader)
+
+target_compile_options(milsim_engine PRIVATE "-Wall")
