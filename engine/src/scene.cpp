@@ -200,6 +200,8 @@ void Scene::render(double interp)
 	//const glm::vec3 color(1.0f, 0.5f, 0.31f);
 	//const glm::vec3 color(0.0, 0.38f, 1.0f);
 	const glm::vec3 color(0.94f, 0.94f, 0.94f);
+	// ambient light color
+	const glm::vec3 ambient_color(0.15f);
 	for(auto& uni : shader->m_uniforms) {
 		if(uni.first == "model") {
 			glUniformMatrix4fv(uni.second, 1, GL_FALSE, glm::value_ptr(placeholder));
@@ -213,6 +215,8 @@ void Scene::render(double interp)
 			glUniform3fv(uni.second, 1, glm::value_ptr(m_light.m_color));
 		} else if(uni.first == "lightPos") {
 			glUniform3fv(uni.second, 1, glm::value_ptr(m_light.m_position));
+		} else if(uni.first == "ambientColor") {
+			glUniform3fv(uni.second, 1, glm::value_ptr(ambient_color));
 		} else if(uni.first == "cameraPos") {
 			glUniform3fv(uni.second, 1, glm::value_ptr(m_camera.m_pos));
 		} else if(uni.first == "myTexture") {

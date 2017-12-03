@@ -10,6 +10,7 @@ uniform vec3 objectColor;
 uniform vec3 lightColor;
 uniform vec3 lightPos;
 uniform vec3 cameraPos;
+uniform vec3 ambientColor;
 
 uniform sampler2D myTexture;
 
@@ -23,7 +24,7 @@ void main()
 
     // ambient light
     float ambientStrength = 0.15;
-    vec3 ambient = ambientStrength * lightColor;
+    vec3 ambient = ambientStrength * ambientColor;
 
     // specular light
     float specularStrength = 0.25;
@@ -36,5 +37,6 @@ void main()
     FragColor = mix(vec4(result, 1.0f), texture(myTexture, TexCoord), 0.5);
     //FragColor = vec4(result, 1.0f) * texture(myTexture, TexCoord);
     //FragColor = texture(myTexture, TexCoord);
-   // FragColor = vec4(result, 1.0f);
+    //FragColor = vec4(result, 1.0f);
+    //FragColor = vec4(result, 1.0f);
 }
