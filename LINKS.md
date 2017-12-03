@@ -14,3 +14,4 @@
 - [Autodesk's *Stingray* renderer walkthrough](http://bitsquid.blogspot.com/2017/02/stingray-renderer-walkthrough.html).
 - [ECS done right (from *Stingray*, aka *BitSquid*)](http://bitsquid.blogspot.com/2014/08/building-data-oriented-entity-system.html).
 - [On ordering draw calls](http://realtimecollisiondetection.net/blog/?p=86).
+- [Parallelizing the Naughty Dog engine](http://www.gdcvault.com/play/1022186/Parallelizing-the-Naughty-Dog-Engine).

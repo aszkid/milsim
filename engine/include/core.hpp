@@ -17,6 +17,7 @@
 #include "state.hpp"
 #include "sys/alexandria.hpp"
 #include "sys/input.hpp"
+#include "sys/ecs.hpp"
 
 
 namespace MilSim {
@@ -40,6 +41,7 @@ namespace MilSim {
 			static_assert(std::is_base_of<GameState, T>::value, "Class passed not derived from `GameState`!");
 			m_states[id] = t_state_ptr(new T());
 			m_states[id]->set_viewport(m_winx, m_winy);
+			m_states[id]->set_entitymngr(m_entitymngr);
 			m_states[id]->post_init("State." + id, m_alexandria, m_hermes.get(), "State." + id);
 			return static_cast<T*>(m_states[id].get());
 		}
@@ -74,6 +76,7 @@ namespace MilSim {
 		std::unique_ptr<Hermes> m_hermes;
 		Alexandria* m_alexandria;
 		Input* m_input;
+		EntityManager* m_entitymngr;
 
 		// Various
 		GLFWwindow* m_window;

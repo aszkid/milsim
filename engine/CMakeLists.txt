@@ -12,6 +12,7 @@ set(SOURCES
 	src/logger.cpp
 	src/object.cpp
 	src/hermes.cpp
+	src/sys/ecs.cpp
 
 	src/util/io.cpp
 	

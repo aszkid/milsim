@@ -89,6 +89,8 @@ Two functions are of utmost important:
 
 On the highest level, a `Scene` object contains a vector of `Scene::Node`s, very much a la Godot. Internally, a `Node` may reference a `Drawable` component, a `Physics` component, etc. by having children.
 
+On the highest level, a `Scene` consists of a vector of `Scene::Node`s (entity). Every node has a set of components, queryable from the corresponding component manager.
+
 ### SceneGraph
 
 A simple scene graph implementation; directed tree holding *spatial* information about objects in a scene. Every `Scene` holds some of them. The important thing is to notice that *there is no single array of ~things~* in the engine: the `SceneGraph` provides a *hirearchical spatial representation* of scene 'objects' (might be cameras, lights, people, bridges...), while other structures hold *renderable representations* of them. It is the combination of them that is powerful.

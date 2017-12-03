@@ -12,7 +12,7 @@ data = {
 		type = "folder",
 		id = "Models",
 		contents = {
-			{
+			--[[{
 				type = "model",
 				id = "Greek",
 				source = "greek.obj"
@@ -21,7 +21,7 @@ data = {
 				type = "model",
 				id = "Gladiator",
 				source = "gladiator.obj"
-			}--[[,
+			},
 			{
 				type = "model",
 				id = "gladiato.obj"

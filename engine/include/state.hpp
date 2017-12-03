@@ -3,6 +3,7 @@
 #include <glm/ext.hpp>
 
 #include "sys/alexandria.hpp"
+#include "sys/ecs.hpp"
 #include "hermes.hpp"
 #include "scene.hpp"
 #include "object.hpp"
@@ -29,6 +30,9 @@ namespace MilSim {
 			m_winx = winx;
 			m_winy = winy;
 		};
+		void set_entitymngr(EntityManager* e) {
+			m_entitymngr = e;
+		}
 
 	private:
 		// SceneGraph
@@ -49,6 +53,7 @@ namespace MilSim {
 	protected:
 		bool m_ready;
 		uint m_winx, m_winy;
+		EntityManager* m_entitymngr;
 	};
 
 }

@@ -56,6 +56,7 @@ void Core::init(const std::string local_root = ".")
 	// Init systems
 	m_input = add_system(new Input(m_window), "input");
 	m_alexandria = add_system(new Alexandria(m_local_root), "alexandria");
+	m_entitymngr = add_system(new EntityManager(), "entitymngr");
 
 	for(auto& s : m_systems) {
 		s.second->init();
