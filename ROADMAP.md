@@ -9,8 +9,11 @@
 - [x] Control camera with mouse
 - [ ] "Simple" rendering pipeline implementation (_not_ deferred, calm down boy).
 	+ [x] `.obj` loader for Alexandria
-	+ [ ] Support for textures!
+	+ [x] Support for textures!
 	+ [ ] Figure out scene architecture (`Drawable`? how generic? how does scene graph fit in?)
+- [ ] `Bullet` physics integration.
+- [ ] Skeletal animation.
+- [ ] 
 
 - [ ] Multi-thread `Alexandria` asset loading to avoid loading hell at game launch
 

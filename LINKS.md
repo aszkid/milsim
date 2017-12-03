@@ -10,3 +10,5 @@
 - [Bounding box basics](https://en.wikibooks.org/wiki/OpenGL_Programming/Bounding_box).
 - [`stb` single-file libraries](https://github.com/nothings/stb).
 - [`CUDA` for GPGU `.obj` loading](https://researchonline.jcu.edu.au/42515/1/2015.CVM.OBJCUDA.pdf).
+- [Discussion on `dynamic_cast` and code architecture](https://www.gamedev.net/forums/topic/671003-c-dynamic-cast/).
+- [Autodesk's *Stingray* renderer walkthrough](http://bitsquid.blogspot.com/2017/02/stingray-renderer-walkthrough.html).
