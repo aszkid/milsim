@@ -2,6 +2,35 @@
 
 using namespace MilSim;
 
+
+// trickery
+void _handle_key(GLFWwindow* win, int key, int scancode, int action, int mods)
+{
+	Input* i = static_cast<Input*>(glfwGetWindowUserPointer(win));
+	i->key_callback(win, key, scancode, action, mods);
+}
+void _handle_cursor_pos(GLFWwindow* win, double xpos, double ypos)
+{
+	Input* i = static_cast<Input*>(glfwGetWindowUserPointer(win));
+	i->cursor_pos_callback(win, xpos, ypos);
+}
+void _handle_cursor_enter(GLFWwindow* win, int entered)
+{
+	Input* i = static_cast<Input*>(glfwGetWindowUserPointer(win));
+	i->cursor_enter_callback(win, entered);
+}
+void _handle_mouse_button(GLFWwindow* win, int button, int action, int mods)
+{
+	Input* i = static_cast<Input*>(glfwGetWindowUserPointer(win));
+	i->mouse_button_callback(win, button, action, mods);
+}
+void _handle_window_size(GLFWwindow* win, int w, int h)
+{
+	Input* i = static_cast<Input*>(glfwGetWindowUserPointer(win));
+	i->window_size_callback(win, w, h);
+}
+
+
 Input::Input(GLFWwindow* win)
 	: Sys::Sys("Input"), m_win(win)
 {
@@ -422,31 +451,4 @@ void Input::key_callback(GLFWwindow* win,
 	}
 
 	m_hermes->send(new InputKeyMessage(k, a));
-}
-
-// trickery
-void MilSim::_handle_key(GLFWwindow* win, int key, int scancode, int action, int mods)
-{
-	Input* i = static_cast<Input*>(glfwGetWindowUserPointer(win));
-	i->key_callback(win, key, scancode, action, mods);
-}
-void MilSim::_handle_cursor_pos(GLFWwindow* win, double xpos, double ypos)
-{
-	Input* i = static_cast<Input*>(glfwGetWindowUserPointer(win));
-	i->cursor_pos_callback(win, xpos, ypos);
-}
-void MilSim::_handle_cursor_enter(GLFWwindow* win, int entered)
-{
-	Input* i = static_cast<Input*>(glfwGetWindowUserPointer(win));
-	i->cursor_enter_callback(win, entered);
-}
-void MilSim::_handle_mouse_button(GLFWwindow* win, int button, int action, int mods)
-{
-	Input* i = static_cast<Input*>(glfwGetWindowUserPointer(win));
-	i->mouse_button_callback(win, button, action, mods);
-}
-void MilSim::_handle_window_size(GLFWwindow* win, int w, int h)
-{
-	Input* i = static_cast<Input*>(glfwGetWindowUserPointer(win));
-	i->window_size_callback(win, w, h);
 }

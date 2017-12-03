@@ -19,7 +19,7 @@ void MainScreen::load()
 
 	// Build our scene
 	//m_scene->add_triangle();
-	m_scene->add_model(MilSim::Crypto::HASH("/Base/Models/greek.obj"));
+	m_scene->add_model(MilSim::Crypto::HASH("/Base/Models/Gladiator"));
 	
 	m_walking[0] = false;
 	m_walking[1] = false;

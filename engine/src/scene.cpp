@@ -196,7 +196,10 @@ void Scene::render(double interp)
 	// models use same shader -- how to handle textured-untextured models?
 	shader = static_cast<ShaderProgramAsset*>(m_alexandria->get_asset("/Base/Shaders/Simple"));
 	glUseProgram(shader->m_prog_id);
-	const glm::vec3 color(1.0f, 0.5f, 0.31f);
+	// model base color
+	//const glm::vec3 color(1.0f, 0.5f, 0.31f);
+	//const glm::vec3 color(0.0, 0.38f, 1.0f);
+	const glm::vec3 color(0.94f, 0.94f, 0.94f);
 	for(auto& uni : shader->m_uniforms) {
 		if(uni.first == "model") {
 			glUniformMatrix4fv(uni.second, 1, GL_FALSE, glm::value_ptr(placeholder));

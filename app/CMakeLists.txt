@@ -11,3 +11,5 @@ set(SOURCES
 )
 add_executable(milsim ${SOURCES})
 target_link_libraries(milsim milsim_engine)
+
+target_compile_options(milsim_engine PRIVATE "-Wall")

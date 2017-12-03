@@ -32,8 +32,6 @@ std::vector<Message*> Hermes::pull_inbox(const uint32_t subid)
 	auto& sub = m_subs[subid];
 	std::vector<Message*> res;
 	for(auto& m : m_inbox) {
-		for(auto c : sub.m_channels) {
-		}
 		if(std::find(sub.m_channels.begin(), sub.m_channels.end(), m->m_chan) != sub.m_channels.end()) {
 			res.push_back(m.get());
 		}

@@ -8,12 +8,6 @@
 
 namespace MilSim {
 
-	static void _handle_key(GLFWwindow* win, int key, int scancode, int action, int mods);
-	static void _handle_cursor_pos(GLFWwindow* win, double xpos, double ypos);
-	static void _handle_cursor_enter(GLFWwindow* win, int entered);
-	static void _handle_mouse_button(GLFWwindow* win, int button, int action, int mods);
-	static void _handle_window_size(GLFWwindow* win, int w, int h);
-
 	class Input : public Sys {
 	public:
 		Input(GLFWwindow* win);

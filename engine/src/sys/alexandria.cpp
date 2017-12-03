@@ -347,10 +347,12 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, sel::Selec
 		std::vector<tinyobj::material_t> materials;
 		std::string err;
 
+		const std::string file = (*root)["source"];
+
 		bool ret = tinyobj::LoadObj(
 			&attrib, &shapes, &materials, &err,
-			working_path.string().c_str(),
-			apathy::Path(working_path).parent().string().c_str()
+			apathy::Path(working_path).append(file).string().c_str(),
+			apathy::Path(working_path).directory().string().c_str()
 		);
 		if(!err.empty()) {
 			m_log->info("Warning: {}", err);
@@ -374,7 +376,7 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, sel::Selec
 			// gotcha! create a `Texture` asset; we could even do `Material` assets
 			// on top of that.
 			apathy::Path tex_id(path);
-			tex_id = tex_id.parent().append(materials[m].diffuse_texname);
+			tex_id = tex_id.append(materials[m].diffuse_texname);
 			add_asset(tex_id, "texture", nullptr, db_name);
 			tex = Crypto::HASH(tex_id.sanitize().string());
 			// force texture load for now
