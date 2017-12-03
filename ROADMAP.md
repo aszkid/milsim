@@ -10,12 +10,14 @@
 - [ ] "Simple" rendering pipeline implementation (_not_ deferred, calm down boy).
 	+ [x] `.obj` loader for Alexandria
 	+ [x] Support for textures!
+	+ [ ] Legit `Material` asset.
 	+ [ ] Figure out scene architecture (`Drawable`? how generic? how does scene graph fit in?)
-- [ ] `Bullet` physics integration.
+- [ ] Basic `Bullet` physics integration.
 - [ ] Skeletal animation.
 - [ ] 
 
 - [ ] Multi-thread `Alexandria` asset loading to avoid loading hell at game launch
+- [ ] Better `Asset` packing (beware of prematurely optimizing).
 
 ## Kinda out there
 - [ ] Look up `std::multimap` for faster `Hermes`?
