@@ -5,25 +5,6 @@
 using namespace MilSim;
 
 ////////////////////////////////////////
-// SCENEGRAPHNODE
-////////////////////////////////////////
-SceneGraphNode::SceneGraphNode(SceneGraphNode* parent)
-	: m_parent(parent)
-{
-
-}
-SceneGraphNode::~SceneGraphNode()
-{
-	
-}
-
-SceneGraphNode* SceneGraphNode::add_child()
-{
-	m_children.push_back(SceneGraphNode(this));
-	return &m_children.back();
-}
-
-////////////////////////////////////////
 // CAMERA
 ////////////////////////////////////////
 Camera::Camera()
@@ -99,7 +80,6 @@ void Camera::_update_view()
 // SCENE
 ////////////////////////////////////////
 Scene::Scene()
-	: m_scene_graph(nullptr)
 {
 
 }
@@ -172,27 +152,6 @@ void Scene::render(double interp)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
 
-	for(Drawable& d : m_drawables) {
-		// get shader and bind it
-		shader = static_cast<ShaderProgramAsset*>(m_alexandria->get_asset(d.m_shader));
-		glUseProgram(
-			shader->m_prog_id
-		);
-		// set shader uniforms
-		for(auto& uni : shader->m_uniforms) {
-			if(uni.first == "model") {
-				glUniformMatrix4fv(uni.second, 1, GL_FALSE, glm::value_ptr(d.m_transform));
-			} else if(uni.first == "view") {
-				glUniformMatrix4fv(uni.second, 1, GL_FALSE, glm::value_ptr(m_camera.m_view));
-			} else if(uni.first == "projection") {
-				glUniformMatrix4fv(uni.second, 1, GL_FALSE, glm::value_ptr(proj));
-			}
-		}
-		// bind vao
-		glBindVertexArray(d.m_vao);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-	}
-
 	// models use same shader -- how to handle textured-untextured models?
 	shader = static_cast<ShaderProgramAsset*>(m_alexandria->get_asset("/Base/Shaders/Simple"));
 	glUseProgram(shader->m_prog_id);
@@ -241,7 +200,7 @@ void Scene::render(double interp)
 	}
 }
 
-Drawable* Scene::add_triangle()
+/*Drawable* Scene::add_triangle()
 {
 	// set up data
 	m_drawables.push_back(Drawable());
@@ -282,7 +241,7 @@ Drawable* Scene::add_triangle()
 	glEnableVertexAttribArray(0);
 
 	return &m_drawables.back();
-}
+}*/
 void Scene::add_model(const t_asset_id name)
 {
 	auto model = m_alexandria->get_asset(name);

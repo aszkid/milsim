@@ -6,12 +6,14 @@
         {
             "label": "build",
             "type": "shell",
-            "command": "cd build && make"
+            "command": "cd build && make",
+            "problemMatcher": []
         },
         {
             "label": "run",
             "type": "shell",
-            "command": "./build/app/milsim --root /media/data/dev/milsim/run"
+            "command": "./build/app/milsim --root /media/data/dev/milsim/run",
+            "problemMatcher": []
         }
     ]
 }

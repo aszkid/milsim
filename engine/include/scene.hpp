@@ -17,25 +17,7 @@ using namespace gl;
 
 namespace MilSim {
 
-	/**
-	 * Scene graph node, used *exclusively* for 
-	 * basic spatial information storage.
-	 */
-	class SceneGraphNode {
-	public:
-		SceneGraphNode(SceneGraphNode* parent);
-		~SceneGraphNode();
-
-		SceneGraphNode* add_child();
-
-	private:
-		std::vector<SceneGraphNode> m_children;
-		SceneGraphNode* m_parent;
-		glm::mat4 m_matrix;
-	};
-
 	struct Drawable {
-		SceneGraphNode* m_node;
 		// MeshAsset* m_mesh
 		std::vector<float> m_vertices; // temporal... will use ref. to mesh asset
 		t_asset_id m_shader;
@@ -72,6 +54,19 @@ namespace MilSim {
 	};
 
 
+	/**
+	 * A kind of 'World' class. Provides a `GameState` with 
+	 * a clean interface for adding things in the world,
+	 * destroying them, etc.
+	 * Q: Is `Scene` passed to `Sys.Render`, or does `Scene`
+	 * call `Sys.Render`?
+	 * Q: Who should generate the drawing commands? `Scene`
+	 * or `Sys.Render`? Probably `Scene`...
+	 * 
+	 * Note that this file has TooManyThings(c). We have to 
+	 * figure out a design for our Entity-Component systems
+	 * and allow the scene class to deal with that. Much cleaner.
+	 */
 	class Scene : public Object {
 	public:
 		Scene();
@@ -90,10 +85,7 @@ namespace MilSim {
 		void add_model(const t_asset_id name);
 	
 	private:
-		// Root scene graph node
-		SceneGraphNode m_scene_graph;
-		// Drawables
-		std::vector<Drawable> m_drawables;
+		// Models
 		std::vector<t_asset_id> m_models; // temporal!! integrate into `Drawable`
 		// Viewport
 		uint m_winx, m_winy;

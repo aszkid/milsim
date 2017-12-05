@@ -19,9 +19,9 @@ About dependency injection: the general rule is that (a) *whoever creates an `Ob
 
 ## Systems
 
-### Sys.Hermes
+Most things should *not* be systems. A system is a piece of code that provides an interface to, usually, some external resource. We have a system for asset loading, a system for rendering, a system for audio, etc. In general, anything of which multiple instances are conceivable to exist should *not* be a system. Since it makes no sense to have multiple asset loading class instances, we make it into a system.
 
-
+Systems are long-lived, so they have to be careful with memory. `Core` creates an instance of each and passes pointers to whoever needs them.
 
 ### Sys.Alexandria
 
@@ -45,26 +45,31 @@ Future: reference counting (`std::shared_ptr`?). Some profiling.
 
 ### Sys.Audio
 
-### Sys.Graph
+### Sys.Render
 
-The *Sys.Graph* system (graphics) deals with both 3D and 2D stuff in a relatively transparent way. It is capable of generating UI layouts (howw???) and drawing 3D scenes.
+The *Sys.Render* system deals with the graphics backend (OpenGL). No other part of the engine should ever talk with OpenGL. This way, we make sure that all the rendering state is contained within `Sys.Render`.
 
-A `GameState`
+How I currently envision the `Render` system design:
++ Each `GameState` owns a certain amount of `Scene`s, each representing a physical world, a GUI layer, etc.
++ The `GameState` creates and modifies every `Scene` with a high-level interface: `scene_gui.add_object("car")`, and the `Scene` asks `Alexandria` for the resource, loads it into memory, and keeps track of it as a physical entity and/or a renderable one in its `EntityManager` [q: instance? global?].
++ At every frame, the `GameState` updates the `Scene`s it desires, and calls the `Scene`'s `render()` method.
++ The `Scene` generates `RenderCommand`s for every drawable object (after culling).
++ `Sys.Render` sorts the list of commands (a "job" packet) and renders with as few OpenGL calls as reasonably possible. For this, we need to distill information passed to the rendering system to the minimum.
 
-### Sys.Graph.GUI
-
-A subsystem that specializes on drawing GUIs. A GUI screen is a tree of *widgets*, anchored to a parent frame. Every single piece of GUI is loaded from scripts.
+Having such a compartmentalized workflow paves the ground for parallelization. All of this is really me trying to grok the modern approach of "data-oriented" design. It leads to cleaner division between logical states of a program (update, draw, dispatch) and other nice things, probably. At any rate, I do not want a monster all-encompassing `Game` class. Let each do one thing (or as few as possible) well.
 
 ### Sys.Net
 
+Deals with networking.
+
 ### Sys.Script
 
-The most powerful system of the engine. It has the ability to communicate with every other system, and relay information to script *capsules*. Furthermore, script capsules can communicate with each other. Heavy stuff.
+It has the ability to communicate with every other system, and relay information to script *capsules*. Furthermore, script capsules can communicate with each other. Heavy stuff.
 
 
 -----
 
-## Stand-alone
+## Stand-alone classes
 
 ### GameState
 
