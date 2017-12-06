@@ -13,13 +13,14 @@ MainScreen::~MainScreen()
 
 void MainScreen::load()
 {
-	m_scene = std::unique_ptr<MilSim::Scene>(new MilSim::Scene());
+	m_scene = std::unique_ptr<MilSim::Scene>(new MilSim::Scene(m_entitymngr.get()));
 	post_init_child(m_scene.get(), "Scene");
 	m_scene->set_viewport(m_winx, m_winy);
 
 	// Build our scene
 	//m_scene->add_triangle();
-	//m_scene->add_model(MilSim::Crypto::HASH("/Base/Models/Gladiator"));
+	
+	MilSim::Entity statue = m_scene->add_model("/Base/Models/Greek");
 
 	m_walking[0] = false;
 	m_walking[1] = false;
@@ -27,6 +28,8 @@ void MainScreen::load()
 	m_walking[3] = false;
 
 	m_walking_spd = 10.0f; // x 3d space units per second
+
+	m_sprint = false;
 
 	m_ready = true;
 }
@@ -70,12 +73,12 @@ void MainScreen::update(double delta)
 					m_walking[3] = false;
 				break;
 			case MilSim::InputKeyMessage::Key::P:
-				if(ik->m_action == MilSim::InputKeyMessage::Action::PRESS)
-					m_logger->info("Camera position: {}", glm::to_string(m_scene->get_camera().m_pos));
+				/*if(ik->m_action == MilSim::InputKeyMessage::Action::PRESS)
+					m_logger->info("Camera position: {}", glm::to_string(m_scene->get_camera().m_pos));*/
 				break;
 			case MilSim::InputKeyMessage::Key::L:
 				if(ik->m_action == MilSim::InputKeyMessage::Action::PRESS)
-					m_scene->get_light().m_position = m_scene->get_camera().m_pos;
+					//m_scene->get_light().m_position = m_scene->get_camera().m_pos;
 				break;
 			case MilSim::InputKeyMessage::Key::M:
 				if(ik->m_action == MilSim::InputKeyMessage::Action::PRESS)
@@ -95,17 +98,23 @@ void MainScreen::update(double delta)
 						m_walking_spd = 0.0f;
 				}
 				break;
+			case MilSim::InputKeyMessage::Key::LEFT_SHIFT:
+				if(ik->m_action == MilSim::InputKeyMessage::Action::PRESS) {
+					m_sprint = true;
+				} else if(ik->m_action == MilSim::InputKeyMessage::Action::RELEASE) {
+					m_sprint = false;
+				}
 			default:
 				break;
 			}
 		} else if(msg->m_chan == MilSim::Crypto::HASH("CursorPos")) {
 			auto cp = static_cast<MilSim::CursorPosMessage*>(msg);
-			m_scene->get_camera().look_delta(glm::vec2(cp->m_xdelta, cp->m_ydelta));
+			//m_scene->get_camera().look_delta(glm::vec2(cp->m_xdelta, cp->m_ydelta));
 		}
 	}
 
-	float vchange = m_walking_spd * delta;
-	if(m_walking[0]) {
+	float vchange = (m_sprint ? 3.0f : 1.0f) * m_walking_spd * delta;
+	/*if(m_walking[0]) {
 		m_scene->get_camera().move(vchange * glm::vec3(0.0, 0.0, -1.0));
 	}
 	if(m_walking[1]) {
@@ -116,7 +125,7 @@ void MainScreen::update(double delta)
 	}
 	if(m_walking[3]) {
 		m_scene->get_camera().move(vchange * glm::vec3(-1.0, 0.0, 0.0));
-	}
+	}*/
 
 	m_scene->update(delta);
 }

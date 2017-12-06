@@ -10,12 +10,12 @@
 #include <GLFW/glfw3.h>
 
 #include "object.hpp"
-#include "hermes.hpp"
-#include "sys/alexandria.hpp"
+#include "ecs.hpp"
 
 using namespace gl;
 
 namespace MilSim {
+
 
 	struct Drawable {
 		// MeshAsset* m_mesh
@@ -58,40 +58,42 @@ namespace MilSim {
 	 * A kind of 'World' class. Provides a `GameState` with 
 	 * a clean interface for adding things in the world,
 	 * destroying them, etc.
-	 * Q: Is `Scene` passed to `Sys.Render`, or does `Scene`
-	 * call `Sys.Render`?
 	 * Q: Who should generate the drawing commands? `Scene`
-	 * or `Sys.Render`? Probably `Scene`...
-	 * 
-	 * Note that this file has TooManyThings(c). We have to 
-	 * figure out a design for our Entity-Component systems
-	 * and allow the scene class to deal with that. Much cleaner.
+	 * or `Sys.Render`?
+	 * A: Not even `Sys.Render`! `Scene` is our game-level
+	 * state representation. It pushes commands into `RenderScene`,
+	 * that converts game-level objects to render-level stuff.
+	 * Then `RenderScene` generates drawing commands and sends
+	 * them to `Sys.Render`.
 	 */
 	class Scene : public Object {
 	public:
-		Scene();
+		Scene(EntityManager* em);
 		~Scene();
 
 		void update(double delta);
 		void render(double interp);
 
-		Camera& get_camera();
-		Light& get_light();
+		Entity get_camera();
+		Entity get_light();
 		void toggle_wireframe();
 
 		void set_viewport(const uint winx, const uint winy);
 
-		Drawable* add_triangle();
-		void add_model(const t_asset_id name);
+		Entity add_triangle();
+		Entity add_model(const char* name);
+		Entity add_light();
 	
 	private:
-		// Models
-		std::vector<t_asset_id> m_models; // temporal!! integrate into `Drawable`
+		// ecs handles
+		EntityManager *m_entitymngr;
+		std::unique_ptr<DebugComponent> m_debug_comp;
+	
 		// Viewport
 		uint m_winx, m_winy;
 
-		Light m_light;
-		Camera m_camera;
+		Entity m_light;
+		Entity m_camera;
 
 		bool m_wireframe;
 

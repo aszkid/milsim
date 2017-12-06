@@ -12,8 +12,8 @@ set(SOURCES
 	src/logger.cpp
 	src/object.cpp
 	src/hermes.cpp
+	src/ecs.cpp
 	
-	src/sys/ecs.cpp
 	src/sys/render.cpp
 
 	src/util/io.cpp
@@ -24,7 +24,9 @@ set(SOURCES
 	src/sys/audio.cpp
 	src/sys/net.cpp
 )
+
 add_library(milsim_engine STATIC ${SOURCES})
+
 target_link_libraries(milsim_engine ${LUA_LIBRARY})
 target_link_libraries(milsim_engine Threads::Threads)
 target_link_libraries(milsim_engine ${OPENGL_gl_LIBRARY})

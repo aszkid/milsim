@@ -22,4 +22,5 @@ private:
 	// 3 - left
 	bool m_walking[4];
 	float m_walking_spd;
+	bool m_sprint;
 };

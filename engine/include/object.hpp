@@ -45,4 +45,29 @@ namespace MilSim {
 		uint32_t m_name_hash;
 	};
 
+
+	struct StateMessage {
+		
+	};
+
+	/**
+	 * Base class for `Scene`-level objects.
+	 */
+	struct SceneObject {
+		// `RenderScene`-level identifier.
+		size_t m_render_id;
+		// Stuff that has happened to the object, useful to `RenderScene`.
+		// Things like `created`, `updated`, ...
+		std::vector<StateMessage> m_state_stream;
+	};
+
+	/**
+	 * Base class for `RenderScene`-level objects.
+	 */
+	struct RenderSceneObject {
+		enum {
+			/* ?? */
+		};
+	};
+
 }
