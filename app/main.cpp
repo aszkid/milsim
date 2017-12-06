@@ -45,7 +45,7 @@ int main(int argc, char** argv)
 	core.set_window(window);
 	core.init(root);
 	auto alexandria = (MilSim::Alexandria*)core.get_system("alexandria");
-	alexandria->load_database("Base.lua");
+	alexandria->load_database("Base.json");
 
 	// Add base states -- `Core` dtor cleans up for us
 	auto main_screen = core.add_state<MainScreen>("MainScreen");

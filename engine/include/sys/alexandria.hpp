@@ -3,12 +3,13 @@
 #include "sys.hpp"
 #include "util/crypto.hpp"
 
-#include <selene.h>
+#include <json.hpp>
 #include <glbinding/gl/gl.h>
 #include <glm/glm.hpp>
 #include <apathy/path.hpp>
 
 using namespace gl;
+using json = nlohmann::json;
 
 
 namespace MilSim {
@@ -163,7 +164,6 @@ namespace MilSim {
 		~ScriptAsset();
 
 	private:
-		sel::State m_state;
 		bool inner_load();
 	};
 
@@ -195,8 +195,8 @@ namespace MilSim {
 		void load_asset();
 
 		// Database loading
-		void load_folder(const sel::Selector& root, apathy::Path path, const std::string db_name);
-		void add_asset(apathy::Path path, const std::string type, sel::Selector* root, const std::string db_name);
+		void load_folder(const json& root, apathy::Path path, const std::string db_name);
+		void add_asset(apathy::Path path, const std::string type, const json* root, const std::string db_name);
 
 		void place_asset(const t_asset_id hash, Asset* asset) {
 			if(m_assets.find(hash) != m_assets.end()) {

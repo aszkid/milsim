@@ -255,17 +255,16 @@ void Alexandria::load_database(const std::string filename)
 	dbpath.append(filename).sanitize();
 	m_log->info("Loading database `{}`...", filename);
 
-	sel::State lua;
-	lua.Load(dbpath.string());
+	json db = json::parse(IO::read_file(dbpath.string()));
 
-	const std::string dbtype = lua["db_type"];
-	const std::string dbname = lua["db_name"];
+	const std::string dbtype = db["db_type"];
+	const std::string dbname = db["db_name"];
 	apathy::Path id_root("/" + dbname + "/");
 
 	// dont forget to normalize paths...
 
 	if(dbtype == "local") {
-		sel::Selector data = lua["data"];
+		const json& data = db["data"];
 		load_folder(data, id_root, dbname);
 	} else {
 		m_log->error("We don't support databases of type `{}` yet!", dbtype);
@@ -274,15 +273,11 @@ void Alexandria::load_database(const std::string filename)
 
 	m_log->info("Finished loading database!");
 }
-void Alexandria::load_folder(const sel::Selector& root, apathy::Path path, const std::string db_name)
+void Alexandria::load_folder(const json& root, apathy::Path path, const std::string db_name)
 {
 	m_log->info("Loading folder `{}`", path.string());
 
-	uint i = 1;
-	sel::Selector node = root[i];
-
-
-	while(node.exists()) {
+	for(auto& node : root) {
 		const std::string new_id = node["id"];
 
 		if(node["type"] == "folder") {
@@ -291,7 +286,6 @@ void Alexandria::load_folder(const sel::Selector& root, apathy::Path path, const
 		else {
 			add_asset(apathy::Path(path).append(new_id), node["type"], &node, db_name);
 		}
-		node = root[++i];
 	}
 }
 
@@ -312,12 +306,12 @@ Asset* Alexandria::get_asset(const std::string id, const GetFlag flag)
 {
 	return get_asset(Crypto::HASH(id), flag);
 }
-void Alexandria::add_asset(apathy::Path path, const std::string type, sel::Selector* root, const std::string db_name)
+void Alexandria::add_asset(apathy::Path path, const std::string type, const json* root, const std::string db_name)
 {
 	const std::string id = path.sanitize().string();
 	const std::string stem = path.stem().string();
 	auto hash = Crypto::HASH(id);
-	const std::string short_id = (root == nullptr) ? path.filename() : (*root)["id"];
+	const std::string short_id = (root == nullptr) ? path.filename() : root->at("id").get<std::string>();
 
 	m_log->info("Adding asset `{}` of type `{}` -- `{:x}`...", id, type, hash);
 

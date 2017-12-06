@@ -34,7 +34,7 @@ void Core::set_window(GLFWwindow* window)
 	glbinding::Binding::initialize();
 	glfwSwapInterval(1); // not working on my system...
 	glViewport(0, 0, m_winx, m_winy);
-	glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	//glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	m_log->info("Using OpenGL `{}`", glGetString(GL_VERSION));
 }

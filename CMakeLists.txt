@@ -39,6 +39,8 @@ include_directories(ext/glm-0.9.8.5)
 include_directories(ext/apathy-master)
 # image loading
 include_directories(ext/stb-master)
+# json
+include_directories(ext/json-2.1.1)
 
 
 # =================================================
