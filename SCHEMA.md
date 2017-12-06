@@ -47,10 +47,10 @@ Future: reference counting (`std::shared_ptr`?). Some profiling.
 
 ### Sys.Render
 
-The *Sys.Render* system deals with the graphics backend (OpenGL). No other part of the engine should ever talk with OpenGL. This way, we make sure that all the rendering state is contained within `Sys.Render`.
+The *Sys.Render* system deals with the graphics backend (OpenGL). No other part of the engine should ever talk with OpenGL, except for the `RenderScene` class (dedicated to *uploading* data to the GPU). This way, we make sure that all the rendering state is contained within `Sys.Render`.
 
 How I currently envision the `Render` system design:
-+ Each `GameState` owns a certain amount of `Scene`s, each representing a physical world, a GUI layer, etc.
++ Each `GameState` owns a certain amount of `Scene`s, each representing a physical world, a GUI layer, etc. at a *game* level, without caring at all for GPU state. Similarly, it owns a certain amount of `RenderScene`s, each being a specific graphical representation of the scene. The usual case is a single `Scene` representing 3D geometry (in a hirearchical way, easy for programmers to reason about) and a corresponding `RenderScene`, holding a "render"-view of the physical data in the `Scene`. `GameState` owns *a single `EntityManager` and a single `xComponent` manager*, and each scene type peeks into it to provide functionality. The `Scene` cares about lights, models, terrain, cameras, etc. The `RenderScene` only cares about meshes, shader programs, textures, and so on. An attempt at separating concerns and keeping code data-oriented.
 + The `GameState` creates and modifies every `Scene` with a high-level interface: `scene_gui.add_object("car")`, and the `Scene` asks `Alexandria` for the resource, loads it into memory, and keeps track of it as a physical entity and/or a renderable one in its `EntityManager` [q: instance? global?].
 + At every frame, the `GameState` updates the `Scene`s it desires, and calls the `Scene`'s `render()` method.
 + The `Scene` generates `RenderCommand`s for every drawable object (after culling).
