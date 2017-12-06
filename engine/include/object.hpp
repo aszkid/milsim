@@ -61,13 +61,4 @@ namespace MilSim {
 		std::vector<StateMessage> m_state_stream;
 	};
 
-	/**
-	 * Base class for `RenderScene`-level objects.
-	 */
-	struct RenderSceneObject {
-		enum {
-			/* ?? */
-		};
-	};
-
 }

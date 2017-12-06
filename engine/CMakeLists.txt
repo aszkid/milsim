@@ -12,14 +12,16 @@ set(SOURCES
 	src/logger.cpp
 	src/object.cpp
 	src/hermes.cpp
-	src/ecs.cpp
 	
+	src/entity.cpp
+	src/component/debug.cpp
+	
+	src/sys/alexandria.cpp
+	src/sys/input.cpp
 	src/sys/render.cpp
 
 	src/util/io.cpp
 	
-	src/sys/alexandria.cpp
-	src/sys/input.cpp
 	src/sys/script.cpp
 	src/sys/audio.cpp
 	src/sys/net.cpp

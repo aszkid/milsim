@@ -10,7 +10,8 @@
 #include <GLFW/glfw3.h>
 
 #include "object.hpp"
-#include "ecs.hpp"
+#include "entity.hpp"
+#include "component/debug.hpp"
 
 using namespace gl;
 

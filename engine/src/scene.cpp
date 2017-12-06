@@ -277,8 +277,12 @@ Entity Scene::add_model(const char* name)
 	}
 
 	Entity model = m_entitymngr->create();
-	Component::Instance debug = m_debug_comp->attach(model);
-	m_debug_comp->set_name(debug, name);
+	m_debug_comp->set_name(
+		m_debug_comp->attach(model),
+		name
+	);
+
+	// also create render-level representation!
 
 	return model;
 }

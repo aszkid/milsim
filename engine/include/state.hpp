@@ -3,7 +3,7 @@
 #include <glm/ext.hpp>
 
 #include "sys/alexandria.hpp"
-#include "ecs.hpp"
+#include "entity.hpp"
 #include "hermes.hpp"
 #include "scene.hpp"
 #include "object.hpp"

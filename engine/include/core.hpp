@@ -15,7 +15,6 @@
 #include "logger.hpp"
 #include "hermes.hpp"
 #include "state.hpp"
-#include "ecs.hpp"
 #include "sys/alexandria.hpp"
 #include "sys/input.hpp"
 
