@@ -15,3 +15,8 @@ void RenderScene::inner_post_init()
 {
 	
 }
+
+void RenderScene::add_mesh(Component::Instance mesh)
+{
+	
+}

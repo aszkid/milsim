@@ -38,7 +38,7 @@ TextureAsset::~TextureAsset()
 }
 bool TextureAsset::inner_load()
 {
-	glGenTextures(1, &m_tex_id);
+	/*glGenTextures(1, &m_tex_id);
 	glBindTexture(GL_TEXTURE_2D, m_tex_id);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -50,13 +50,13 @@ bool TextureAsset::inner_load()
 		m_logger->error("Texture is not RGB nor RGBA! Aborting...");
 		abort();
 	}
-	glGenerateMipmap(GL_TEXTURE_2D);
+	glGenerateMipmap(GL_TEXTURE_2D);*/
 
 	return true;
 }
 void TextureAsset::inner_free()
 {
-	glDeleteTextures(1, &m_tex_id);
+	//glDeleteTextures(1, &m_tex_id);
 }
 
 
@@ -275,7 +275,7 @@ void Alexandria::load_database(const std::string filename)
 }
 void Alexandria::load_folder(const json& root, apathy::Path path, const std::string db_name)
 {
-	m_log->info("Loading folder `{}`", path.string());
+	//m_log->info("Loading folder `{}`", path.string());
 
 	for(auto& node : root) {
 		const std::string new_id = node["id"];

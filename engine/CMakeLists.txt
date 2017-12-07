@@ -18,6 +18,7 @@ set(SOURCES
 	src/component/debug.cpp
 	src/component/render.cpp
 	src/component/transform.cpp
+	src/component/mesh.cpp
 	
 	src/sys/alexandria.cpp
 	src/sys/input.cpp

@@ -8,11 +8,10 @@
 #include <glm/glm.hpp>
 #include <apathy/path.hpp>
 
-using namespace gl;
-using json = nlohmann::json;
-
-
 namespace MilSim {
+
+	using namespace gl;
+	using json = nlohmann::json;
 
 	typedef uint32_t t_asset_id;
 
@@ -86,7 +85,6 @@ namespace MilSim {
 			int width, int height, int channels);
 		~TextureAsset();
 
-		GLuint m_tex_id;
 		unsigned char* m_data;
 		int m_width, m_height, m_channels;
 	

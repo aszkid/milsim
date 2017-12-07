@@ -1,6 +1,7 @@
 #pragma once
 
 #include "object.hpp"
+#include "component/mesh.hpp"
 #include "sys/render.hpp"
 
 namespace MilSim {
@@ -21,6 +22,14 @@ namespace MilSim {
 	public:
 		RenderScene();
 		~RenderScene();
+
+		void add_mesh(Component::Instance mesh);
+
+		/**
+		 * Game-level `Scene` uses this interface to communicate with
+		 * the `Render` system, which is running in its own thread.
+		 */
+		void post_message();
 
 	private:
 		void inner_post_init();

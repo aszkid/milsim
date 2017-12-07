@@ -104,60 +104,6 @@ void Scene::inner_post_init()
 	m_wireframe = false;
 
 	glEnable(GL_DEPTH_TEST);
-
-	/**
-	 * testing `TransformComponent`:
-	 * gun on a person in a car on a plane
-	 */
-	Entity plane = m_entitymngr->create();
-	Entity car = m_entitymngr->create();
-	Entity killer = m_entitymngr->create();
-	Entity k1 = m_entitymngr->create();
-	Entity k2 = m_entitymngr->create();
-	Entity person = m_entitymngr->create();
-	Entity gun = m_entitymngr->create();
-	Entity watch = m_entitymngr->create();
-	
-	auto plane_t = m_transform_component->attach(plane);
-	auto car_t = m_transform_component->attach(car);
-	auto killer_t = m_transform_component->attach(killer);
-	auto k1_t = m_transform_component->attach(k1);
-	auto k2_t = m_transform_component->attach(k2);
-	auto person_t = m_transform_component->attach(person);
-	auto gun_t = m_transform_component->attach(gun);
-	auto watch_t = m_transform_component->attach(watch);
-
-	m_transform_component->add_child(plane_t, car_t),
-	m_transform_component->add_child(car_t, person_t);
-	m_transform_component->add_child(person_t, gun_t);
-	m_transform_component->add_child(person_t, watch_t);
-
-	// trying to crush our `TransformComponent`
-	m_transform_component->add_child(car_t, killer_t);
-	m_transform_component->add_child(killer_t, k1_t);
-	m_transform_component->add_child(killer_t, k2_t);
-
-	// translate the plane
-	const glm::mat4 translate = glm::translate(glm::vec3(2.0f, 0.0f, 0.0f));
-	m_transform_component->set_local(
-		plane_t,
-		translate
-	);
-
-	// aha!
-	m_transform_component->destroy(killer);
-
-	// print effect of watch transformation
-	auto view = m_transform_component->get_view(watch_t);
-	m_logger->info("{}", glm::to_string(view.world * glm::vec4(0,0,0,1)));
-	// print dirty components
-	auto dirty = m_transform_component->get_dirty();
-	m_logger->info("We have {} dirty nodes", dirty.size());
-	for(auto i : dirty) {
-		m_logger->info("Instance ({})", i);
-	}
-
-	m_logger->info("{}", m_transform_component->dump(plane_t).dump(4));
 }
 void Scene::set_viewport(const uint winx, const uint winy)
 {
