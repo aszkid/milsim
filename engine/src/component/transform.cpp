@@ -135,6 +135,15 @@ void TransformComponent::_destroy(const size_t idx)
 			m_children[parent].erase(it);
 		}
 	}
+	// rm dirty reference
+	auto it = std::find(
+		m_dirty.begin(),
+		m_dirty.end(),
+		Instance {idx}
+	);
+	if(it != m_dirty.end()) {
+		m_dirty.erase(it);
+	}
 	// clear our fields
 	m_children[idx].clear();
 	m_local[idx] = glm::mat4(0.f);
