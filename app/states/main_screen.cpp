@@ -26,7 +26,7 @@ void MainScreen::load()
 	// Build our scene
 	//m_scene->add_triangle();
 	
-	m_statue = m_scene->add_model("/Base/Models/Greek");
+	//m_statue = m_scene->add_model("/Base/Models/Greek");
 
 	m_walking[0] = false;
 	m_walking[1] = false;

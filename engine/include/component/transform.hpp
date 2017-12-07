@@ -1,8 +1,12 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <glm/ext.hpp>
+#include <json.hpp>
 
 #include "component.hpp"
+
+using json = nlohmann::json;
 
 namespace MilSim {
 
@@ -20,7 +24,13 @@ namespace MilSim {
 		void destroy(Entity e);
 
 		void set_local(Instance i, const glm::mat4 t);
+		// you generally don't set the world matrix manually
 		void set_world(Instance i, const glm::mat4 t);
+		void set_parent(Instance parent, Instance child);
+
+		void add_child(Instance parent, Instance child);
+
+		Instance get_parent(Instance i);
 
 		/**
 		 * Returns list of instances that have
@@ -38,16 +48,21 @@ namespace MilSim {
 		};
 		View get_view(Instance i);
 
+		/**
+		 * Debugging
+		 */
+		json dump(Instance i = {0});
+
 	private:
 		void _destroy(const size_t idx);
+		void _transform(Instance i, const glm::mat4 t);
 
 		size_t m_len;
 		std::map<Entity, size_t> m_map;
 		std::vector<glm::mat4> m_local;
 		std::vector<glm::mat4> m_world;
-		// Q: parent or children ref?
-		// A: lets try parent first (easier, only one parent)
-		std::vector<Entity> m_parent;
+		std::vector<Instance> m_parent;
+		std::vector<std::vector<Instance>> m_children;
 
 		std::vector<Instance> m_dirty;
 		std::vector<size_t> m_free;

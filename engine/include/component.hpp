@@ -18,6 +18,10 @@ namespace MilSim {
 
 		struct Instance {
 			size_t m_idx;
+
+			operator size_t() const {
+				return m_idx;
+			};
 		};
 		
 		virtual Instance attach(Entity e) = 0;

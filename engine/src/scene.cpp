@@ -104,6 +104,43 @@ void Scene::inner_post_init()
 	m_wireframe = false;
 
 	glEnable(GL_DEPTH_TEST);
+
+	/**
+	 * testing `TransformComponent`:
+	 * gun on a person in a car on a plane
+	 */
+	Entity plane = m_entitymngr->create();
+	Entity car = m_entitymngr->create();
+	Entity person = m_entitymngr->create();
+	Entity gun = m_entitymngr->create();
+	Entity watch = m_entitymngr->create();
+	
+	auto plane_t = m_transform_component->attach(plane);
+	auto car_t = m_transform_component->attach(car);
+	auto person_t = m_transform_component->attach(person);
+	auto gun_t = m_transform_component->attach(gun);
+	auto watch_t = m_transform_component->attach(watch);
+
+	m_transform_component->add_child(plane_t, car_t),
+	m_transform_component->add_child(car_t, person_t);
+	m_transform_component->add_child(person_t, gun_t);
+	m_transform_component->add_child(person_t, watch_t);
+
+	// translate the plane
+	const glm::mat4 translate = glm::translate(glm::vec3(2.0f, 0.0f, 0.0f));
+	m_transform_component->set_local(
+		person_t,
+		translate
+	);
+	// print effect of watch transformation
+	auto view = m_transform_component->get_view(watch_t);
+	m_logger->info("{}", glm::to_string(view.world * glm::vec4(0,0,0,1)));
+	// print dirty components
+	auto dirty = m_transform_component->get_dirty();
+	m_logger->info("We have {} dirty nodes", dirty.size());
+	for(auto i : dirty) {
+		m_logger->info("Instance ({})", i);
+	}
 }
 void Scene::set_viewport(const uint winx, const uint winy)
 {
