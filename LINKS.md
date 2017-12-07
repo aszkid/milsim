@@ -15,4 +15,6 @@
 - [ECS done right (from *Stingray*, aka *BitSquid*)](http://bitsquid.blogspot.com/2014/08/building-data-oriented-entity-system.html).
 - [On ordering draw calls](http://realtimecollisiondetection.net/blog/?p=86).
 - [Parallelizing the Naughty Dog engine](http://www.gdcvault.com/play/1022186/Parallelizing-the-Naughty-Dog-Engine).
-- [Mike Acton's "Data-Oriented Design and C++](https://www.youtube.com/watch?v=rX0ItVEVjHc)
+- [Mike Acton's "Data-Oriented Design and C++"](https://www.youtube.com/watch?v=rX0ItVEVjHc).
+- [Full D3D12 Pipeline State description](https://msdn.microsoft.com/en-us/library/windows/desktop/dn899196(v=vs.85).aspx); useful to translate concepts.
+- [`gfx-rs` programming model](https://gfx-rs.github.io/2016/09/14/programming-model.html); a nice example of high-level API wrapping.

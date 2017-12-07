@@ -15,6 +15,13 @@
 			"contents" : [
 				{
 					"type" : "model",
+					"id" : "Teapot",
+					"source" : "wt_teapot.obj"
+				}
+			],
+			"__" : [
+				{
+					"type" : "model",
 					"id" : "Greek",
 					"source" : "greek.obj"
 				}
