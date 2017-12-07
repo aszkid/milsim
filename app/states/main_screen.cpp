@@ -4,7 +4,7 @@
 
 MainScreen::MainScreen()
 {
-
+	m_statue = {0};
 }
 MainScreen::~MainScreen()
 {
@@ -13,14 +13,20 @@ MainScreen::~MainScreen()
 
 void MainScreen::load()
 {
-	m_scene = std::unique_ptr<MilSim::Scene>(new MilSim::Scene(m_entitymngr.get()));
+	// create world scene
+	m_scene = std::unique_ptr<MilSim::Scene>(new_scene());
 	post_init_child(m_scene.get(), "Scene");
 	m_scene->set_viewport(m_winx, m_winy);
+	// create corresponding render scene
+	m_render_scene = std::unique_ptr<MilSim::RenderScene>(new_render_scene());
+	post_init_child(m_render_scene.get(), "RenderScene");
+	// give `RenderScene` handle to `Scene`
+	m_scene->set_render_scene(m_render_scene.get());
 
 	// Build our scene
 	//m_scene->add_triangle();
 	
-	MilSim::Entity statue = m_scene->add_model("/Base/Models/Greek");
+	m_statue = m_scene->add_model("/Base/Models/Greek");
 
 	m_walking[0] = false;
 	m_walking[1] = false;
@@ -44,64 +50,65 @@ void MainScreen::render(double interp)
 }
 void MainScreen::update(double delta)
 {
+	using IKMsg = MilSim::InputKeyMessage;
 	MILSIM_MSG_LOOP(msg) {
 		if(msg->m_chan == MilSim::Crypto::HASH("InputKey")) {
-			auto ik = static_cast<MilSim::InputKeyMessage*>(msg);
+			auto ik = static_cast<IKMsg*>(msg);
 			switch(ik->m_key) {
-			case MilSim::InputKeyMessage::Key::W:
-				if(ik->m_action == MilSim::InputKeyMessage::Action::PRESS)
+			case IKMsg::Key::W:
+				if(ik->m_action == IKMsg::Action::PRESS)
 					m_walking[0] = true;
-				if(ik->m_action == MilSim::InputKeyMessage::Action::RELEASE)
+				if(ik->m_action == IKMsg::Action::RELEASE)
 					m_walking[0] = false;
 				break;
-			case MilSim::InputKeyMessage::Key::S:
-				if(ik->m_action == MilSim::InputKeyMessage::Action::PRESS)
+			case IKMsg::Key::S:
+				if(ik->m_action == IKMsg::Action::PRESS)
 					m_walking[1] = true;
-				if(ik->m_action == MilSim::InputKeyMessage::Action::RELEASE)
+				if(ik->m_action == IKMsg::Action::RELEASE)
 					m_walking[1] = false;
 				break;
-			case MilSim::InputKeyMessage::Key::D:
-				if(ik->m_action == MilSim::InputKeyMessage::Action::PRESS)
+			case IKMsg::Key::D:
+				if(ik->m_action == IKMsg::Action::PRESS)
 					m_walking[2] = true;
-				if(ik->m_action == MilSim::InputKeyMessage::Action::RELEASE)
+				if(ik->m_action == IKMsg::Action::RELEASE)
 					m_walking[2] = false;
 				break;
-			case MilSim::InputKeyMessage::Key::A:
-				if(ik->m_action == MilSim::InputKeyMessage::Action::PRESS)
+			case IKMsg::Key::A:
+				if(ik->m_action == IKMsg::Action::PRESS)
 					m_walking[3] = true;
-				if(ik->m_action == MilSim::InputKeyMessage::Action::RELEASE)
+				if(ik->m_action == IKMsg::Action::RELEASE)
 					m_walking[3] = false;
 				break;
-			case MilSim::InputKeyMessage::Key::P:
-				/*if(ik->m_action == MilSim::InputKeyMessage::Action::PRESS)
+			case IKMsg::Key::P:
+				/*if(ik->m_action == IKMsg::Action::PRESS)
 					m_logger->info("Camera position: {}", glm::to_string(m_scene->get_camera().m_pos));*/
 				break;
-			case MilSim::InputKeyMessage::Key::L:
-				if(ik->m_action == MilSim::InputKeyMessage::Action::PRESS)
+			case IKMsg::Key::L:
+				if(ik->m_action == IKMsg::Action::PRESS)
 					//m_scene->get_light().m_position = m_scene->get_camera().m_pos;
 				break;
-			case MilSim::InputKeyMessage::Key::M:
-				if(ik->m_action == MilSim::InputKeyMessage::Action::PRESS)
+			case IKMsg::Key::M:
+				if(ik->m_action == IKMsg::Action::PRESS)
 					m_scene->toggle_wireframe();
 				break;
-			case MilSim::InputKeyMessage::Key::KP_ADD:
-				if(ik->m_action == MilSim::InputKeyMessage::Action::PRESS || ik->m_action == MilSim::InputKeyMessage::Action::REPEAT) {
+			case IKMsg::Key::KP_ADD:
+				if(ik->m_action == IKMsg::Action::PRESS || ik->m_action == IKMsg::Action::REPEAT) {
 					m_walking_spd += 1.0f;
 					if(m_walking_spd > 50.0f)
 						m_walking_spd = 50.0f;
 				}
 				break;
-			case MilSim::InputKeyMessage::Key::KP_SUBTRACT:
-				if(ik->m_action == MilSim::InputKeyMessage::Action::PRESS || ik->m_action == MilSim::InputKeyMessage::Action::REPEAT) {
+			case IKMsg::Key::KP_SUBTRACT:
+				if(ik->m_action == IKMsg::Action::PRESS || ik->m_action == IKMsg::Action::REPEAT) {
 					m_walking_spd -= 1.0f;
 					if(m_walking_spd < 0.0f)
 						m_walking_spd = 0.0f;
 				}
 				break;
-			case MilSim::InputKeyMessage::Key::LEFT_SHIFT:
-				if(ik->m_action == MilSim::InputKeyMessage::Action::PRESS) {
+			case IKMsg::Key::LEFT_SHIFT:
+				if(ik->m_action == IKMsg::Action::PRESS) {
 					m_sprint = true;
-				} else if(ik->m_action == MilSim::InputKeyMessage::Action::RELEASE) {
+				} else if(ik->m_action == IKMsg::Action::RELEASE) {
 					m_sprint = false;
 				}
 			default:

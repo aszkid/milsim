@@ -44,5 +44,5 @@ void EntityManager::kill()
 }
 void EntityManager::update()
 {
-
+	
 }

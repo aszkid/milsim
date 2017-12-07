@@ -9,11 +9,11 @@ namespace MilSim {
 	 */
 	class DebugComponent : public Component {
 	public:
-		DebugComponent(EntityManager* em);
+		DebugComponent();
 		~DebugComponent();
 
-		Component::Instance attach(Entity e);
-		Component::Instance lookup(Entity e);
+		Instance attach(Entity e);
+		Instance lookup(Entity e);
 		void destroy(Entity e);
 		void gc();
 

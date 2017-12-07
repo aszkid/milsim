@@ -2,10 +2,11 @@
 
 using namespace MilSim;
 
-DebugComponent::DebugComponent(EntityManager* em)
-	: Component::Component(em)
+DebugComponent::DebugComponent()
 {
 	m_len = 0;
+
+	// null component
 	m_entity.emplace_back(Entity {0});
 	m_name.emplace_back("null");
 
@@ -35,8 +36,10 @@ Component::Instance DebugComponent::lookup(Entity e)
 void DebugComponent::destroy(Entity e)
 {
 	auto it = m_map.find(e);
-	if(it != m_map.end())
-		_destroy(it->second);
+	if(it == m_map.end())
+		return;
+	_destroy(it->second);
+	m_map.erase(it);
 }
 void DebugComponent::gc()
 {

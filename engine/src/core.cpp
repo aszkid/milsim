@@ -113,6 +113,7 @@ void Core::loop()
 			// Logic happens
 			glfwPollEvents();
 			update();
+			// pull messages `Core` is interested in
 			for(auto e : m_hermes->pull_inbox(Crypto::HASH("Core"))) {
 				if(e->m_chan == Crypto::HASH("InputKey")) {
 					auto ikm = static_cast<InputKeyMessage*>(e);

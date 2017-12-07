@@ -15,6 +15,7 @@ public:
 
 private:
 	std::unique_ptr<MilSim::Scene> m_scene;
+	std::unique_ptr<MilSim::RenderScene> m_render_scene;
 
 	// 0 - front
 	// 1 - back
@@ -23,4 +24,7 @@ private:
 	bool m_walking[4];
 	float m_walking_spd;
 	bool m_sprint;
+
+	// scene stuff
+	MilSim::Entity m_statue;
 };

@@ -81,10 +81,12 @@ void Camera::_update_view()
 ////////////////////////////////////////
 // SCENE
 ////////////////////////////////////////
-Scene::Scene(EntityManager* em)
+Scene::Scene(EntityManager* em, DebugComponent* dc, TransformComponent* tc)
 {
 	m_entitymngr = em;
-	m_debug_comp = std::unique_ptr<DebugComponent>(new DebugComponent(m_entitymngr));
+	m_debug_comp = dc;
+	m_transform_component = tc;
+	m_render_scene = nullptr;
 }
 Scene::~Scene()
 {
@@ -107,6 +109,10 @@ void Scene::set_viewport(const uint winx, const uint winy)
 {
 	m_winx = winx;
 	m_winy = winy;
+}
+void Scene::set_render_scene(RenderScene* rs)
+{
+	m_render_scene = rs;
 }
 Entity Scene::get_camera()
 {
@@ -133,6 +139,15 @@ void Scene::update(double delta)
 			glViewport(0, 0, m_winx, m_winy);
 		}
 	}
+	
+	// update `Scene`-level components
+	// `TransformComponent` updates are immediate, get list of dirty
+	for(const auto i : m_transform_component->get_dirty()) {
+		// send `UPDATE_UNIFORM` message or something similar
+	}
+
+	// pipe render-level update messages onto `RenderScene` thread
+	// ....
 }
 void Scene::render(double interp)
 {
@@ -267,7 +282,7 @@ void Scene::render(double interp)
 
 	return &m_drawables.back();
 }*/
-Entity Scene::add_model(const char* name)
+Entity Scene::add_model(const char* name, const glm::mat4 local, const glm::mat4 world)
 {
 	auto model_asset = m_alexandria->get_asset(Crypto::HASH(name));
 	if (model_asset == nullptr)
@@ -277,10 +292,24 @@ Entity Scene::add_model(const char* name)
 	}
 
 	Entity model = m_entitymngr->create();
+
+	// set basic debug info
 	m_debug_comp->set_name(
 		m_debug_comp->attach(model),
 		name
 	);
+	// set transform info
+	MilSim::Component::Instance transform = m_transform_component->attach(model);
+	m_transform_component->set_local(
+		transform,
+		glm::mat4(local)
+	);
+	m_transform_component->set_world(
+		transform,
+		glm::mat4(world)
+	);
+	
+	// send render resource creation command
 
 	// also create render-level representation!
 

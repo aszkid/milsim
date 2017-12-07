@@ -9,9 +9,11 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
+#include "render_scene.hpp"
 #include "object.hpp"
 #include "entity.hpp"
 #include "component/debug.hpp"
+#include "component/transform.hpp"
 
 using namespace gl;
 
@@ -69,7 +71,7 @@ namespace MilSim {
 	 */
 	class Scene : public Object {
 	public:
-		Scene(EntityManager* em);
+		Scene(EntityManager* em, DebugComponent* dc, TransformComponent* tc);
 		~Scene();
 
 		void update(double delta);
@@ -80,15 +82,20 @@ namespace MilSim {
 		void toggle_wireframe();
 
 		void set_viewport(const uint winx, const uint winy);
+		void set_render_scene(RenderScene* rs);
 
 		Entity add_triangle();
-		Entity add_model(const char* name);
+		Entity add_model(const char* name, const glm::mat4 local = glm::mat4(1.0f), const glm::mat4 world = glm::mat4(1.0f));
 		Entity add_light();
 	
 	private:
 		// ecs handles
-		EntityManager *m_entitymngr;
-		std::unique_ptr<DebugComponent> m_debug_comp;
+		EntityManager* m_entitymngr;
+		DebugComponent* m_debug_comp;
+		TransformComponent* m_transform_component;
+
+		// handle to the render scene used to render our stuff
+		RenderScene* m_render_scene;
 	
 		// Viewport
 		uint m_winx, m_winy;

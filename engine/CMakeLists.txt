@@ -9,12 +9,15 @@ include_directories(include)
 set(SOURCES
 	src/core.cpp
 	src/scene.cpp
+	src/render_scene.cpp
 	src/logger.cpp
 	src/object.cpp
 	src/hermes.cpp
 	
 	src/entity.cpp
 	src/component/debug.cpp
+	src/component/render.cpp
+	src/component/transform.cpp
 	
 	src/sys/alexandria.cpp
 	src/sys/input.cpp

@@ -10,17 +10,18 @@ namespace MilSim {
 	 */
 	class Component {
 	public:
-		Component(EntityManager* em)
-			: m_entitymngr(em)
-		{};
+		Component() {};
 		virtual ~Component() {};
+		void set_handler(EntityManager* em) {
+			m_entitymngr = em;
+		}
 
 		struct Instance {
 			size_t m_idx;
 		};
 		
-		virtual Component::Instance attach(Entity e) = 0;
-		virtual Component::Instance lookup(Entity e) = 0;
+		virtual Instance attach(Entity e) = 0;
+		virtual Instance lookup(Entity e) = 0;
 		virtual void destroy(Entity e) = 0;
 
 	protected:
