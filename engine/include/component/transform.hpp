@@ -66,6 +66,8 @@ namespace MilSim {
 
 		std::vector<Instance> m_dirty;
 		std::vector<size_t> m_free;
+
+		t_logger m_logger;
 	};
 
 }

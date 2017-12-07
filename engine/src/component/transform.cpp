@@ -13,6 +13,8 @@ TransformComponent::TransformComponent()
 	m_parent.push_back({0});
 	m_children.push_back(std::vector<Instance>());
 
+	m_logger = Logger::create("TransformComponent");
+
 }
 TransformComponent::~TransformComponent()
 {
@@ -78,11 +80,12 @@ void TransformComponent::set_world(Instance i, const glm::mat4 t)
 }
 void TransformComponent::set_parent(Instance parent, Instance child)
 {
-	m_parent[parent] = child;
+	m_parent[child] = parent;
 }
 void TransformComponent::add_child(Instance parent, Instance child)
 {
 	m_children[parent].push_back(child);
+	set_parent(parent, child);
 }
 Component::Instance TransformComponent::get_parent(Instance i)
 {
@@ -103,11 +106,40 @@ TransformComponent::View TransformComponent::get_view(Component::Instance i)
 
 void TransformComponent::_destroy(const size_t idx)
 {
+	/**
+	 * This function is expensive right now.
+	 * We might want to allow for a `SOFT_DESTROY` flag
+	 * and get rid of the residual references later in
+	 * the program...
+	 */
+
+	// this idx is now free to use
 	m_free.push_back(idx);
+	// rm parent pointers of every child
+	for(Instance child : m_children[idx]) {
+		/**
+		 * Children are now dangling... should we hook them
+		 * to the rm'd component's parent? Make that a flag?
+		 */
+		m_parent[child].m_idx = 0;
+	}
+	// rm child pointer of our parent
+	Instance parent = m_parent[idx];
+	if(parent != 0) {
+		auto it = std::find(
+			m_children[parent].begin(),
+			m_children[parent].end(),
+			Instance {idx}
+		);
+		if(it != m_children[parent].end()) {
+			m_children[parent].erase(it);
+		}
+	}
+	// clear our fields
 	m_children[idx].clear();
-	/*m_local.erase(m_local.begin()+idx);
-	m_world.erase(m_world.begin()+idx);
-	m_parent.erase(m_parent.begin()+idx);*/
+	m_local[idx] = glm::mat4(0.f);
+	m_local[idx] = glm::mat4(0.f);
+	m_parent[idx] = {0};
 }
 void TransformComponent::_transform(Component::Instance i, const glm::mat4 t)
 {
