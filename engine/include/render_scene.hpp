@@ -7,6 +7,11 @@
 namespace MilSim {
 
 	/**
+	 * Higher-level render-state components (not first-class citizens, though...).
+	 */
+	class RenderMesh {};
+
+	/**
 	 * The graphics counterpart of the `Scene` class:
 	 * holds only the *render representation* of a world object.
 	 * Therefore, some world objects (link sounds) have no
@@ -17,6 +22,12 @@ namespace MilSim {
 	 * 
 	 * `Scene` posts messages to the `RenderScene`,
 	 * which updates all render resources as needed.
+	 * 
+	 * Might decide to upload stuff in an effort to use memory
+	 * and state binding efficiently:
+	 * 		+ If two meshes use the same vertex layout and material,
+	 * 		  pack them in the same vertex buffer.
+	 * But first make it work!
 	 */
 	class RenderScene : public Object {
 	public:
@@ -33,6 +44,12 @@ namespace MilSim {
 
 	private:
 		void inner_post_init();
+
+		struct Data {
+			std::vector<RenderMesh> m_render_mesh;
+			std::vector<size_t> m_render_mesh_free;
+			// etc
+		};
 	};
 
 }

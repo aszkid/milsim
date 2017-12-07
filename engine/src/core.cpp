@@ -56,6 +56,7 @@ void Core::init(const std::string local_root = ".")
 	// Init systems
 	m_input = add_system(new Input(m_window), "input");
 	m_alexandria = add_system(new Alexandria(m_local_root), "alexandria");
+	m_render = add_system(new Render(), "render");
 
 	for(auto& s : m_systems) {
 		s.second->init();
@@ -64,6 +65,10 @@ void Core::init(const std::string local_root = ".")
 void Core::deinit()
 {
 	m_states.clear();
+
+	for(auto& s : m_systems) {
+		s.second->kill();
+	}
 	m_systems.clear();
 
 	glfwDestroyWindow(m_window);

@@ -17,6 +17,7 @@
 #include "state.hpp"
 #include "sys/alexandria.hpp"
 #include "sys/input.hpp"
+#include "sys/render.hpp"
 
 
 namespace MilSim {
@@ -74,6 +75,7 @@ namespace MilSim {
 		std::unique_ptr<Hermes> m_hermes;
 		Alexandria* m_alexandria;
 		Input* m_input;
+		Render* m_render;
 
 		// Various
 		GLFWwindow* m_window;

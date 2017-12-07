@@ -1,5 +1,7 @@
 #pragma once
 
+#include <atomic>
+
 #include <glbinding/gl/gl.h>
 
 #include "sys.hpp"
@@ -48,7 +50,29 @@ namespace MilSim {
 		Render();
 		~Render();
 
+		void init();
+		void kill();
+		void update();
 
+		void thread_entry();
+
+	private:
+		
+		struct Resources {
+			std::vector<TextureResource> m_textures;
+			std::vector<size_t> m_textures_free;
+
+			std::vector<VertexBufferResource> m_vertex_buffers;
+			std::vector<size_t> m_vertex_buffers_free;
+
+			std::vector<VertexLayoutResource> m_vertex_layouts;
+			std::vector<size_t> m_vertex_layouts_free;
+		};
+
+		Resources m_resources;
+
+		std::thread m_thread;
+		std::atomic<bool> m_should_stop;
 	};
 
 };
