@@ -19,3 +19,4 @@
 - [Full D3D12 Pipeline State description](https://msdn.microsoft.com/en-us/library/windows/desktop/dn899196(v=vs.85).aspx); useful to translate concepts.
 - [`gfx-rs` programming model](https://gfx-rs.github.io/2016/09/14/programming-model.html); a nice example of high-level API wrapping.
 - [Blog series on a "Stateless, layered, multi-threaded rendering" API](https://blog.molecular-matters.com/2014/11/06/stateless-layered-multi-threaded-rendering-part-1/).
+- [A thread-safe `queue` implementation in C++11](https://juanchopanzacpp.wordpress.com/2013/02/26/concurrent-queue-c11/).
