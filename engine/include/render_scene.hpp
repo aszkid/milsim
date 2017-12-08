@@ -25,8 +25,8 @@ namespace MilSim {
 	 * 
 	 * Might decide to upload stuff in an effort to use memory
 	 * and state binding efficiently:
-	 * 		+ If two meshes use the same vertex layout and material,
-	 * 		  pack them in the same vertex buffer.
+	 * 		+ If two meshes use the same vertex layout (pretty common),
+	 * 		  pack them in the same vertex buffer. Stuff like this.
 	 * But first make it work!
 	 */
 	class RenderScene : public Object {

@@ -17,9 +17,7 @@
 					"type" : "model",
 					"id" : "Teapot",
 					"source" : "wt_teapot.obj"
-				}
-			],
-			"__" : [
+				},
 				{
 					"type" : "model",
 					"id" : "Greek",

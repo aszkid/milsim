@@ -284,7 +284,7 @@ void Scene::render(double interp)
 }*/
 Entity Scene::add_model(const char* name, const glm::mat4 local, const glm::mat4 world)
 {
-	auto model_asset = m_alexandria->get_asset(Crypto::HASH(name));
+	auto model_asset = (MilSim::ModelAsset*)m_alexandria->get_asset(Crypto::HASH(name));
 	if (model_asset == nullptr)
 	{
 		m_logger->info("Can't load this model boy...");

@@ -40,7 +40,9 @@ namespace MilSim {
 
 		/**
 		 * View of the data of a specific instance. You are not
-		 * really supposed to use this frequently.
+		 * really supposed to use this frequently. When was the
+		 * last time you needed per-frame access to a *single*
+		 * transform?
 		 */
 		struct View {
 			const glm::mat4& world;

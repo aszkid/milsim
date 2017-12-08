@@ -32,6 +32,6 @@ void Render::update()
 void Render::thread_entry()
 {
 	while(!m_should_stop.load()) {
-		m_log->info("Logging from render thread...");
+		//m_log->info("Logging from render thread...");
 	}
 }
