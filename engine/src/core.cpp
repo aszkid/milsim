@@ -131,8 +131,6 @@ void Core::loop()
 		// Drawing happens
 		render();
 
-		//glfwSwapBuffers(m_window);
-
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		if(should_close)
 			break;
