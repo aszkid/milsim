@@ -81,7 +81,6 @@ void Render::dispatch(RenderResourceContext* rrc)
  */
 void Render::_handle_resource(RenderResourceContext* rrc)
 {
-	m_log->info("Handling resource message (rrc: {:x})...", (uint64_t)rrc->m_tex_ref[0]);
 	// assuming `rrc` not nullptr...
 	// 1) upload textures
 	size_t tex_n = rrc->m_tex.size();
@@ -105,20 +104,18 @@ void Render::_handle_resource(RenderResourceContext* rrc)
 		glGenerateMipmap(GL_TEXTURE_2D);
 
 		// notify whoever holds the instance
-		// UNSAFE, period. figure it out somehow
-		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		m_log->info("Writing at handle {:x}...", (uint64_t)rrc->m_tex_ref[i]);
-		rrc->m_tex_ref[i]->m_id = tex_instance.m_id;
-		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		// this is safe, though
+		// TODO: pack these up and send batched at the end
+		m_hermes->send(new RenderResourceMessage(
+			tex_instance,
+			rrc->m_tex_ref[i],
+			RenderResourceMessage::CREATED
+		));
 	}
 	// 2) upload vertex buffers
 	// etc
 
 	// this *is* safe
-	//rrc->m_delete.store(true);
+	rrc->m_delete.store(true);
 }
 void Render::_handle_command(RenderCommandContext* rcc)
 {
@@ -147,7 +144,6 @@ RenderResourceInstance Render::_alloc_texture()
 	}
 	
 	glGenTextures(1, &m_textures[instance].m_tex_id);
-	m_log->info("Generated texture...");
 
 	return instance;
 }

@@ -88,11 +88,11 @@ namespace MilSim {
 			unsigned char* source;
 		};
 		std::vector<TextureData> m_tex;
-		std::vector<RenderResourceInstance*> m_tex_ref;
+		std::vector<size_t> m_tex_ref;
 		TextureData _tmp_tex;
 		void begin_texture();
 		void hook_texture(int width, int height, int channels, unsigned char* source);
-		void end_texture(RenderResourceInstance* ref);
+		void end_texture(size_t ref);
 
 		/**
 		 * VERTEX BUFFER

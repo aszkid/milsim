@@ -2,10 +2,12 @@
 
 #include <vector>
 #include <map>
+#include <mutex>
 
 #include "util/types.hpp"
 #include "util/crypto.hpp"
 #include "logger.hpp"
+#include "render_resource.hpp"
 
 namespace MilSim {
 
@@ -98,6 +100,20 @@ namespace MilSim {
 		int m_width, m_height;
 	};
 
+	class RenderResourceMessage : public Message {
+	public:
+		enum Type {
+			CREATED, DESTROYED, UPDATED
+		};
+		RenderResourceMessage(RenderResourceInstance instance, size_t creator, Type type)
+			: Message::Message(Crypto::HASH("RenderResource")), m_instance(instance), m_creator(creator), m_type(type)
+		{};
+
+		RenderResourceInstance m_instance;
+		Type m_type;
+		size_t m_creator;
+	};
+
 	/**
 	 * Subscription class, holds a list of interested channels. 
 	 * The interested party is responsible for pulling events
@@ -134,6 +150,8 @@ namespace MilSim {
 		std::map<uint32_t, Subscription> m_subs;
 		std::vector<std::unique_ptr<Message>> m_inbox;
 		t_logger m_log;
+
+		std::mutex m_mutex;
 
 	};
 

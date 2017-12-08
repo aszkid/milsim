@@ -235,7 +235,9 @@ Alexandria::~Alexandria()
 
 void Alexandria::init()
 {
-
+	m_hermes->subscribe(Crypto::HASH("Alexandria"), {
+		Crypto::HASH("RenderResource")
+	});
 }
 void Alexandria::kill()
 {
@@ -244,17 +246,26 @@ void Alexandria::kill()
 
 void Alexandria::update()
 {
-	for(auto it = m_rrc_pool.begin(); it != m_rrc_pool.end(); ++it) {
-		if((*it)->m_delete.load()) {
-			m_log->info("Erasing rrc...");
-			//m_rrc_pool.erase(it);
-			//it->reset();
-			m_log->info("rrc ptr: {:x}", (uint64_t)it->get());
-			(*it)->m_tex_ref.clear();
-			//(*it).reset();
+	for(auto& msg : m_hermes->pull_inbox(Crypto::HASH("Alexandria"))) {
+		if(msg->m_chan == Crypto::HASH("RenderResource")) {
+			auto rrm = static_cast<RenderResourceMessage*>(msg);
+			// use base class `RenderableAsset` for all assets that need render representation...
+			if(rrm->m_instance.m_type == RenderResource::TEXTURE) {
+				auto tex = (TextureAsset*)get_asset(rrm->m_creator, NO_LOAD);
+				tex->m_handle = rrm->m_instance;
+				m_log->info("Populated texture with render resource handle {:x}!", tex->m_handle);
+			}
 		}
 	}
-	m_rrc_pool.clear();
+
+	for(auto it = m_rrc_pool.begin(); it != m_rrc_pool.end(); ) {
+		if((*it)->m_delete.load()) {
+			// slow, use a `free_rrc` vector (or similar)
+			m_rrc_pool.erase(it);
+		} else {
+			++it;
+		}
+	}
 }
 
 void Alexandria::load_database(const std::string filename)
@@ -413,7 +424,7 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 		stbi_set_flip_vertically_on_load(true);
 		texture->m_data = stbi_load(working_path.string().c_str(), &texture->m_width, &texture->m_height, &texture->m_channels, 0);
 
-		// Upload to the GPU -- naive way, blocking
+		// Upload to the GPU
 		RenderResourceContext* rrc = alloc_rrc();
 		rrc->begin_texture();
 		rrc->hook_texture(
@@ -422,11 +433,9 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 			texture->m_channels,
 			texture->m_data
 		);
-		rrc->end_texture(&texture->m_handle);
+		rrc->end_texture(hash);
 
-		m_log->info("Passing handle {:x}...", (uint64_t)&texture->m_handle);
-
-		m_log->info("Dispatching render message...");
+		m_log->info("Dispatching render-resource message...");
 		m_sys_render->dispatch(rrc);
 	}
 	

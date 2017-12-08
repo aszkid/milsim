@@ -71,6 +71,12 @@ It has the ability to communicate with every other system, and relay information
 
 ## Stand-alone classes
 
+### Hermes
+The message passer. Lives in the main thread, but is multi-writer-ready. The current implementation is dead simple; a single `vector` of messages that are accumulated and flushed every frame. Writers acquire a lock on-write to push back, and readers do too (we assume there can be a read-write situation, which might be possible when the render thread is spinning on its own). When a game object wants to read messages, it calls `Hermes::pull_inbox(subscription)` which generates on-the-fly a vector of messages directed to one of the cannels the subscription is interested in. This is not ideal. What we can do better:
+
++ Separate the inbox in a `write_queue` and a `read_queue` (or similar) to allow separate read and write locks.
++ Allocate for each subscription a `ref_queue` and for each message received, push its index into every subscription queue. Pulling the inbox becomes lighter, but with an added overhead at every `send()`.
+
 ### GameState
 
 Games are essentially finite state machines. Each of these states is represented by a `GameState` instance. It holds (references) to everything in the scene: spatial information, geometry information, etc.

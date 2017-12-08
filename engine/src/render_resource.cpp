@@ -13,7 +13,7 @@ void RenderResourceContext::hook_texture(int width, int height, int channels, un
 {
 	_tmp_tex = {width, height, channels, source};
 }
-void RenderResourceContext::end_texture(RenderResourceInstance* ref)
+void RenderResourceContext::end_texture(size_t ref)
 {
 	m_tex.push_back(_tmp_tex);
 	m_tex_ref.push_back(ref);
