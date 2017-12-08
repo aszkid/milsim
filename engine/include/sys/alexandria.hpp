@@ -94,25 +94,17 @@ namespace MilSim {
 	};
 
 	/**
-	 * Vertex base data structure, minimal.
-	 */
-	struct Vertex {
-		Vertex(glm::vec3 pos, glm::vec3 norm, glm::vec2 tex) {
-			m_position = pos;
-			m_normal = norm;
-			m_texture = tex;
-		};
-
-		glm::vec3 m_position;
-		glm::vec3 m_normal;
-		glm::vec2 m_texture;
-	};
-	/**
 	 * Mesh: main structure for 3D geometry.
 	 */
 	struct Mesh {
-		std::vector<Vertex> m_verts;
-		GLuint m_vao, m_vbo, m_ebo;
+		/**
+		 * OLD
+		 * std::vector<Vertex> m_verts;
+		 * GLuint m_vao, m_vbo, m_ebo;
+		*/
+		std::vector<glm::vec3> m_position;
+		std::vector<glm::vec3> m_normal;
+		std::vector<glm::vec2> m_texture;
 	};
 	/**
 	 * ModelAsset: lowest level of 3D organization,
@@ -121,10 +113,11 @@ namespace MilSim {
 	 */
 	class ModelAsset : public Asset {
 	public:
-		ModelAsset(const std::string name, std::vector<Mesh> meshes);
+		ModelAsset(const std::string name);
 		~ModelAsset();
 
 		std::vector<Mesh> m_meshes;
+		//std::vector<Material> m_materials;
 		t_asset_id m_texture;
 
 	private:
@@ -196,13 +189,14 @@ namespace MilSim {
 		void load_folder(const json& root, apathy::Path path, const std::string db_name);
 		void add_asset(apathy::Path path, const std::string type, const json* root, const std::string db_name);
 
-		void place_asset(const t_asset_id hash, Asset* asset) {
+		Asset* place_asset(const t_asset_id hash, Asset* asset) {
 			if(m_assets.find(hash) != m_assets.end()) {
 				m_log->warn("Asset `{:x}` already exists, skipping...");
-				return;
+				return nullptr;
 			}
 			m_assets[hash] = t_asset_ptr(asset);
 			m_assets[hash]->set_hash(hash);
+			return asset;
 		}
 
 		apathy::Path m_local_root;

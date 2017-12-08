@@ -63,8 +63,8 @@ void TextureAsset::inner_free()
 ////////////////////////////////////////
 // MODELASSET
 ////////////////////////////////////////
-ModelAsset::ModelAsset(const std::string name, std::vector<Mesh> meshes)
-	: Asset::Asset("ModelAsset." + name), m_meshes(meshes), m_texture(0)
+ModelAsset::ModelAsset(const std::string name)
+	: Asset::Asset("ModelAsset." + name), m_texture(0)
 {
 }
 ModelAsset::~ModelAsset()
@@ -73,7 +73,7 @@ ModelAsset::~ModelAsset()
 }
 bool ModelAsset::inner_load()
 {
-	for(auto& m : m_meshes) {
+	/*for(auto& m : m_meshes) {
 		glGenVertexArrays(1, &m.m_vao);
 		glGenBuffers(1, &m.m_vbo);
 		
@@ -104,16 +104,16 @@ bool ModelAsset::inner_load()
 			GL_FLOAT, GL_FALSE,
 			sizeof(Vertex), (void*)offsetof(Vertex, m_texture)
 		);
-	}
+	}*/
 
 	return true;
 }
 void ModelAsset::inner_free()
 {
-	for(auto& m : m_meshes) {
+	/*for(auto& m : m_meshes) {
 		glDeleteBuffers(1, &m.m_vbo);
 		glDeleteVertexArrays(1, &m.m_vao);
-	}
+	}*/
 	m_meshes.clear();
 }
 
@@ -356,7 +356,6 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 			abort();
 		}
 
-		Mesh mesh;
 		/*m_log->info("{} vertices", attrib.vertices.size() / 3);
 		m_log->info("{} normals", attrib.normals.size() / 3);
 		m_log->info("{} materials", materials.size());
@@ -366,7 +365,7 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 		t_asset_id tex = 0;
 
 		// loop materials
-		for(size_t m = 0; m < materials.size(); m++) {
+		/*for(size_t m = 0; m < materials.size(); m++) {
 			// gotcha! create a `Texture` asset; we could even do `Material` assets
 			// on top of that.
 			apathy::Path tex_id(path);
@@ -375,14 +374,11 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 			tex = Crypto::HASH(tex_id.sanitize().string());
 			// force texture load for now
 			get_asset(tex);
-		}
+		}*/
 
-		// loop shapes
-		for(size_t s = 0; s < shapes.size(); s++) {
-			// loop faces
+		/*for(size_t s = 0; s < shapes.size(); s++) {
  			size_t index_off = 0;
 			for(size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
-				// loop vertices
 				size_t fv = shapes[s].mesh.num_face_vertices[f];
 				for(size_t v = 0; v < fv; v++) {
 					tinyobj::index_t idx = shapes[s].mesh.indices[index_off + v];
@@ -406,10 +402,34 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 				}
 				index_off += fv;
 			}
+		}*/
+		
+		ModelAsset* model = static_cast<ModelAsset*>(place_asset(hash, new ModelAsset(short_id)));
+		model->m_meshes.push_back({});
+		Mesh& mesh = model->m_meshes.back();
+
+		// Memory copying -- pretty fast
+		const size_t realsize = sizeof(tinyobj::real_t);
+
+		const size_t len_v = attrib.vertices.size() / 3;
+		const size_t bytes_v = attrib.vertices.size() * realsize;
+		mesh.m_position.resize(len_v);
+		memcpy(&mesh.m_position[0], &attrib.vertices[0], bytes_v);
+
+		const size_t len_vn = attrib.normals.size() / 3;
+		const size_t bytes_vn = attrib.normals.size() * realsize;
+		mesh.m_normal.resize(len_vn);
+		memcpy(&mesh.m_normal[0], &attrib.normals[0], bytes_vn);
+
+		const size_t len_tc = attrib.texcoords.size() / 2;
+		const size_t bytes_tc = attrib.texcoords.size() * realsize;
+		if(len_tc > 0) {
+			// assume that we have texture coordinates
+			mesh.m_texture.resize(len_tc);
+			memcpy(&mesh.m_texture[0], &attrib.texcoords[0], bytes_tc);
 		}
-		//m_assets[hash] = t_asset_ptr(new ModelAsset(short_id, {mesh}));
-		place_asset(hash, new ModelAsset(short_id, {mesh}));
-		((ModelAsset*)get_asset(hash, NO_LOAD))->m_texture = tex;
+
+		model->m_texture = tex;
 
 	} else if(type == "texture") {
 		int width, height, channels;
