@@ -12,4 +12,5 @@ set(SOURCES
 add_executable(milsim ${SOURCES})
 target_link_libraries(milsim milsim_engine)
 
-target_compile_options(milsim_engine PRIVATE "-Wall")
+target_compile_options(milsim PRIVATE $<$<CONFIG:DEBUG>:-Wall -Wextra -g>)
+target_compile_options(milsim PRIVATE $<$<CONFIG:RELEASE>:-Wall -Wextra -O3>)

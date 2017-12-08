@@ -80,9 +80,7 @@ namespace MilSim {
 	 */
 	class TextureAsset : public Asset {
 	public:
-		TextureAsset(const std::string name,
-			unsigned char* data,
-			int width, int height, int channels);
+		TextureAsset(const std::string name);
 		~TextureAsset();
 
 		unsigned char* m_data;

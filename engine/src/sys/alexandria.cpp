@@ -25,8 +25,8 @@ bool FontAsset::inner_load()
 ////////////////////////////////////////
 // TEXTUREASSET
 ////////////////////////////////////////
-TextureAsset::TextureAsset(const std::string name, unsigned char* data, int width, int height, int channels)
-	: Asset::Asset("TextureAsset." + name), m_data(data), m_width(width), m_height(height), m_channels(channels)
+TextureAsset::TextureAsset(const std::string name)
+	: Asset::Asset("TextureAsset." + name)
 {
 
 }
@@ -356,16 +356,11 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 			abort();
 		}
 
-		/*m_log->info("{} vertices", attrib.vertices.size() / 3);
-		m_log->info("{} normals", attrib.normals.size() / 3);
-		m_log->info("{} materials", materials.size());
-		m_log->info("{} shapes", shapes.size());*/
-
 		// last texture used
 		t_asset_id tex = 0;
 
 		// loop materials
-		/*for(size_t m = 0; m < materials.size(); m++) {
+		for(size_t m = 0; m < materials.size(); m++) {
 			// gotcha! create a `Texture` asset; we could even do `Material` assets
 			// on top of that.
 			apathy::Path tex_id(path);
@@ -374,36 +369,9 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 			tex = Crypto::HASH(tex_id.sanitize().string());
 			// force texture load for now
 			get_asset(tex);
-		}*/
-
-		/*for(size_t s = 0; s < shapes.size(); s++) {
- 			size_t index_off = 0;
-			for(size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
-				size_t fv = shapes[s].mesh.num_face_vertices[f];
-				for(size_t v = 0; v < fv; v++) {
-					tinyobj::index_t idx = shapes[s].mesh.indices[index_off + v];
-					tinyobj::real_t vx = attrib.vertices[3*idx.vertex_index+0];
-					tinyobj::real_t vy = attrib.vertices[3*idx.vertex_index+1];
-					tinyobj::real_t vz = attrib.vertices[3*idx.vertex_index+2];
-					tinyobj::real_t nx = attrib.normals[3*idx.normal_index+0];
-					tinyobj::real_t ny = attrib.normals[3*idx.normal_index+1];
-					tinyobj::real_t nz = attrib.normals[3*idx.normal_index+2];
-					tinyobj::real_t tx = 0;
-					tinyobj::real_t ty = 0;
-					if(attrib.texcoords.size() > 0) {
-						tx = attrib.texcoords[2 * idx.texcoord_index + 0];
-						ty = attrib.texcoords[2 * idx.texcoord_index + 1];
-					}
-					mesh.m_verts.emplace_back(
-						glm::vec3(vx, vy, vz),
-						glm::vec3(nx, ny, nz),
-						glm::vec2(tx, ty)
-					);
-				}
-				index_off += fv;
-			}
-		}*/
+		}
 		
+		// Prepare asset -- TODO: pool this allocation? let `Alexandria` manage it
 		ModelAsset* model = static_cast<ModelAsset*>(place_asset(hash, new ModelAsset(short_id)));
 		model->m_meshes.push_back({});
 		Mesh& mesh = model->m_meshes.back();
@@ -429,15 +397,13 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 			memcpy(&mesh.m_texture[0], &attrib.texcoords[0], bytes_tc);
 		}
 
+		// Pass in the texture loaded (only one for now)
 		model->m_texture = tex;
 
 	} else if(type == "texture") {
-		int width, height, channels;
+		TextureAsset* texture = static_cast<TextureAsset*>(place_asset(hash, new TextureAsset(short_id)));
 		stbi_set_flip_vertically_on_load(true);
-		unsigned char* data = stbi_load(working_path.string().c_str(), &width, &height, &channels, 0);
-		place_asset(hash, new TextureAsset(
-			short_id, data, width, height, channels
-		));
+		texture->m_data = stbi_load(working_path.string().c_str(), &texture->m_width, &texture->m_height, &texture->m_channels, 0);
 	}
 	
 	//m_assets[hash]->set_path(path); ??
