@@ -55,8 +55,8 @@ void Core::init(const std::string local_root = ".")
 
 	// Init systems
 	m_input = add_system(new Input(m_window), "input");
-	m_alexandria = add_system(new Alexandria(m_local_root), "alexandria");
 	m_render = add_system(new Render(), "render");
+	m_alexandria = add_system(new Alexandria(m_local_root, m_render), "alexandria");
 
 	for(auto& s : m_systems) {
 		s.second->init();

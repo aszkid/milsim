@@ -1,12 +1,13 @@
 #pragma once
 
-#include "sys.hpp"
-#include "util/crypto.hpp"
-
 #include <json.hpp>
 #include <glbinding/gl/gl.h>
 #include <glm/glm.hpp>
 #include <apathy/path.hpp>
+
+#include "sys.hpp"
+#include "sys/render.hpp"
+#include "util/crypto.hpp"
 
 namespace MilSim {
 
@@ -85,6 +86,8 @@ namespace MilSim {
 
 		unsigned char* m_data;
 		int m_width, m_height, m_channels;
+
+		RenderResourceInstance m_handle;
 	
 	private:
 		bool inner_load();
@@ -161,7 +164,7 @@ namespace MilSim {
 	 */
 	class Alexandria : public Sys {
 	public:
-		Alexandria(const std::string local_root);
+		Alexandria(const std::string local_root, Render* render);
 		~Alexandria();
 
 		void init();
@@ -198,6 +201,12 @@ namespace MilSim {
 		}
 
 		apathy::Path m_local_root;
+
+		// Handle for `Sys.Render` -- needed to upload assets to the GPU
+		Render* m_sys_render;
+		// Keeping track of RRCs
+		std::vector<std::unique_ptr<RenderResourceContext>> m_rrc_pool;
+		RenderResourceContext* alloc_rrc();
 	};
 
 }

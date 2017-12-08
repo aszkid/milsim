@@ -4,72 +4,26 @@
 
 #include <glbinding/gl/gl.h>
 
+#include "util/concurrentqueue.hpp"
 #include "sys.hpp"
+#include "render_resource.hpp"
+#include "render_command.hpp"
 
 namespace MilSim {
 
 	using namespace gl;
 
 	/**
-	 * Render-level representation of resources.
+	 * Render thread messages.
 	 */
-
-	struct RenderResource {
+	struct RenderMessage {
 		enum Type {
-			TEXTURE, RENDER_TARGET, VERTEX_BUFFER, VERTEX_LAYOUT, INDEX_BUFFER, SHADER
+			RESOURCE, COMMAND
 		};
+
 		Type m_type;
-	};
-
-	struct TextureResource : public RenderResource {
-		GLuint m_tex_id;
-		int m_width, m_height;
-	};
-
-	struct VertexBufferResource : public RenderResource {
-		GLuint m_vao, m_vbo, m_ebo;
-	};
-
-	struct VertexLayoutResource : public RenderResource {
-
-	};
-
-
-	const uint64_t INDEX_BITS = 52;
-	const uint64_t INDEX_MASK = ((uint64_t)1 << INDEX_BITS) - 1;
-	const uint64_t GENERATION_MASK = ~INDEX_MASK;
-	inline uint64_t RI_index(const uint64_t id) {
-		return id & INDEX_MASK;
-	};
-	inline uint64_t RI_generation(const uint64_t id) {
-		return (id & GENERATION_MASK) >> INDEX_BITS;
-	};
-	/**
-	 * GPU resource handle that is looked up by `RenderScene` to 
-	 * generate draw calls and etc.
-	 */
-	struct ResourceInstance {
-		// |xxxx|yyyyyyyyyyyyyyyyy|
-		//   |              |
-		//   |_ generation  |
-		//      (12 bits)   |_ index
-		//                     (52 bits)
-		// I suppose this is more than enough
-		uint64_t m_id;
-		RenderResource::Type m_type;
-
-		/**
-		 * Returns real array index.
-		 */
-		inline operator uint64_t() const {
-			return RI_index(m_id);
-		};
-		inline uint64_t index() const {
-			return RI_index(m_id);
-		};
-		inline uint64_t generation() const {
-			return RI_generation(m_id);
-		};
+		RenderResourceContext* m_resourcec;
+		RenderCommandContext* m_commandc;
 	};
 
 	/**
@@ -95,12 +49,10 @@ namespace MilSim {
 		void thread_entry();
 
 		/**
-		 * Resource creation interface.
+		 * All communication with the render thread happens through this method.
+		 * Q: should we now own the RRC?
 		 */
-
-		ResourceInstance create_texture(const unsigned char* source, const size_t width, const size_t height);
-		ResourceInstance create_vertex_buffer();
-		ResourceInstance create_vertex_layout();
+		void dispatch(RenderResourceContext* rrc);
 
 	private:
 		
@@ -125,13 +77,20 @@ namespace MilSim {
 		 * the render thread! OpenGL does not play nicely with multithreading,
 		 * as far as I know.
 		 */
-		ResourceInstance _alloc_texture();
+		void _handle_resource(RenderResourceContext* rrc);
+		void _handle_command(RenderCommandContext* rcc);
+		RenderResourceInstance _alloc_texture();
 
 		/**
-		 * Other data.
+		 * Render thread and synchronization.
 		 */
 		std::thread m_thread;
 		std::atomic<bool> m_should_stop;
+
+		/**
+		 * Render thread message queue.
+		 */
+		moodycamel::ConcurrentQueue<RenderMessage> m_queue;
 	};
 
 };

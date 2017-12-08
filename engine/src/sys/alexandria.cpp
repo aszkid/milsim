@@ -220,8 +220,8 @@ bool ScriptAsset::inner_load()
 ////////////////////////////////////////
 // ALEXANDRIA
 ////////////////////////////////////////
-Alexandria::Alexandria(const std::string local_root)
-	: Sys::Sys("Alexandria"), m_local_root(local_root)
+Alexandria::Alexandria(const std::string local_root, Render* render)
+	: Sys::Sys("Alexandria"), m_local_root(local_root), m_sys_render(render)
 {
 
 }
@@ -244,13 +244,16 @@ void Alexandria::kill()
 
 void Alexandria::update()
 {
-	
+	for(auto it = m_rrc_pool.begin(); it != m_rrc_pool.end(); ++it) {
+		if((*it)->m_delete.load()) {
+			m_log->info("Erasing rrc...");
+			m_rrc_pool.erase(it);
+		}
+	}
 }
 
 void Alexandria::load_database(const std::string filename)
 {
-	// TODO: use JSON instead of Lua for database loading... makes more sense
-
 	apathy::Path dbpath(m_local_root);
 	dbpath.append(filename).sanitize();
 	m_log->info("Loading database `{}`...", filename);
@@ -404,7 +407,29 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 		TextureAsset* texture = static_cast<TextureAsset*>(place_asset(hash, new TextureAsset(short_id)));
 		stbi_set_flip_vertically_on_load(true);
 		texture->m_data = stbi_load(working_path.string().c_str(), &texture->m_width, &texture->m_height, &texture->m_channels, 0);
+
+		// Upload to the GPU -- naive way, blocking
+		RenderResourceContext* rrc = alloc_rrc();
+		rrc->begin_texture();
+		rrc->hook_texture(
+			texture->m_width,
+			texture->m_height,
+			texture->m_channels,
+			texture->m_data
+		);
+		rrc->end_texture(&texture->m_handle);
+
+		m_log->info("Dispatching render message...");
+		m_sys_render->dispatch(rrc);
 	}
 	
 	//m_assets[hash]->set_path(path); ??
+}
+
+RenderResourceContext* Alexandria::alloc_rrc()
+{
+	m_rrc_pool.emplace_back(new RenderResourceContext());
+	auto rrc = m_rrc_pool.back().get();
+	rrc->m_delete.store(false);
+	return m_rrc_pool.back().get();
 }

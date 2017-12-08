@@ -55,7 +55,7 @@ namespace MilSim {
 	 * Used by every `RenderScene` to generate draw calls, state changes, and
 	 * GPU resource updates.
 	 */
-	class RenderContext {
+	class RenderCommandContext {
 	public:
 		
 		RenderCommand m_rc;
