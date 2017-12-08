@@ -28,7 +28,8 @@
 		{
 			"type" : "folder",
 			"id" : "Shaders",
-			"contents" : [
+			"contents" : [],
+			"__" : [
 				{
 					"type" : "shader",
 					"id" : "Simple"

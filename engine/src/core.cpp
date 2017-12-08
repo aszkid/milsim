@@ -29,14 +29,6 @@ void Core::set_window(GLFWwindow* window)
 	glfwSetWindowSize(m_window, m_winx, m_winy);
 	glfwSetWindowPos(m_window, 50, 50);
 	glfwSetWindowTitle(m_window, "MilSim");
-
-	glfwMakeContextCurrent(m_window);
-	glbinding::Binding::initialize();
-	glfwSwapInterval(1); // not working on my system...
-	glViewport(0, 0, m_winx, m_winy);
-	//glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-	m_log->info("Using OpenGL `{}`", glGetString(GL_VERSION));
 }
 void Core::init(const std::string local_root = ".")
 {
@@ -55,7 +47,7 @@ void Core::init(const std::string local_root = ".")
 
 	// Init systems
 	m_input = add_system(new Input(m_window), "input");
-	m_render = add_system(new Render(), "render");
+	m_render = add_system(new Render(m_window, m_winx, m_winy), "render");
 	m_alexandria = add_system(new Alexandria(m_local_root, m_render), "alexandria");
 
 	for(auto& s : m_systems) {
@@ -139,7 +131,7 @@ void Core::loop()
 		// Drawing happens
 		render();
 
-		glfwSwapBuffers(m_window);
+		//glfwSwapBuffers(m_window);
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		if(should_close)

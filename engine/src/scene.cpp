@@ -103,7 +103,7 @@ void Scene::inner_post_init()
 
 	m_wireframe = false;
 
-	glEnable(GL_DEPTH_TEST);
+	//glEnable(GL_DEPTH_TEST);
 }
 void Scene::set_viewport(const uint winx, const uint winy)
 {
@@ -131,13 +131,13 @@ void Scene::update(double delta)
 {
 	MILSIM_MSG_LOOP(msg)
 	{
-		if (msg->m_chan == Crypto::HASH("WindowSize"))
+		/*if (msg->m_chan == Crypto::HASH("WindowSize"))
 		{
 			auto ws = static_cast<WindowSizeMessage *>(msg);
 			m_winx = ws->m_width;
 			m_winy = ws->m_height;
 			glViewport(0, 0, m_winx, m_winy);
-		}
+		}*/
 	}
 	
 	// update `Scene`-level components
@@ -159,9 +159,8 @@ void Scene::render(double interp)
 		0.1f, 10000.0f);
 	glm::mat4 placeholder(1.0);
 
-	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+	/*glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 	if (m_wireframe)
 	{
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -169,7 +168,7 @@ void Scene::render(double interp)
 	else
 	{
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	}
+	}*/
 
 	/*// models use same shader -- how to handle textured-untextured models?
 	shader = static_cast<ShaderProgramAsset *>(m_alexandria->get_asset("/Base/Shaders/Simple"));

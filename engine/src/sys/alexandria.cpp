@@ -132,7 +132,7 @@ ShaderProgramAsset::~ShaderProgramAsset()
 
 bool ShaderProgramAsset::inner_load()
 {
-	const char *vert = m_vert_source.c_str();
+	/*const char *vert = m_vert_source.c_str();
 	const char *frag = m_frag_source.c_str();
 	
 	int ok;
@@ -189,13 +189,13 @@ bool ShaderProgramAsset::inner_load()
 		glGetProgramResourceName(m_prog_id, GL_UNIFORM, i, name.size(), NULL, &name[0]);
 		name.pop_back(); // pop null character
 		m_uniforms[name] = values[3];
-	}
+	}*/
 
 	return true;
 }
 void ShaderProgramAsset::inner_free()
 {
-	glDeleteShader(m_prog_id);
+	//glDeleteShader(m_prog_id);
 }
 
 ////////////////////////////////////////
@@ -247,9 +247,14 @@ void Alexandria::update()
 	for(auto it = m_rrc_pool.begin(); it != m_rrc_pool.end(); ++it) {
 		if((*it)->m_delete.load()) {
 			m_log->info("Erasing rrc...");
-			m_rrc_pool.erase(it);
+			//m_rrc_pool.erase(it);
+			//it->reset();
+			m_log->info("rrc ptr: {:x}", (uint64_t)it->get());
+			(*it)->m_tex_ref.clear();
+			//(*it).reset();
 		}
 	}
+	m_rrc_pool.clear();
 }
 
 void Alexandria::load_database(const std::string filename)
@@ -419,6 +424,8 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 		);
 		rrc->end_texture(&texture->m_handle);
 
+		m_log->info("Passing handle {:x}...", (uint64_t)&texture->m_handle);
+
 		m_log->info("Dispatching render message...");
 		m_sys_render->dispatch(rrc);
 	}
@@ -429,7 +436,7 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 RenderResourceContext* Alexandria::alloc_rrc()
 {
 	m_rrc_pool.emplace_back(new RenderResourceContext());
-	auto rrc = m_rrc_pool.back().get();
+	auto* rrc = m_rrc_pool.back().get();
 	rrc->m_delete.store(false);
 	return m_rrc_pool.back().get();
 }

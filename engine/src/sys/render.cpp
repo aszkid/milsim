@@ -4,8 +4,8 @@
 
 using namespace MilSim;
 
-Render::Render()
-	: Sys::Sys("Render"), m_should_stop(false)
+Render::Render(GLFWwindow* window, uint winx, uint winy)
+	: Sys::Sys("Render"), m_should_stop(false), m_window(window), m_winx(winx), m_winy(winy)
 {
 	m_textures.push_back({});
 	m_vertex_buffers.push_back({});
@@ -39,6 +39,15 @@ void Render::update()
 
 void Render::thread_entry()
 {
+	// Initialize OpenGL context in the render thread
+	glfwMakeContextCurrent(m_window);
+	glbinding::Binding::initialize();
+	//glbinding::Binding::useCurrentContext();
+	glfwSwapInterval(1); // not working on my system...
+	glViewport(0, 0, m_winx, m_winy);
+	//glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	m_log->info("Using OpenGL `{}`", glGetString(GL_VERSION));
+
 	while(!m_should_stop.load()) {
 		RenderMessage msg;
 		while(m_queue.try_dequeue(msg)) {
@@ -53,6 +62,8 @@ void Render::thread_entry()
 				break;
 			}
 		}
+
+		glfwSwapBuffers(m_window);
 	}
 }
 
@@ -61,7 +72,7 @@ void Render::thread_entry()
  */
 void Render::dispatch(RenderResourceContext* rrc)
 {
-	m_queue.enqueue(RenderMessage {RenderMessage::RESOURCE, rrc});
+	m_queue.enqueue(RenderMessage {RenderMessage::RESOURCE, rrc, nullptr});
 }
 
 
@@ -70,6 +81,7 @@ void Render::dispatch(RenderResourceContext* rrc)
  */
 void Render::_handle_resource(RenderResourceContext* rrc)
 {
+	m_log->info("Handling resource message (rrc: {:x})...", (uint64_t)rrc->m_tex_ref[0]);
 	// assuming `rrc` not nullptr...
 	// 1) upload textures
 	size_t tex_n = rrc->m_tex.size();
@@ -93,9 +105,10 @@ void Render::_handle_resource(RenderResourceContext* rrc)
 		glGenerateMipmap(GL_TEXTURE_2D);
 
 		// notify whoever holds the instance
-		// UNSAFE, period.
+		// UNSAFE, period. figure it out somehow
 		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		m_log->info("Writing at handle {:x}...", (uint64_t)rrc->m_tex_ref[i]);
 		rrc->m_tex_ref[i]->m_id = tex_instance.m_id;
 		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -104,8 +117,8 @@ void Render::_handle_resource(RenderResourceContext* rrc)
 	// 2) upload vertex buffers
 	// etc
 
-	// this is safe
-	rrc->m_delete.store(true);
+	// this *is* safe
+	//rrc->m_delete.store(true);
 }
 void Render::_handle_command(RenderCommandContext* rcc)
 {
@@ -118,14 +131,15 @@ RenderResourceInstance Render::_alloc_texture()
 	if(m_textures_free.empty()) {
 		// new array element starts at 0th generation
 		m_textures.push_back({});
-		uint64_t id = m_textures.size();
+		uint64_t id = m_textures.size()-1;
 		// should check if m_textures.size() > 2^52.... but probably not
 		instance = {id, RenderResource::Type::TEXTURE};
 		m_log->info("Added new texture from new space:");
 		m_log->info("    + Index: {}, generation: {}", RI_index(id), RI_generation(id));
 	} else {
 		uint64_t old_id = m_textures_free.back();
-		uint64_t id = (RI_generation(id) + 1) | (RI_index(id));
+		// GENERATION IS NOT WELL WRITTEN
+		uint64_t id = (RI_generation(old_id) + ((uint64_t)1 << INDEX_BITS)) | (RI_index(old_id));
 		instance = {id, RenderResource::Type::TEXTURE};
 		m_log->info("Added new texture from free space:");
 		m_log->info("    + Old index: {}, old generation: {}", RI_index(old_id), RI_generation(old_id));
@@ -133,6 +147,7 @@ RenderResourceInstance Render::_alloc_texture()
 	}
 	
 	glGenTextures(1, &m_textures[instance].m_tex_id);
+	m_log->info("Generated texture...");
 
 	return instance;
 }

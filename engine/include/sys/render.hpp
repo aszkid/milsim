@@ -3,6 +3,9 @@
 #include <atomic>
 
 #include <glbinding/gl/gl.h>
+#include <glbinding/Binding.h>
+#define GLFW_INCLUDE_NONE // avoid glbinding errors
+#include <GLFW/glfw3.h>
 
 #include "util/concurrentqueue.hpp"
 #include "sys.hpp"
@@ -39,7 +42,7 @@ namespace MilSim {
 	 */
 	class Render : public Sys {
 	public:
-		Render();
+		Render(GLFWwindow* window, uint winx, uint winy);
 		~Render();
 
 		void init();
@@ -56,6 +59,12 @@ namespace MilSim {
 
 	private:
 		
+		/**
+		 * Main window ptr.
+		 */
+		GLFWwindow* m_window;
+		uint m_winx, m_winy;
+
 		/**
 		 * Resources held.
 		 */
