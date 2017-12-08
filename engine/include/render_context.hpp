@@ -9,9 +9,10 @@ namespace MilSim {
 	 * POD structure holding a render 'key' to perform sorting
 	 * and a pointer to the actual render data.
 	 * `m_key` bit structure for now:
-	 * 		| Target | Shader | Texture |
+	 * 		| Layer | Shader | Texture |
 	 * where
-	 * 		+ Target: framebuffer destination,
+	 * 		+ Layer: full pipeline description (render targets, stencil+depth buffers...),
+	 * 		         usually only one layer for forward-rendering (what we start out with).
 	 * 		+ Shader: shader program to use.
 	 * 		+ Texture: texture to bind (zero if none, I suppose).
 	 * `m_head` points at the data required for the execution of
@@ -51,7 +52,8 @@ namespace MilSim {
 	/**
 	 * Render command builder. Generates a `RenderCommand` and
 	 * packs the `m_data` needed to execute the call.
-	 * Used by every `RenderScene` to generate draw calls.
+	 * Used by every `RenderScene` to generate draw calls, state changes, and
+	 * GPU resource updates.
 	 */
 	class RenderContext {
 	public:
