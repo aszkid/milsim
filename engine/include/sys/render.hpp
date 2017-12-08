@@ -34,6 +34,44 @@ namespace MilSim {
 
 	};
 
+
+	const uint64_t INDEX_BITS = 52;
+	const uint64_t INDEX_MASK = ((uint64_t)1 << INDEX_BITS) - 1;
+	const uint64_t GENERATION_MASK = ~INDEX_MASK;
+	inline uint64_t RI_index(const uint64_t id) {
+		return id & INDEX_MASK;
+	};
+	inline uint64_t RI_generation(const uint64_t id) {
+		return (id & GENERATION_MASK) >> INDEX_BITS;
+	};
+	/**
+	 * GPU resource handle that is looked up by `RenderScene` to 
+	 * generate draw calls and etc.
+	 */
+	struct ResourceInstance {
+		// |xxxx|yyyyyyyyyyyyyyyyy|
+		//   |              |
+		//   |_ generation  |
+		//      (12 bits)   |_ index
+		//                     (52 bits)
+		// I suppose this is more than enough
+		uint64_t m_id;
+		RenderResource::Type m_type;
+
+		/**
+		 * Returns real array index.
+		 */
+		inline operator uint64_t() const {
+			return RI_index(m_id);
+		};
+		inline uint64_t index() const {
+			return RI_index(m_id);
+		};
+		inline uint64_t generation() const {
+			return RI_generation(m_id);
+		};
+	};
+
 	/**
 	 * Provides an interface for submitting render commands.
 	 * Try to design a sort of command API that lets higher-level
@@ -56,21 +94,42 @@ namespace MilSim {
 
 		void thread_entry();
 
+		/**
+		 * Resource creation interface.
+		 */
+
+		ResourceInstance create_texture(const unsigned char* source, const size_t width, const size_t height);
+		ResourceInstance create_vertex_buffer();
+		ResourceInstance create_vertex_layout();
+
 	private:
 		
-		struct Resources {
-			std::vector<TextureResource> m_textures;
-			std::vector<size_t> m_textures_free;
+		/**
+		 * Resources held.
+		 */
+		std::vector<TextureResource> m_textures;
+		std::vector<uint64_t> m_textures_free;
+		uint64_t m_textures_generation;
 
-			std::vector<VertexBufferResource> m_vertex_buffers;
-			std::vector<size_t> m_vertex_buffers_free;
+		std::vector<VertexBufferResource> m_vertex_buffers;
+		std::vector<uint64_t> m_vertex_buffers_free;
+		uint64_t m_vertex_buffers_generation;
 
-			std::vector<VertexLayoutResource> m_vertex_layouts;
-			std::vector<size_t> m_vertex_layouts_free;
-		};
+		std::vector<VertexLayoutResource> m_vertex_layouts;
+		std::vector<uint64_t> m_vertex_layouts_free;
+		uint64_t m_vertex_layouts_generation;
 
-		Resources m_resources;
+		/**
+		 * Resource allocation and destruction methods.
+		 * It is important to note that these are *ONLY* called from
+		 * the render thread! OpenGL does not play nicely with multithreading,
+		 * as far as I know.
+		 */
+		ResourceInstance _alloc_texture();
 
+		/**
+		 * Other data.
+		 */
 		std::thread m_thread;
 		std::atomic<bool> m_should_stop;
 	};
