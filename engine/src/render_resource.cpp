@@ -23,11 +23,7 @@ void RenderResourceContext::push_vertex_buffer(VertexBufferData vb, size_t ref)
 /**
  * VERTEX LAYOUT
  */
-void RenderResourceContext::begin_vertex_layout()
+void RenderResourceContext::push_vertex_layout(VertexLayoutData vl)
 {
-
-}
-void RenderResourceContext::end_vertex_layout()
-{
-
+	m_vl.push_back(vl);
 }

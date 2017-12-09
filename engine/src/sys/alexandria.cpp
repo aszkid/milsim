@@ -441,22 +441,34 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 		// Pass in the texture loaded (only one for now)
 		model->m_texture = tex;
 
-		// Upload to the GPU
-		RenderResourceContext* rrc = alloc_rrc();
+		// Prepare data buffer(s)
+		/*RenderResourceContext* rrc = alloc_rrc();
 		RenderResourceContext::VertexBufferData buff = {
-			total_size, &mesh.m_data.get()[0], RenderResourceContext::VertexBufferData::STATIC
+			.chunks = {
+				{.data = &mesh.m_data.get()[0], .size = total_size}
+			},
+			.usage = RenderResourceContext::VertexBufferData::STATIC
 		};
 		rrc->push_vertex_buffer(buff, hash);
-		// push attributes
-		/**
-		 * RRC::VertexLayoutData layout;
-		 * layout->push_attribute();
+		// Prepare its vertex format
+		
+		RenderResourceContext::VertexLayoutData layout = {
+			.attribs = {
+				{
+					.size =  3,
+					.type = RenderResourceContext::VertexLayoutData::Attribute::FLOAT,
+				}
+			}
+		};
+		 * const size_t vertex_size = type_size * (3 + 3 + 2);
+		 * layout->push_attribute(size: 3, type: FLOAT, stride: 0, offset: 0);
+		 * layout->push_attribute(size: 3, type: FLOAT, stride: 0, offset: vertices_byte);
+		 * layout->push_attribute(size: 2, type: FLOAT, stride: 0, offset: vertices_byte + normals_byte);
 		 * 
-		 * 
-		 */
+		 
 
 		m_log->info("Dispatching render-buffer message...");
-		m_sys_render->dispatch(rrc);
+		m_sys_render->dispatch(rrc);*/
 
 	} else if(type == "texture") {
 		TextureAsset* texture = static_cast<TextureAsset*>(place_asset(hash, new TextureAsset(short_id)));

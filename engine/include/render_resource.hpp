@@ -97,8 +97,16 @@ namespace MilSim {
 		 * VERTEX BUFFER
 		 */
 		struct VertexBufferData {
-			size_t size;
-			const GLvoid* data;
+			/**
+			 * For glBufferSubData uploading.
+			 * We assume chunks are contiguous...
+			 * (i.e. no `offset`, we compute it adding sizes)
+			 */
+			struct Chunk {
+				const GLvoid* data;
+				size_t size;
+			};
+			std::vector<Chunk> chunks;
 			enum Usage {
 				STATIC,
 				DYNAMIC
@@ -114,15 +122,25 @@ namespace MilSim {
 		 */
 		struct VertexLayoutData {
 			/**
-			 * Should be able to reference out-of-struct
-			 * buffer objects... How?
+			 * We get rid of the idea of requiring a "binding" point.
+			 * This is a declaration of intentions: we create a specific
+			 * vertex layout that different vertex buffers might use
+			 * later on.
+			 * (I found out that this is functionality that OpenGL 4.3+ offers; good!)
+			 * The idea is; we generate a pair (or so) of VertexLayouts at startup,
+			 * and associate all objects with them. Makes so much sense...
 			 */
-			struct Attrib {
-				
+			struct Attribute {
+				size_t size;
+				enum Type {
+					FLOAT, /* etc */
+				};
+				Type type;
 			};
+			std::vector<Attribute> attribs;
 		};
-		void begin_vertex_layout();
-		void end_vertex_layout();
+		std::vector<VertexLayoutData> m_vl;
+		void push_vertex_layout(VertexLayoutData vl);
 	};
 
 }

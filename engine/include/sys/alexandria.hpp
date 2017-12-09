@@ -110,7 +110,8 @@ namespace MilSim {
 		 * std::vector<glm::vec2> m_texture;
 		 */
 		/**
-		 * BETTER (?)
+		 * BETTER (?) -- we need it this  way
+		 * 		     for our current vbo wrapper
 		 * | vertices | normals | texcoords |
 		 * ^          ^         ^
 		 * |___ vertex_ptr      |
