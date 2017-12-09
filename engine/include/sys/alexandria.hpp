@@ -94,32 +94,19 @@ namespace MilSim {
 		void inner_free();
 	};
 
+	struct Vertex {
+		glm::vec3 m_position;
+		glm::vec3 m_normal;
+		glm::vec2 m_texcoord;
+	};
 	/**
 	 * Mesh: main structure for 3D geometry.
 	 */
 	struct Mesh {
 		/**
-		 * REAL OLD
-		 * std::vector<Vertex> m_verts;
-		 * GLuint m_vao, m_vbo, m_ebo;
-		*/
-		/**
-		 * LESS OLD
-		 * std::vector<glm::vec3> m_position;
-		 * std::vector<glm::vec3> m_normal;
-		 * std::vector<glm::vec2> m_texture;
+		 * Back to the basics.
 		 */
-		/**
-		 * BETTER (?) -- we need it this  way
-		 * 		     for our current vbo wrapper
-		 * | vertices | normals | texcoords |
-		 * ^          ^         ^
-		 * |___ vertex_ptr      |
-		 *            |___ normal_ptr
-		 *                      |___ texcoord_ptr
-		 */
-		std::unique_ptr<unsigned char[]> m_data;
-		size_t m_size;
+		std::vector<Vertex> m_verts;
 		RenderResourceInstance m_handle;
 	};
 	/**

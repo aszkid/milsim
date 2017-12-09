@@ -395,48 +395,18 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 		model->m_meshes.push_back({});
 		Mesh& mesh = model->m_meshes.back();
 
-		// Memory copying -- pretty fast
-		/*const size_t realsize = sizeof(tinyobj::real_t);
-
-		const size_t len_v = attrib.vertices.size() / 3;
-		const size_t bytes_v = attrib.vertices.size() * realsize;
-		mesh.m_position.resize(len_v);
-		memcpy(&mesh.m_position[0], &attrib.vertices[0], bytes_v);
-
-		const size_t len_vn = attrib.normals.size() / 3;
-		const size_t bytes_vn = attrib.normals.size() * realsize;
-		mesh.m_normal.resize(len_vn);
-		memcpy(&mesh.m_normal[0], &attrib.normals[0], bytes_vn);
-
-		const size_t len_tc = attrib.texcoords.size() / 2;
-		const size_t bytes_tc = attrib.texcoords.size() * realsize;
-		if(len_tc > 0) {
-			// assume that we have texture coordinates
-			mesh.m_texture.resize(len_tc);
-			memcpy(&mesh.m_texture[0], &attrib.texcoords[0], bytes_tc);
-		}*/
-
-		// Get size info
-		const bool has_tex = attrib.texcoords.size() > 0;
-		const size_t type_size = sizeof(tinyobj::real_t);
-		const size_t vertices = attrib.vertices.size();
-		const size_t vertices_byte = vertices * type_size;
-		const size_t normals = attrib.normals.size();
-		const size_t normals_byte = normals * type_size;
-		const size_t texcoords = attrib.texcoords.size();
-		const size_t texcoords_byte = texcoords * type_size;
-		const size_t total_size = vertices_byte + normals_byte + texcoords_byte;
-
-		// Allocate big chunk
-		mesh.m_data = std::unique_ptr<unsigned char[]>(new unsigned char[total_size]);
-		const unsigned char* vertex_ptr = &mesh.m_data.get()[0];
-		const unsigned char* normal_ptr = vertex_ptr + vertices_byte;
-		const unsigned char* texcoord_ptr = normal_ptr + normals_byte;
-
 		// Copy vertex data
-		memcpy((void*)vertex_ptr, &attrib.vertices[0], vertices_byte);
-		memcpy((void*)normal_ptr, &attrib.normals[0], normals_byte);
-		memcpy((void*)texcoord_ptr, &attrib.texcoords[0], texcoords_byte);
+		const bool has_tex = attrib.texcoords.size() > 0;
+		const size_t vertices = attrib.vertices.size() / 3;
+		mesh.m_verts.resize(vertices);
+		
+		for(size_t i = 0; i < vertices; i++) {
+			mesh.m_verts[i] = {
+				glm::vec3(attrib.vertices[3*i], attrib.vertices[3*i+1], attrib.vertices[3*i+2]),
+				glm::vec3(attrib.normals[3*i], attrib.normals[3*i+1], attrib.normals[3*i+2]),
+				(has_tex) ? glm::vec2(attrib.texcoords[2*i], attrib.texcoords[2*i+1]) : glm::vec2(0)
+			};
+		}
 
 		// Pass in the texture loaded (only one for now)
 		model->m_texture = tex;
