@@ -163,6 +163,29 @@ void Render::_handle_resource(RenderResourceContext* rrc)
 		auto& vlayout = m_vertex_layouts[vlayout_instance];
 		auto& vlayout_data = rrc->m_vl[i];
 
+		glBindVertexArray(vlayout.m_vao);
+		for(size_t j = 0; j < vlayout_data.attribs.size(); j++) {
+			auto& attrib = vlayout_data.attribs[j];
+			GLenum type;
+			switch(attrib.type) {
+			case RenderResourceContext::VertexLayoutData::Attribute::Type::FLOAT:
+				type = GL_FLOAT;
+				break;
+			default:
+				m_log->info("Vertex attribute format not supported!");
+				abort();
+				break;
+			}
+			glEnableVertexAttribArray(j);
+			glVertexAttribFormat(
+				j,
+				attrib.size,
+				type,
+				GL_FALSE,
+				attrib.offset
+			);
+		}
+
 		m_hermes->send(new RenderResourceMessage(
 			vlayout_instance,
 			rrc->m_vl_ref[i],
