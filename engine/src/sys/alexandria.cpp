@@ -396,7 +396,7 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 		Mesh& mesh = model->m_meshes.back();
 
 		// Memory copying -- pretty fast
-		const size_t realsize = sizeof(tinyobj::real_t);
+		/*const size_t realsize = sizeof(tinyobj::real_t);
 
 		const size_t len_v = attrib.vertices.size() / 3;
 		const size_t bytes_v = attrib.vertices.size() * realsize;
@@ -414,10 +414,49 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 			// assume that we have texture coordinates
 			mesh.m_texture.resize(len_tc);
 			memcpy(&mesh.m_texture[0], &attrib.texcoords[0], bytes_tc);
-		}
+		}*/
+
+		// Get size info
+		const bool has_tex = attrib.texcoords.size() > 0;
+		const size_t type_size = sizeof(tinyobj::real_t);
+		const size_t vertices = attrib.vertices.size();
+		const size_t vertices_byte = vertices * type_size;
+		const size_t normals = attrib.normals.size();
+		const size_t normals_byte = normals * type_size;
+		const size_t texcoords = attrib.texcoords.size();
+		const size_t texcoords_byte = texcoords * type_size;
+		const size_t total_size = vertices_byte + normals_byte + texcoords_byte;
+
+		// Allocate big chunk
+		mesh.m_data = std::unique_ptr<unsigned char[]>(new unsigned char[total_size]);
+		const unsigned char* vertex_ptr = &mesh.m_data.get()[0];
+		const unsigned char* normal_ptr = vertex_ptr + vertices_byte;
+		const unsigned char* texcoord_ptr = normal_ptr + normals_byte;
+
+		// Copy vertex data
+		memcpy((void*)vertex_ptr, &attrib.vertices[0], vertices_byte);
+		memcpy((void*)normal_ptr, &attrib.normals[0], normals_byte);
+		memcpy((void*)texcoord_ptr, &attrib.texcoords[0], texcoords_byte);
 
 		// Pass in the texture loaded (only one for now)
 		model->m_texture = tex;
+
+		// Upload to the GPU
+		RenderResourceContext* rrc = alloc_rrc();
+		RenderResourceContext::VertexBufferData buff = {
+			total_size, &mesh.m_data.get()[0], RenderResourceContext::VertexBufferData::STATIC
+		};
+		rrc->push_vertex_buffer(buff, hash);
+		// push attributes
+		/**
+		 * RRC::VertexLayoutData layout;
+		 * layout->push_attribute();
+		 * 
+		 * 
+		 */
+
+		m_log->info("Dispatching render-buffer message...");
+		m_sys_render->dispatch(rrc);
 
 	} else if(type == "texture") {
 		TextureAsset* texture = static_cast<TextureAsset*>(place_asset(hash, new TextureAsset(short_id)));
@@ -426,14 +465,13 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 
 		// Upload to the GPU
 		RenderResourceContext* rrc = alloc_rrc();
-		rrc->begin_texture();
-		rrc->hook_texture(
+		RenderResourceContext::TextureData tex = {
 			texture->m_width,
 			texture->m_height,
 			texture->m_channels,
 			texture->m_data
-		);
-		rrc->end_texture(hash);
+		};
+		rrc->push_texture(tex, hash);
 
 		m_log->info("Dispatching render-resource message...");
 		m_sys_render->dispatch(rrc);

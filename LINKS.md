@@ -24,3 +24,4 @@
 - ["What Every Programmer Should Know About Memory", by Ulrich Drepper](http://futuretech.blinkenlights.nl/misc/cpumemory.pdf).
 - ["CPU Caches and Why You Care", by Scott Meyers](https://www.youtube.com/watch?v=WDIkqP4JbkE); source of my basic understanding of CPU cache.
 - [Design pitfalls in `OGRE::Node`, by Mike Acton](https://www.bounceapp.com/116414).
+- ["Approaching Zero Driver Overhead (AZDO) in OpenGL", GDC 2014](https://www.youtube.com/watch?v=K70QbvzB6II); for future reference.

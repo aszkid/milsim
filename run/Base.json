@@ -15,13 +15,13 @@
 			"contents" : [
 				{
 					"type" : "model",
-					"id" : "Teapot",
-					"source" : "wt_teapot.obj"
+					"id" : "Greek",
+					"source" : "greek.obj"
 				},
 				{
 					"type" : "model",
-					"id" : "Greek",
-					"source" : "greek.obj"
+					"id" : "Teapot",
+					"source" : "wt_teapot.obj"
 				}
 			]
 		},

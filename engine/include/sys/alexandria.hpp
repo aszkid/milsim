@@ -99,13 +99,27 @@ namespace MilSim {
 	 */
 	struct Mesh {
 		/**
-		 * OLD
+		 * REAL OLD
 		 * std::vector<Vertex> m_verts;
 		 * GLuint m_vao, m_vbo, m_ebo;
 		*/
-		std::vector<glm::vec3> m_position;
-		std::vector<glm::vec3> m_normal;
-		std::vector<glm::vec2> m_texture;
+		/**
+		 * LESS OLD
+		 * std::vector<glm::vec3> m_position;
+		 * std::vector<glm::vec3> m_normal;
+		 * std::vector<glm::vec2> m_texture;
+		 */
+		/**
+		 * BETTER (?)
+		 * | vertices | normals | texcoords |
+		 * ^          ^         ^
+		 * |___ vertex_ptr      |
+		 *            |___ normal_ptr
+		 *                      |___ texcoord_ptr
+		 */
+		std::unique_ptr<unsigned char[]> m_data;
+		size_t m_size;
+		RenderResourceInstance m_handle;
 	};
 	/**
 	 * ModelAsset: lowest level of 3D organization,

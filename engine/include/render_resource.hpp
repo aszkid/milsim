@@ -26,7 +26,9 @@ namespace MilSim {
 	};
 
 	struct VertexBufferResource : public RenderResource {
-		GLuint m_vao, m_vbo, m_ebo;
+		GLuint m_buf;
+		GLsizeiptr m_size;
+		GLenum m_usage;
 	};
 
 	struct VertexLayoutResource : public RenderResource {
@@ -89,20 +91,36 @@ namespace MilSim {
 		};
 		std::vector<TextureData> m_tex;
 		std::vector<size_t> m_tex_ref;
-		TextureData _tmp_tex;
-		void begin_texture();
-		void hook_texture(int width, int height, int channels, unsigned char* source);
-		void end_texture(size_t ref);
+		void push_texture(TextureData tex, size_t ref);
 
 		/**
 		 * VERTEX BUFFER
 		 */
-		void begin_vertex_buffer();
-		void end_vertex_buffer();
+		struct VertexBufferData {
+			size_t size;
+			const GLvoid* data;
+			enum Usage {
+				STATIC,
+				DYNAMIC
+			};
+			Usage usage;
+		};
+		std::vector<VertexBufferData> m_vb;
+		std::vector<size_t> m_vb_ref;
+		void push_vertex_buffer(VertexBufferData vb, size_t ref);
 
 		/**
 		 * VERTEX LAYOUT
 		 */
+		struct VertexLayoutData {
+			/**
+			 * Should be able to reference out-of-struct
+			 * buffer objects... How?
+			 */
+			struct Attrib {
+				
+			};
+		};
 		void begin_vertex_layout();
 		void end_vertex_layout();
 	};

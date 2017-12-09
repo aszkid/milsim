@@ -41,5 +41,5 @@ target_link_libraries(milsim_engine glfw ${GLFW_LIBRARIES})
 target_link_libraries(milsim_engine glbinding::glbinding)
 target_link_libraries(milsim_engine tinyobjloader)
 
-target_compile_options(milsim_engine PRIVATE $<$<CONFIG:DEBUG>:-Wall -Wextra -g>)
-target_compile_options(milsim_engine PRIVATE $<$<CONFIG:RELEASE>:-Wall -Wextra -O3>)
+target_compile_options(milsim_engine PRIVATE $<$<CONFIG:DEBUG>:-Wall -Wextra -g -Wno-reorder>)
+target_compile_options(milsim_engine PRIVATE $<$<CONFIG:RELEASE>:-Wall -Wextra -O3 -Wno-reorder>)
