@@ -32,7 +32,11 @@ namespace MilSim {
 	};
 
 	struct VertexLayoutResource : public RenderResource {
-
+		GLuint m_vao;
+		// how to store attribs? should we?
+		// we would duplicate information in RRC::VertexLayoutData... mostly
+		// if we let the user deal with attribute storage, and only care about uploading it...
+		// we should *not* store the attribs. this system does not care.
 	};
 
 	const uint64_t INDEX_BITS = 52;
@@ -49,12 +53,15 @@ namespace MilSim {
 	 * generate draw calls and etc.
 	 */
 	struct RenderResourceInstance {
-		// |xxxx|yyyyyyyyyyyyyyyyy|
-		//   |              |
-		//   |_ generation  |
-		//      (12 bits)   |_ index
-		//                     (52 bits)
-		// I suppose this is more than enough
+		/**
+		 * |xxxx|yyyyyyyyyyyyyyyyy|
+		 * |              |
+		 * |_ generation  |
+		 *    (12 bits)   |_ index
+		 *                   (52 bits)
+		 * I suppose this is more than enough
+		 * TODO: add a few bits for TYPE!!!
+		 */
 		uint64_t m_id;
 		RenderResource::Type m_type;
 
@@ -136,11 +143,13 @@ namespace MilSim {
 					FLOAT, /* etc */
 				};
 				Type type;
+				GLuint offset;
 			};
 			std::vector<Attribute> attribs;
 		};
 		std::vector<VertexLayoutData> m_vl;
-		void push_vertex_layout(VertexLayoutData vl);
+		std::vector<size_t> m_vl_ref;
+		void push_vertex_layout(VertexLayoutData vl, size_t ref);
 	};
 
 }

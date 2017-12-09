@@ -209,6 +209,14 @@ namespace MilSim {
 		// Keeping track of RRCs
 		std::vector<std::unique_ptr<RenderResourceContext>> m_rrc_pool;
 		RenderResourceContext* alloc_rrc();
+
+		/**
+		 * Common vertex layout handles.
+		 * Every vertex buffer we populate has one of these
+		 * as their vertex layout. We create them at startup.
+		 */
+		RenderResourceInstance m_vl_mesh;
+
 	};
 
 }

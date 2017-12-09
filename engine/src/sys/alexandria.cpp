@@ -238,6 +238,33 @@ void Alexandria::init()
 	m_hermes->subscribe(Crypto::HASH("Alexandria"), {
 		Crypto::HASH("RenderResource")
 	});
+
+	// Prepare common vertex layouts
+	RenderResourceContext* rrc = alloc_rrc();
+	RenderResourceContext::VertexLayoutData layout = {
+		.attribs = {
+			{
+				// Vertex position
+				.size =  3,
+				.type = RenderResourceContext::VertexLayoutData::Attribute::FLOAT,
+				.offset = 0,
+			},
+			{
+				// Normal vector
+				.size = 3,
+				.type = RenderResourceContext::VertexLayoutData::Attribute::FLOAT,
+				.offset = offsetof(Vertex, m_normal)
+			},
+			{
+				// Texture coordinates
+				.size = 2,
+				.type = RenderResourceContext::VertexLayoutData::Attribute::FLOAT,
+				.offset = offsetof(Vertex, m_texcoord)
+			}
+		}
+	};
+	rrc->push_vertex_layout(layout, Crypto::HASH("VertexLayout/Mesh"));
+	m_sys_render->dispatch(rrc);
 }
 void Alexandria::kill()
 {
@@ -250,10 +277,28 @@ void Alexandria::update()
 		if(msg->m_chan == Crypto::HASH("RenderResource")) {
 			auto rrm = static_cast<RenderResourceMessage*>(msg);
 			// use base class `RenderableAsset` for all assets that need render representation...
-			if(rrm->m_instance.m_type == RenderResource::TEXTURE) {
+			switch(rrm->m_instance.m_type) {
+			case RenderResource::TEXTURE: {
 				auto tex = (TextureAsset*)get_asset(rrm->m_creator, NO_LOAD);
 				tex->m_handle = rrm->m_instance;
 				m_log->info("Populated texture with render resource handle {:x}!", tex->m_handle);
+				break;
+			}
+			case RenderResource::VERTEX_BUFFER: {
+				auto& mesh = ((ModelAsset*)get_asset(rrm->m_creator, NO_LOAD))->m_meshes[0];
+				mesh.m_handle = rrm->m_instance;
+				m_log->info("Populated mesh with render resource handle {:x}!", mesh.m_handle);
+				break;
+			}
+			case RenderResource::VERTEX_LAYOUT: {
+				if(rrm->m_creator == Crypto::HASH("VertexLayout/Mesh")) {
+					m_vl_mesh = rrm->m_instance;
+					m_log->info("Got the `Mesh` vertex layout! {:x}", m_vl_mesh);
+				}
+				break;
+			}
+			default:
+				break;
 			}
 		}
 	}
@@ -399,7 +444,7 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 		const bool has_tex = attrib.texcoords.size() > 0;
 		const size_t vertices = attrib.vertices.size() / 3;
 		mesh.m_verts.resize(vertices);
-		
+
 		for(size_t i = 0; i < vertices; i++) {
 			mesh.m_verts[i] = {
 				glm::vec3(attrib.vertices[3*i], attrib.vertices[3*i+1], attrib.vertices[3*i+2]),
@@ -412,33 +457,18 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 		model->m_texture = tex;
 
 		// Prepare data buffer(s)
-		/*RenderResourceContext* rrc = alloc_rrc();
+		RenderResourceContext* rrc = alloc_rrc();
 		RenderResourceContext::VertexBufferData buff = {
 			.chunks = {
-				{.data = &mesh.m_data.get()[0], .size = total_size}
+				{.data = &mesh.m_verts[0], .size = vertices * sizeof(Vertex)}
 			},
 			.usage = RenderResourceContext::VertexBufferData::STATIC
 		};
 		rrc->push_vertex_buffer(buff, hash);
-		// Prepare its vertex format
-		
-		RenderResourceContext::VertexLayoutData layout = {
-			.attribs = {
-				{
-					.size =  3,
-					.type = RenderResourceContext::VertexLayoutData::Attribute::FLOAT,
-				}
-			}
-		};
-		 * const size_t vertex_size = type_size * (3 + 3 + 2);
-		 * layout->push_attribute(size: 3, type: FLOAT, stride: 0, offset: 0);
-		 * layout->push_attribute(size: 3, type: FLOAT, stride: 0, offset: vertices_byte);
-		 * layout->push_attribute(size: 2, type: FLOAT, stride: 0, offset: vertices_byte + normals_byte);
-		 * 
-		 
 
+		// Dispatch!
 		m_log->info("Dispatching render-buffer message...");
-		m_sys_render->dispatch(rrc);*/
+		m_sys_render->dispatch(rrc);
 
 	} else if(type == "texture") {
 		TextureAsset* texture = static_cast<TextureAsset*>(place_asset(hash, new TextureAsset(short_id)));
@@ -459,7 +489,8 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 		m_sys_render->dispatch(rrc);
 	}
 	
-	//m_assets[hash]->set_path(path); ??
+	// TODO: 
+	// m_assets[hash]->set_path(path); ??
 }
 
 RenderResourceContext* Alexandria::alloc_rrc()

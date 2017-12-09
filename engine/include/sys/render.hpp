@@ -88,7 +88,10 @@ namespace MilSim {
 		 */
 		void _handle_resource(RenderResourceContext* rrc);
 		void _handle_command(RenderCommandContext* rcc);
+		
 		RenderResourceInstance _alloc_texture();
+		RenderResourceInstance _alloc_vertex_buffer();
+		RenderResourceInstance _alloc_vertex_layout();
 
 		/**
 		 * Render thread and synchronization.

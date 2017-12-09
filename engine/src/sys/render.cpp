@@ -114,8 +114,61 @@ void Render::_handle_resource(RenderResourceContext* rrc)
 			RenderResourceMessage::CREATED
 		));
 	}
+
 	// 2) upload vertex buffers
-	// etc
+	size_t vbuf_n = rrc->m_vb.size();
+	assert(vbuf_n == rrc->m_vb_ref.size()); // debug
+	for(size_t i = 0; i < vbuf_n; i++) {
+		auto vbuf_instance = _alloc_vertex_buffer();
+		auto& vbuf = m_vertex_buffers[vbuf_instance];
+		auto& vbuf_data = rrc->m_vb[i];
+
+		if(vbuf_data.chunks.size() > 1) {
+			m_log->info("We don't support multie buffer chunks yet!");
+			abort();
+		}
+
+		auto& chunk = vbuf_data.chunks[0];
+		glBindBuffer(GL_COPY_WRITE_BUFFER, vbuf.m_buf);
+		GLenum usage;
+		switch(vbuf_data.usage) {
+		case RenderResourceContext::VertexBufferData::STATIC:
+			usage = GL_STATIC_DRAW;
+			break;
+		case RenderResourceContext::VertexBufferData::DYNAMIC:
+			usage = GL_DYNAMIC_DRAW;
+			break;
+		default:
+			m_log->info("Buffer usage not supported!");
+			abort();
+		}
+		glBufferData(GL_COPY_WRITE_BUFFER,
+			chunk.size,
+			chunk.data,
+			usage
+		);
+
+		m_hermes->send(new RenderResourceMessage(
+			vbuf_instance,
+			rrc->m_vb_ref[i],
+			RenderResourceMessage::CREATED
+		));
+	}
+
+	// 3) Upload vertex array objects (format descriptors)
+	size_t vlayout_n  = rrc->m_vl.size();
+	assert(vlayout_n == rrc->m_vl_ref.size());
+	for(size_t i = 0; i < vlayout_n; i++) {
+		auto vlayout_instance = _alloc_vertex_layout();
+		auto& vlayout = m_vertex_layouts[vlayout_instance];
+		auto& vlayout_data = rrc->m_vl[i];
+
+		m_hermes->send(new RenderResourceMessage(
+			vlayout_instance,
+			rrc->m_vl_ref[i],
+			RenderResourceMessage::CREATED
+		));
+	}
 
 	// this *is* safe
 	rrc->m_delete.store(true);
@@ -128,25 +181,66 @@ void Render::_handle_command(RenderCommandContext* rcc)
 RenderResourceInstance Render::_alloc_texture()
 {
 	RenderResourceInstance instance = {0, RenderResource::Type::TEXTURE};
+	uint64_t id = 0;
+
 	if(m_textures_free.empty()) {
 		// new array element starts at 0th generation
 		m_textures.push_back({});
-		uint64_t id = m_textures.size()-1;
+		id = m_textures.size()-1;
 		// should check if m_textures.size() > 2^52.... but probably not
-		instance = {id, RenderResource::Type::TEXTURE};
-		m_log->info("Added new texture from new space:");
-		m_log->info("    + Index: {}, generation: {}", RI_index(id), RI_generation(id));
+		/*m_log->info("Added new texture from new space:");
+		m_log->info("    + Index: {}, generation: {}", RI_index(id), RI_generation(id));*/
 	} else {
 		uint64_t old_id = m_textures_free.back();
+		m_textures_free.pop_back();
 		// GENERATION IS NOT WELL WRITTEN
-		uint64_t id = (RI_generation(old_id) + ((uint64_t)1 << INDEX_BITS)) | (RI_index(old_id));
-		instance = {id, RenderResource::Type::TEXTURE};
-		m_log->info("Added new texture from free space:");
+		id = (RI_generation(old_id) + ((uint64_t)1 << INDEX_BITS)) | (RI_index(old_id));
+		/*m_log->info("Added new texture from free space:");
 		m_log->info("    + Old index: {}, old generation: {}", RI_index(old_id), RI_generation(old_id));
-		m_log->info("    + New index: {}, new generation: {}", RI_index(id), RI_generation(id));
+		m_log->info("    + New index: {}, new generation: {}", RI_index(id), RI_generation(id));*/
 	}
 	
+	instance.m_id = id;
 	glGenTextures(1, &m_textures[instance].m_tex_id);
+
+	return instance;
+}
+RenderResourceInstance Render::_alloc_vertex_buffer()
+{
+	RenderResourceInstance instance = {0, RenderResource::Type::VERTEX_BUFFER};
+	size_t id = 0;
+
+	if(m_vertex_buffers_free.empty()) {
+		m_vertex_buffers.push_back({});
+		id = m_vertex_buffers.size() - 1;
+	} else {
+		uint64_t old_id = m_vertex_buffers_free.back();
+		m_vertex_buffers_free.pop_back();
+		id = (RI_generation(old_id) + ((uint64_t)1 << INDEX_BITS)) | (RI_index(old_id));
+	}
+	
+	instance.m_id = id;
+	glGenBuffers(1, &m_vertex_buffers[instance].m_buf);
+
+	return instance;
+}
+
+RenderResourceInstance Render::_alloc_vertex_layout()
+{
+	RenderResourceInstance instance = {0, RenderResource::Type::VERTEX_LAYOUT};
+	size_t id = 0;
+
+	if(m_vertex_layouts_free.empty()) {
+		m_vertex_layouts.push_back({});
+		id = m_vertex_layouts.size() - 1;
+	} else {
+		uint64_t old_id = m_vertex_layouts_free.back();
+		m_vertex_layouts_free.pop_back();
+		id = (RI_generation(old_id) + ((uint64_t)1 << INDEX_BITS)) | (RI_index(old_id));
+	}
+	
+	instance.m_id = id;
+	glGenVertexArrays(1, &m_vertex_layouts[instance].m_vao);
 
 	return instance;
 }
