@@ -38,25 +38,34 @@ TextureAsset::~TextureAsset()
 }
 bool TextureAsset::inner_load()
 {
-	/*glGenTextures(1, &m_tex_id);
-	glBindTexture(GL_TEXTURE_2D, m_tex_id);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	if(m_channels == 3) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, m_width, m_height, 0, GL_RGB, GL_UNSIGNED_BYTE, m_data);
-	} else if(m_channels == 4) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_data);
-	} else {
-		m_logger->error("Texture is not RGB nor RGBA! Aborting...");
-		abort();
-	}
-	glGenerateMipmap(GL_TEXTURE_2D);*/
-
 	return true;
 }
 void TextureAsset::inner_free()
 {
-	//glDeleteTextures(1, &m_tex_id);
+	stbi_image_free(&m_data);
+}
+
+
+////////////////////////////////////////
+// MATERIALASSET
+////////////////////////////////////////
+MaterialAsset::MaterialAsset(const std::string name)
+	: Asset::Asset("MaterialAsset." + name)
+{
+
+}
+MaterialAsset::~MaterialAsset()
+{
+
+}
+
+bool MaterialAsset::inner_load()
+{
+
+}
+void MaterialAsset::inner_free()
+{
+
 }
 
 
@@ -64,7 +73,7 @@ void TextureAsset::inner_free()
 // MODELASSET
 ////////////////////////////////////////
 ModelAsset::ModelAsset(const std::string name)
-	: Asset::Asset("ModelAsset." + name), m_texture(0)
+	: Asset::Asset("ModelAsset." + name), m_material(0)
 {
 }
 ModelAsset::~ModelAsset()
@@ -362,7 +371,7 @@ Asset* Alexandria::get_asset(const t_asset_id id, const GetFlag flag)
 		return asset->second.get();
 	}
 	// Asset is not in our database!
-	m_log->info("Asset `{}` is not in our database!", id);
+	m_log->info("Asset `{:x}` is not in our database!", id);
 	return nullptr;
 }
 Asset* Alexandria::get_asset(const std::string id, const GetFlag flag)
@@ -379,12 +388,17 @@ RenderResourceInstance Alexandria::get_vertex_layout(const size_t kind)
 	}
 }
 
-void Alexandria::add_asset(apathy::Path path, const std::string type, const json* root, const std::string db_name)
+void Alexandria::add_asset(apathy::Path path, const std::string type, const json* root, const std::string db_name, const std::string short_id_override)
 {
 	const std::string id = path.sanitize().string();
 	const std::string stem = path.stem().string();
 	auto hash = Crypto::HASH(id);
-	const std::string short_id = (root == nullptr) ? path.filename() : root->at("id").get<std::string>();
+	std::string short_id;
+	if(short_id_override.empty()) {
+		short_id = (root == nullptr) ? path.filename() : root->at("id").get<std::string>();
+	} else {
+		short_id = short_id_override;
+	}
 
 	m_log->info("Adding asset `{}` of type `{}` -- `{:x}`...", id, type, hash);
 
@@ -404,7 +418,7 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 		auto vert_source = IO::read_file(apathy::Path(working_path).string() + ".vert");
 		auto frag_source = IO::read_file(apathy::Path(working_path).string() + ".frag");
 
-		place_asset(hash, new ShaderProgramAsset(
+		auto shader = (ShaderProgramAsset*)place_asset(hash, new ShaderProgramAsset(
 			short_id, vert_source, frag_source
 		));
 
@@ -422,26 +436,12 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 			apathy::Path(working_path).directory().string().c_str()
 		);
 		if(!err.empty()) {
+			// Do not worry of a 'material error' is printed: we take care of it manually, we use a different format
 			m_log->info("Warning: {}", err);
 		}
 		if(!ret) {
 			m_log->error("Failed to load model {}!", id);
 			abort();
-		}
-
-		// last texture used
-		t_asset_id tex = 0;
-
-		// loop materials
-		for(size_t m = 0; m < materials.size(); m++) {
-			// gotcha! create a `Texture` asset; we could even do `Material` assets
-			// on top of that.
-			apathy::Path tex_id(path);
-			tex_id = tex_id.append(materials[m].diffuse_texname);
-			add_asset(tex_id, "texture", nullptr, db_name);
-			tex = Crypto::HASH(tex_id.sanitize().string());
-			// force texture load for now
-			get_asset(tex);
 		}
 		
 		// Prepare asset -- TODO: pool this allocation? let `Alexandria` manage it
@@ -462,9 +462,6 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 			};
 		}
 
-		// Pass in the texture loaded (only one for now)
-		model->m_texture = tex;
-
 		// Prepare data buffer(s)
 		RenderResourceContext* rrc = alloc_rrc();
 		RenderResourceContext::VertexBufferData buff = {
@@ -475,11 +472,22 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 		};
 		rrc->push_vertex_buffer(buff, hash);
 		m_sys_render->dispatch(rrc);
+		
+		// Attach material, if any
+		auto material_root = root->find("material");
+		if(material_root != root->end()) {
+			apathy::Path material_id(path);
+			material_id = material_id.append("Material");
+			add_asset(material_id, "material", &(*material_root), db_name, short_id + ".Material");
+			model->m_material = Crypto::HASH(material_id.string());
+		}
 
 	} else if(type == "texture") {
 		TextureAsset* texture = static_cast<TextureAsset*>(place_asset(hash, new TextureAsset(short_id)));
 		stbi_set_flip_vertically_on_load(true);
 		texture->m_data = stbi_load(working_path.string().c_str(), &texture->m_width, &texture->m_height, &texture->m_channels, 0);
+
+		m_log->info("Loading texture `{}`...", working_path.string());
 
 		// Upload to the GPU
 		RenderResourceContext* rrc = alloc_rrc();
@@ -491,6 +499,32 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 		};
 		rrc->push_texture(tex, hash);
 		m_sys_render->dispatch(rrc);
+	} else if(type == "material") {
+		auto material = (MaterialAsset*)place_asset(hash, new MaterialAsset(short_id));
+		
+		std::vector<float> Ka = root->at("Ka");
+		std::vector<float> Kd = root->at("Kd");
+		std::vector<float> Ks = root->at("Ks");
+
+		material->m_ambient = glm::vec3(Ka[0], Ka[1], Ka[2]);
+		material->m_diffuse = glm::vec3(Kd[0], Kd[1], Kd[2]);
+		material->m_specular = glm::vec3(Ks[0], Ks[1], Ks[2]);
+
+		auto Kd_tex = root->find("Kd_tex");
+		if(Kd_tex != root->end()) {
+			apathy::Path Kd_tex_id(path);
+			Kd_tex_id = Kd_tex_id.append(Kd_tex->get<std::string>());
+			add_asset(Kd_tex_id, "texture", nullptr, db_name);
+			material->m_diffuse_tex = Crypto::HASH(Kd_tex_id.sanitize().string());
+		}
+
+		auto Ks_tex = root->find("Ks_tex");
+		if(Ks_tex != root->end()) {
+			apathy::Path Ks_tex_id(path);
+			Ks_tex_id = Ks_tex_id.append(Ks_tex->get<std::string>());
+			add_asset(Ks_tex_id, "texture", nullptr, db_name);
+			material->m_specular_tex = Crypto::HASH(Ks_tex_id.sanitize().string());
+		}
 	}
 	
 	// TODO: 

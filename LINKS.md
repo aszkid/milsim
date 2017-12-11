@@ -26,3 +26,5 @@
 - [Design pitfalls in `OGRE::Node`, by Mike Acton](https://www.bounceapp.com/116414).
 - ["Approaching Zero Driver Overhead (AZDO) in OpenGL", GDC 2014](https://www.youtube.com/watch?v=K70QbvzB6II); for future reference.
 - [On `glVertexAttribFormat`](https://stackoverflow.com/a/37972230); we will probably use that. Much more flexible and intuitive. And [more here](https://stackoverflow.com/questions/14249634/opengl-vaos-and-multiple-buffers).
+- [Intro to PBR](https://learnopengl.com/#!PBR/Theory).
+- [OpenGL like Vulkan](https://developer.nvidia.com/opengl-vulkan), by Christoph Kubisch (NVIDIA).
