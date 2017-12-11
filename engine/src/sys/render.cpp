@@ -31,6 +31,28 @@ void Render::kill()
 {
 	m_should_stop.store(true);
 	m_thread.join();
+
+	// free remaining alive resources
+	glbinding::Binding::useCurrentContext();
+
+	for(auto& tex : m_textures) {
+		glDeleteTextures(1, &tex.m_tex_id);
+	}
+	m_textures.clear();
+
+	for(auto& vbuf : m_vertex_buffers) {
+		glDeleteBuffers(1, &vbuf.m_buf);
+	}
+	m_vertex_buffers.clear();
+
+	for(auto& vl : m_vertex_layouts) {
+		glDeleteVertexArrays(1, &vl.m_vao);
+	}
+	m_vertex_layouts.clear();
+
+	m_textures_free.clear();
+	m_vertex_buffers_free.clear();
+	m_vertex_layouts_free.clear();
 }
 void Render::update()
 {
