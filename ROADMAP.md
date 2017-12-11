@@ -10,16 +10,16 @@
 - [ ] "Simple" rendering pipeline implementation (_not_ deferred, calm down boy).
 	+ [x] `.obj` loader for Alexandria
 	+ [x] Support for textures!
-	+ [ ] Thread-safe `queue` implementation for Main-Render threads communication.
+	+ [x] Thread-safe `queue` implementation for Main-Render threads communication; *got one [online](http://www.moodycamel.com/blog/2014/a-fast-general-purpose-lock-free-queue-for-c++)*.
+	+ [ ] Basic proof-of-concept implementation of entity-component rendering.
 - [ ] Legit `Material` asset.
 - [ ] Basic `Bullet` physics integration.
 - [ ] Skeletal animation.
 
+## Kinda out there
+- [ ] Look up `std::multimap` for faster `Hermes`? Of better design in general.
 - [ ] Multi-thread `Alexandria` asset loading to avoid loading hell at game launch
 - [ ] Better `Asset` packing (beware of prematurely optimizing). Start working on the toolchain.
-
-## Kinda out there
-- [ ] Look up `std::multimap` for faster `Hermes`?
 
 ## On the horizon
 - `Sys.Script` + hooks

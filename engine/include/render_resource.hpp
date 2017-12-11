@@ -15,7 +15,7 @@ namespace MilSim {
 	 */
 	struct RenderResource {
 		enum Type {
-			TEXTURE, RENDER_TARGET, VERTEX_BUFFER, VERTEX_LAYOUT, INDEX_BUFFER, SHADER
+			TEXTURE, RENDER_TARGET, VERTEX_BUFFER, VERTEX_LAYOUT, INDEX_BUFFER, SHADER, NONE
 		};
 		Type m_type;
 	};

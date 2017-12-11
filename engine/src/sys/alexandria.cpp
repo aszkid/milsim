@@ -276,24 +276,22 @@ void Alexandria::update()
 	for(auto& msg : m_hermes->pull_inbox(Crypto::HASH("Alexandria"))) {
 		if(msg->m_chan == Crypto::HASH("RenderResource")) {
 			auto rrm = static_cast<RenderResourceMessage*>(msg);
-			// use base class `RenderableAsset` for all assets that need render representation...
+			// use base class `RenderableAsset` for all assets that need render representation?
+			// we are assuming the message is of type `CREATED`, for now...
 			switch(rrm->m_instance.m_type) {
 			case RenderResource::TEXTURE: {
 				auto tex = (TextureAsset*)get_asset(rrm->m_creator, NO_LOAD);
 				tex->m_handle = rrm->m_instance;
-				m_log->info("Populated texture with render resource handle {:x}!", tex->m_handle);
 				break;
 			}
 			case RenderResource::VERTEX_BUFFER: {
 				auto& mesh = ((ModelAsset*)get_asset(rrm->m_creator, NO_LOAD))->m_meshes[0];
 				mesh.m_handle = rrm->m_instance;
-				m_log->info("Populated mesh with render resource handle {:x}!", mesh.m_handle);
 				break;
 			}
 			case RenderResource::VERTEX_LAYOUT: {
 				if(rrm->m_creator == Crypto::HASH("VertexLayout/Mesh")) {
 					m_vl_mesh = rrm->m_instance;
-					m_log->info("Got the `Mesh` vertex layout! {:x}", m_vl_mesh);
 				}
 				break;
 			}
@@ -304,8 +302,9 @@ void Alexandria::update()
 	}
 
 	for(auto it = m_rrc_pool.begin(); it != m_rrc_pool.end(); ) {
-		if((*it)->m_delete.load()) {
-			// slow, use a `free_rrc` vector (or similar)
+		// slow, use a `free_rrc` vector (or similar)
+		auto* rrc = (*it).get();
+		if(rrc->m_delete.load()) {
 			m_rrc_pool.erase(it);
 		} else {
 			++it;
@@ -370,6 +369,16 @@ Asset* Alexandria::get_asset(const std::string id, const GetFlag flag)
 {
 	return get_asset(Crypto::HASH(id), flag);
 }
+
+RenderResourceInstance Alexandria::get_vertex_layout(const size_t kind)
+{
+	if(kind == Crypto::HASH("VertexLayout/Mesh")) {
+		return m_vl_mesh;
+	} else {
+		return {0, RenderResource::Type::NONE};
+	}
+}
+
 void Alexandria::add_asset(apathy::Path path, const std::string type, const json* root, const std::string db_name)
 {
 	const std::string id = path.sanitize().string();
@@ -465,9 +474,6 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 			.usage = RenderResourceContext::VertexBufferData::STATIC
 		};
 		rrc->push_vertex_buffer(buff, hash);
-
-		// Dispatch!
-		m_log->info("Dispatching render-buffer message...");
 		m_sys_render->dispatch(rrc);
 
 	} else if(type == "texture") {
@@ -484,8 +490,6 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 			texture->m_data
 		};
 		rrc->push_texture(tex, hash);
-
-		m_log->info("Dispatching render-resource message...");
 		m_sys_render->dispatch(rrc);
 	}
 	

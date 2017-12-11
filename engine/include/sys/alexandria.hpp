@@ -183,6 +183,8 @@ namespace MilSim {
 		Asset* get_asset(const std::string id, const GetFlag flag = LOAD);
 		Asset* get_asset(const t_asset_id id, const GetFlag flag = LOAD);
 
+		RenderResourceInstance get_vertex_layout(const size_t kind);
+
 	private:
 		std::map<uint32_t, t_asset_ptr> m_assets;
 
