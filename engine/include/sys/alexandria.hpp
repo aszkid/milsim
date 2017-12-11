@@ -94,6 +94,26 @@ namespace MilSim {
 		void inner_free();
 	};
 
+	/**
+	 * Material asset.
+	 */
+	class MaterialAsset : public Asset {
+	public:
+		MaterialAsset(const std::string name);
+		~MaterialAsset();
+
+		glm::vec3 m_ambient;
+		glm::vec3 m_diffuse;
+		glm::vec3 m_specular;
+
+		t_asset_id m_diffuse_tex;
+		t_asset_id m_specular_tex;
+
+	private:
+		bool inner_load();
+		void inner_free();
+	};
+
 	struct Vertex {
 		glm::vec3 m_position;
 		glm::vec3 m_normal;
@@ -121,7 +141,7 @@ namespace MilSim {
 
 		std::vector<Mesh> m_meshes;
 		//std::vector<Material> m_materials;
-		t_asset_id m_texture;
+		t_asset_id m_material;
 
 	private:
 		bool inner_load();
@@ -190,7 +210,7 @@ namespace MilSim {
 
 		// Database loading
 		void load_folder(const json& root, apathy::Path path, const std::string db_name);
-		void add_asset(apathy::Path path, const std::string type, const json* root, const std::string db_name);
+		void add_asset(apathy::Path path, const std::string type, const json* root, const std::string db_name, const std::string short_id_override = "");
 
 		Asset* place_asset(const t_asset_id hash, Asset* asset) {
 			if(m_assets.find(hash) != m_assets.end()) {
@@ -206,7 +226,7 @@ namespace MilSim {
 
 		// Handle for `Sys.Render` -- needed to upload assets to the GPU
 		Render* m_sys_render;
-		// Keeping track of RRCs
+		// Keeping track of RRCs -- we should have a thread-wide allocator
 		std::vector<std::unique_ptr<RenderResourceContext>> m_rrc_pool;
 		RenderResourceContext* alloc_rrc();
 
