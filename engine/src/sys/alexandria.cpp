@@ -45,7 +45,6 @@ bool TextureAsset::inner_load()
 }
 void TextureAsset::inner_free()
 {
-	m_logger->info("Freeing texture...");
 	stbi_image_free(m_data);
 }
 
@@ -522,13 +521,16 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 			add_asset(material_id, "material", &(*material_root), db_name, short_id + ".Material");
 			mesh->m_material = Crypto::HASH(material_id.string());
 		}
-
-	} else if(type == "texture") {
+	
+	} else if(type == "texture_local") {
 		TextureAsset* texture = static_cast<TextureAsset*>(place_asset(hash, new TextureAsset(short_id)));
 		stbi_set_flip_vertically_on_load(true);
 		texture->m_data = stbi_load(working_path.string().c_str(), &texture->m_width, &texture->m_height, &texture->m_channels, 0);
 
-		m_log->info("Loading texture `{}`...", working_path.string());
+	} else if(type == "texture") {
+		// Create local texture
+		add_asset(id, "texture_local", nullptr, db_name);
+		auto texture = static_cast<TextureAsset*>(get_asset(hash));
 
 		// Upload to the GPU
 		RenderResourceContext* rrc = alloc_rrc();
@@ -570,18 +572,10 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 			material->m_specular_tex = Crypto::HASH(Ks_tex_id.sanitize().string());
 		}
 	} else if(type == "map_noise") {
-		apathy::Path noise_id(working_path);
-		noise_id = noise_id.append(root->at("source").get<std::string>());
-
-		apathy::Path tex_id(path);
-		tex_id = tex_id.append("Texture");
-		auto tex_hash = Crypto::HASH(tex_id.string());
-		TextureAsset* texture = static_cast<TextureAsset*>(place_asset(
-			tex_hash,
-			new TextureAsset(short_id + ".Texture")
-		));
-		stbi_set_flip_vertically_on_load(true);
-		texture->m_data = stbi_load(noise_id.string().c_str(), &texture->m_width, &texture->m_height, &texture->m_channels, 0);
+		apathy::Path map_tex(path);
+		map_tex = map_tex.append(root->at("source").get<std::string>());
+		add_asset(map_tex, "texture_local", nullptr, db_name);
+		auto texture = static_cast<TextureAsset*>(get_asset(Crypto::HASH(map_tex.string())));
 
 		// Populate vertex and index buffers
 		const size_t w = texture->m_width;

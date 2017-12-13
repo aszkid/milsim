@@ -119,7 +119,9 @@ void Render::_handle_resource(RenderResourceContext* rrc)
 		glBindTexture(GL_TEXTURE_2D, tex.m_tex_id);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		if(tex_data.channels == 3) {
+		if(tex_data.channels == 1) {
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, tex_data.width, tex_data.height, 0, GL_RED, GL_UNSIGNED_BYTE, tex_data.source);
+		} else if(tex_data.channels == 3) {
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_data.width, tex_data.height, 0, GL_RGB, GL_UNSIGNED_BYTE, tex_data.source);
 		} else if(tex_data.channels == 4) {
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_data.width, tex_data.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data.source);

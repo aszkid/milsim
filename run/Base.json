@@ -23,8 +23,7 @@
 		{
 			"type" : "folder",
 			"id" : "Models",
-			"contents" : [],
-			"_contents" : [
+			"contents" : [
 				{
 					"type" : "model",
 					"id" : "Greek",
