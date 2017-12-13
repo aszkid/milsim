@@ -1,11 +1,12 @@
 #include "sys/render.hpp"
 
 #include <mutex>
+#include <selene.h>
 
 using namespace MilSim;
 
-Render::Render(GLFWwindow* window, uint winx, uint winy)
-	: Sys::Sys("Render"), m_should_stop(false), m_window(window), m_winx(winx), m_winy(winy)
+Render::Render(GLFWwindow* window, uint winx, uint winy, apathy::Path root)
+	: Sys::Sys("Render"), m_should_stop(false), m_window(window), m_winx(winx), m_winy(winy), m_root(root)
 {
 	m_textures.push_back({});
 	m_vertex_buffers.push_back({});
@@ -71,6 +72,8 @@ void Render::thread_entry()
 	//glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	m_log->info("Using OpenGL `{}`", glGetString(GL_VERSION));
 
+	setup_pipeline();
+
 	while(!m_should_stop.load()) {
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -91,6 +94,31 @@ void Render::thread_entry()
 
 		glfwSwapBuffers(m_window);
 	}
+}
+
+void Render::setup_pipeline()
+{
+	sel::State state;
+	state.Load(m_root.append("render_config.lua").string());
+
+	m_log->info("Setting up render targets...");
+	auto ts = state["pipeline_targets"];
+	size_t i = 1;
+	auto t = ts[i];
+	while(t.exists()) {
+		const std::string name = t["name"];
+		m_log->info("Creating target `{}`...", name);
+
+		
+
+		t = ts[++i];
+	}
+
+	/**
+	 * enqueue(framebuffer, texture0, texture1, etc)
+	 * OR
+	 * onsite?
+	 */
 }
 
 /**

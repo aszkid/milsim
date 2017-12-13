@@ -80,7 +80,7 @@ namespace MilSim {
 		// Various
 		GLFWwindow* m_window;
 		GameState* m_current_state;
-		std::string m_local_root;
+		apathy::Path m_local_root;
 		uint m_winx, m_winy;
 
 		// Loggers

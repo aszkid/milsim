@@ -254,7 +254,7 @@ void ScriptAsset::handle_render_message(RenderResourceMessage* msg)
 ////////////////////////////////////////
 // ALEXANDRIA
 ////////////////////////////////////////
-Alexandria::Alexandria(const std::string local_root, Render* render)
+Alexandria::Alexandria(apathy::Path local_root, Render* render)
 	: Sys::Sys("Alexandria"), m_local_root(local_root), m_sys_render(render)
 {
 
@@ -318,7 +318,7 @@ void Alexandria::update()
 				// delegate
 				asset->handle_render_message(rrm);
 			} else {
-				m_log->info("Cannot delegate render message!");
+				m_log->info("Cannot delegate render message to `{:x}`!", (uint64_t)asset);
 			}
 
 			/*switch(rrm->m_instance.m_type) {
@@ -471,7 +471,7 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 		);
 		if(!err.empty()) {
 			// Do not worry of a 'material error' is printed: we take care of it manually, we use a different format
-			m_log->info("Warning: {}", err);
+			//m_log->info("Warning: {}", err);
 		}
 		if(!ret) {
 			m_log->error("Failed to load model {}!", id);

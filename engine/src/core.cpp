@@ -32,8 +32,7 @@ void Core::set_window(GLFWwindow* window)
 }
 void Core::init(const std::string local_root = ".")
 {
-	// TODO: use a proper path-handling library...
-	m_local_root = local_root;
+	m_local_root = apathy::Path(local_root);
 
 	// `Hermes` has to be the first thing to be initialized
 	m_hermes = std::unique_ptr<Hermes>(new Hermes());
@@ -47,7 +46,7 @@ void Core::init(const std::string local_root = ".")
 
 	// Init systems
 	m_input = add_system(new Input(m_window), "input");
-	m_render = add_system(new Render(m_window, m_winx, m_winy), "render");
+	m_render = add_system(new Render(m_window, m_winx, m_winy, m_local_root), "render");
 	m_alexandria = add_system(new Alexandria(m_local_root, m_render), "alexandria");
 
 	for(auto& s : m_systems) {

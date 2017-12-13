@@ -15,7 +15,13 @@ namespace MilSim {
 	 */
 	struct RenderResource {
 		enum Type {
-			TEXTURE, RENDER_TARGET, VERTEX_BUFFER, VERTEX_LAYOUT, INDEX_BUFFER, SHADER, NONE
+			TEXTURE,
+			RENDER_TARGET,
+			VERTEX_BUFFER,
+			VERTEX_LAYOUT,
+			INDEX_BUFFER,
+			SHADER,
+			NONE
 		};
 		Type m_type;
 	};
@@ -41,6 +47,10 @@ namespace MilSim {
 
 	struct IndexBufferResource : public RenderResource {
 		GLuint m_ibo;
+	};
+
+	struct FrameBufferResource : public RenderResource {
+		GLuint m_fbo;
 	};
 
 	const uint64_t INDEX_BITS = 52;

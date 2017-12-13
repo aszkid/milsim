@@ -28,3 +28,4 @@
 - [On `glVertexAttribFormat`](https://stackoverflow.com/a/37972230); we will probably use that. Much more flexible and intuitive. And [more here](https://stackoverflow.com/questions/14249634/opengl-vaos-and-multiple-buffers).
 - [Intro to PBR](https://learnopengl.com/#!PBR/Theory).
 - [OpenGL like Vulkan](https://developer.nvidia.com/opengl-vulkan), by Christoph Kubisch (NVIDIA).
+- [Moving Frostbite to PBR](https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf).

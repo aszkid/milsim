@@ -209,7 +209,7 @@ namespace MilSim {
 	 */
 	class Alexandria : public Sys {
 	public:
-		Alexandria(const std::string local_root, Render* render);
+		Alexandria(apathy::Path local_root, Render* render);
 		~Alexandria();
 
 		void init();

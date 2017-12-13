@@ -6,6 +6,7 @@
 #include <glbinding/Binding.h>
 #define GLFW_INCLUDE_NONE // avoid glbinding errors
 #include <GLFW/glfw3.h>
+#include <apathy/path.hpp>
 
 #include "util/concurrentqueue.hpp"
 #include "sys.hpp"
@@ -30,6 +31,20 @@ namespace MilSim {
 	};
 
 	/**
+	 * Building block of a render pipeline.
+	 */
+	struct RenderLayer {
+		std::vector<RenderResourceInstance> m_render_targets;
+		RenderResourceInstance m_depth_stencil_target;
+		RenderResourceInstance m_framebuffer;
+		enum Sort {
+			FRONT_BACK,
+			BACK_FRONT
+		};
+		Sort m_sort;
+	};
+
+	/**
 	 * Provides an interface for submitting render commands.
 	 * Try to design a sort of command API that lets higher-level
 	 * systems care zero about OpenGL.
@@ -42,7 +57,7 @@ namespace MilSim {
 	 */
 	class Render : public Sys {
 	public:
-		Render(GLFWwindow* window, uint winx, uint winy);
+		Render(GLFWwindow* window, uint winx, uint winy, apathy::Path root);
 		~Render();
 
 		void init();
@@ -50,6 +65,11 @@ namespace MilSim {
 		void update();
 
 		void thread_entry();
+
+		/**
+		 * One of the few blocking functions. To be executed BEFORE thread_entry.
+		 */
+		void setup_pipeline();
 
 		/**
 		 * All communication with the render thread happens through this method.
@@ -64,6 +84,8 @@ namespace MilSim {
 		 */
 		GLFWwindow* m_window;
 		uint m_winx, m_winy;
+
+		apathy::Path m_root;
 
 		/**
 		 * Resources held.
@@ -82,6 +104,11 @@ namespace MilSim {
 
 		std::vector<IndexBufferResource> m_index_buffers;
 		std::vector<uint64_t> m_index_buffers_free;
+
+		/**
+		 * Pipeline description.
+		 */
+		std::vector<RenderLayer> m_render_layers;
 
 		/**
 		 * Resource allocation and destruction methods.
