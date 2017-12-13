@@ -318,7 +318,7 @@ void Alexandria::update()
 				// delegate
 				asset->handle_render_message(rrm);
 			} else {
-				m_log->info("Cannot delegate render message to `{:x}`!", (uint64_t)asset);
+				m_log->info("Cannot delegate render message of type {} to `{:x}`!", rrm->m_type, (uint64_t)asset);
 			}
 
 			/*switch(rrm->m_instance.m_type) {
