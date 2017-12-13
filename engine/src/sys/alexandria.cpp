@@ -572,13 +572,20 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 	} else if(type == "map_noise") {
 		apathy::Path noise_id(working_path);
 		noise_id = noise_id.append(root->at("source").get<std::string>());
-		TextureAsset texture = TextureAsset(short_id + ".Noise");
+
+		apathy::Path tex_id(path);
+		tex_id = tex_id.append("Texture");
+		auto tex_hash = Crypto::HASH(tex_id.string());
+		TextureAsset* texture = static_cast<TextureAsset*>(place_asset(
+			tex_hash,
+			new TextureAsset(short_id + ".Texture")
+		));
 		stbi_set_flip_vertically_on_load(true);
-		texture.m_data = stbi_load(noise_id.string().c_str(), &texture.m_width, &texture.m_height, &texture.m_channels, 0);
+		texture->m_data = stbi_load(noise_id.string().c_str(), &texture->m_width, &texture->m_height, &texture->m_channels, 0);
 
 		// Populate vertex and index buffers
-		const size_t w = texture.m_width;\
-		const size_t h = texture.m_height;
+		const size_t w = texture->m_width;
+		const size_t h = texture->m_height;
 		const size_t vlen = w * h;
 		const size_t tris = (w-1)*(h-1)*2;
 		const size_t ilen = tris*3;
@@ -601,7 +608,7 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 			glm::vec3 pos;
 			pos.x = i % w;
 			pos.z = (size_t)(i / h);
-			pos.y = (float)texture.m_data[i] / 4.f;
+			pos.y = (float)texture->m_data[i] / 4.f;
 			//m_log->info("{}", glm::to_string(pos));
 			vbuffer[i].m_position = pos;
 		}
