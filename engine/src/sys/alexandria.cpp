@@ -46,7 +46,7 @@ bool TextureAsset::inner_load()
 void TextureAsset::inner_free()
 {
 	m_logger->info("Freeing texture...");
-	stbi_image_free(&m_data);
+	stbi_image_free(m_data);
 }
 
 void TextureAsset::handle_render_message(RenderResourceMessage* msg)
