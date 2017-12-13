@@ -11,7 +11,8 @@
 	+ [x] `.obj` loader for Alexandria
 	+ [x] Support for textures!
 	+ [x] Thread-safe `queue` implementation for Main-Render threads communication; *got one [online](http://www.moodycamel.com/blog/2014/a-fast-general-purpose-lock-free-queue-for-c++)*.
-	+ [ ] Basic proof-of-concept implementation of entity-component rendering.
+	+ [ ] Pipeline abstraction basic design.
+	+ [ ] Render commands basic design.
 - [ ] Legit `Material` asset.
 - [ ] Basic `Bullet` physics integration.
 - [ ] Skeletal animation.

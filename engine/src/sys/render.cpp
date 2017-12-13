@@ -10,6 +10,7 @@ Render::Render(GLFWwindow* window, uint winx, uint winy)
 	m_textures.push_back({});
 	m_vertex_buffers.push_back({});
 	m_vertex_layouts.push_back({});
+	m_index_buffers.push_back({});
 
 	m_textures_generation = 0;
 	m_vertex_buffers_generation = 0;
@@ -215,6 +216,32 @@ void Render::_handle_resource(RenderResourceContext* rrc)
 		));
 	}
 
+	// 4) Upload index buffers
+	size_t ibuf_n  = rrc->m_ib.size();
+	assert(ibuf_n == rrc->m_ib_ref.size());
+	for(size_t i = 0; i < ibuf_n; i++) {
+		auto ibuf_instance = _alloc_index_buffer();
+		auto& ibuf = m_index_buffers[ibuf_instance];
+		auto& ibuf_data = rrc->m_ib[i];
+
+		glBindBuffer(
+			GL_ELEMENT_ARRAY_BUFFER,
+			ibuf.m_ibo
+		);
+		glBufferData(
+			GL_ELEMENT_ARRAY_BUFFER,
+			ibuf_data.size,
+			ibuf_data.data,
+			GL_STATIC_DRAW //dictatorship
+		);
+
+		m_hermes->send(new RenderResourceMessage(
+			ibuf_instance,
+			rrc->m_ib_ref[i],
+			RenderResourceMessage::CREATED
+		));
+	}
+
 	// this *is* safe
 	rrc->m_delete.store(true);
 }
@@ -286,6 +313,26 @@ RenderResourceInstance Render::_alloc_vertex_layout()
 	
 	instance.m_id = id;
 	glGenVertexArrays(1, &m_vertex_layouts[instance].m_vao);
+
+	return instance;
+}
+
+RenderResourceInstance Render::_alloc_index_buffer()
+{
+	RenderResourceInstance instance = {0, RenderResource::Type::INDEX_BUFFER};
+	size_t id = 0;
+
+	if(m_index_buffers_free.empty()) {
+		m_index_buffers.push_back({});
+		id = m_index_buffers.size() - 1;
+	} else {
+		uint64_t old_id = m_index_buffers_free.back();
+		m_index_buffers_free.pop_back();
+		id = (RI_generation(old_id) + ((uint64_t)1 << INDEX_BITS)) | (RI_index(old_id));
+	}
+
+	instance.m_id = id;
+	glGenBuffers(1, &m_index_buffers[instance].m_ibo);
 
 	return instance;
 }

@@ -11,6 +11,17 @@
 		},
 		{
 			"type" : "folder",
+			"id" : "Maps",
+			"contents" : [
+				{
+					"type" : "map_noise",
+					"id" : "TestMap",
+					"source" : "test.png"
+				}
+			]
+		},
+		{
+			"type" : "folder",
 			"id" : "Models",
 			"contents" : [
 				{

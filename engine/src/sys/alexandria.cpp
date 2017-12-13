@@ -32,9 +32,7 @@ TextureAsset::TextureAsset(const std::string name)
 }
 TextureAsset::~TextureAsset()
 {
-	if(m_loaded) {
-		stbi_image_free(m_data);
-	}
+
 }
 bool TextureAsset::inner_load()
 {
@@ -42,7 +40,8 @@ bool TextureAsset::inner_load()
 }
 void TextureAsset::inner_free()
 {
-	stbi_image_free(&m_data);
+	/*m_logger->info("Freeing texture...");
+	stbi_image_free(&m_data);*/
 }
 
 
@@ -499,6 +498,9 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 		};
 		rrc->push_texture(tex, hash);
 		m_sys_render->dispatch(rrc);
+
+		texture->load();
+
 	} else if(type == "material") {
 		auto material = (MaterialAsset*)place_asset(hash, new MaterialAsset(short_id));
 		
@@ -525,6 +527,65 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 			add_asset(Ks_tex_id, "texture", nullptr, db_name);
 			material->m_specular_tex = Crypto::HASH(Ks_tex_id.sanitize().string());
 		}
+	} else if(type == "map_noise") {
+		apathy::Path noise_id(working_path);
+		noise_id = noise_id.append(root->at("source").get<std::string>());
+		TextureAsset texture = TextureAsset(short_id + ".Noise");
+		stbi_set_flip_vertically_on_load(true);
+		texture.m_data = stbi_load(noise_id.string().c_str(), &texture.m_width, &texture.m_height, &texture.m_channels, 0);
+
+		m_log->info("{} components in map texture {}", texture.m_channels, noise_id.string());
+		m_log->info("(0,0) : {})", texture.m_data[0]);
+
+		// Populate vertex and index buffers
+		const size_t w = texture.m_width;
+		const size_t h = texture.m_height;
+		const size_t vlen = w * h;
+		const size_t tris = (w-1)*(h-1)*2;
+		const size_t ilen = tris*3;
+
+		// These guys die before Render is able to upload them, dummie
+		std::vector<glm::vec3> vbuffer;
+		std::vector<GLuint> ibuffer;
+		vbuffer.resize(vlen);
+		ibuffer.resize(ilen);
+
+		for(size_t i = 0; i < vlen; i++) {
+			glm::vec3 pos;
+			pos.x = i % w;
+			pos.z = (size_t)(i / h);
+			pos.y = (float)texture.m_data[i] / 4.f;
+			//m_log->info("{}", glm::to_string(pos));
+			vbuffer[i] = pos;
+		}
+		for(size_t i = 0; i < tris; i++) {
+			if(i % 2 == 0) {
+				ibuffer[3*i]   = i/2;
+				ibuffer[3*i+1] = (i/2)+w;
+				ibuffer[3*i+2] = (i/2)+1; 
+			} else {
+				// https://oeis.org/A026741
+				ibuffer[3*i]   = (i-1)/2;
+				ibuffer[3*i+1] = ((i-1)/2)+w;
+				ibuffer[3*i+2] = ((i-1)/2)+w+1;
+			}
+		}
+
+		RenderResourceContext* rrc = alloc_rrc();
+		RenderResourceContext::IndexBufferData ib = {
+			.data = &ibuffer[0],
+			.size = ilen * sizeof(GLuint)
+		};
+		rrc->push_index_buffer(ib, Crypto::HASH("Map." + short_id));
+		RenderResourceContext::VertexBufferData vb = {
+			.chunks = {
+				{.data = &vbuffer[0], .size = vlen * sizeof(glm::vec3)}
+			},
+			.usage = RenderResourceContext::VertexBufferData::Usage::STATIC
+		};
+		rrc->push_vertex_buffer(vb, Crypto::HASH("Map." + short_id));
+
+		m_sys_render->dispatch(rrc);
 	}
 	
 	// TODO: 

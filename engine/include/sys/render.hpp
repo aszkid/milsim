@@ -80,6 +80,9 @@ namespace MilSim {
 		std::vector<uint64_t> m_vertex_layouts_free;
 		uint64_t m_vertex_layouts_generation;
 
+		std::vector<IndexBufferResource> m_index_buffers;
+		std::vector<uint64_t> m_index_buffers_free;
+
 		/**
 		 * Resource allocation and destruction methods.
 		 * It is important to note that these are *ONLY* called from
@@ -92,6 +95,7 @@ namespace MilSim {
 		RenderResourceInstance _alloc_texture();
 		RenderResourceInstance _alloc_vertex_buffer();
 		RenderResourceInstance _alloc_vertex_layout();
+		RenderResourceInstance _alloc_index_buffer();
 
 		/**
 		 * Render thread and synchronization.

@@ -17,7 +17,6 @@ set(SOURCES
 	
 	src/entity.cpp
 	src/component/debug.cpp
-	src/component/render.cpp
 	src/component/transform.cpp
 	src/component/mesh.cpp
 	

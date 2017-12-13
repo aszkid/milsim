@@ -28,3 +28,12 @@ void RenderResourceContext::push_vertex_layout(VertexLayoutData vl, size_t ref)
 	m_vl.push_back(vl);
 	m_vl_ref.push_back(ref);
 }
+
+/**
+ * INDEX BUFFER
+ */
+void RenderResourceContext::push_index_buffer(RenderResourceContext::IndexBufferData ib, size_t ref)
+{
+	m_ib.push_back(ib);
+	m_ib_ref.push_back(ref);
+}

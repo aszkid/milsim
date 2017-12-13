@@ -39,6 +39,10 @@ namespace MilSim {
 		// we should *not* store the attribs. this system does not care.
 	};
 
+	struct IndexBufferResource : public RenderResource {
+		GLuint m_ibo;
+	};
+
 	const uint64_t INDEX_BITS = 52;
 	const uint64_t INDEX_MASK = ((uint64_t)1 << INDEX_BITS) - 1;
 	const uint64_t GENERATION_MASK = ~INDEX_MASK;
@@ -150,6 +154,22 @@ namespace MilSim {
 		std::vector<VertexLayoutData> m_vl;
 		std::vector<size_t> m_vl_ref;
 		void push_vertex_layout(VertexLayoutData vl, size_t ref);
+
+		/**
+		 * INDEX BUFFER
+		 */
+		struct IndexBufferData {
+			/**
+			 * This is the same thing as the VertexBufferData...
+			 * the only different is their binding point.
+			 * Think about a common interface. Or not...
+			 */
+			const GLvoid* data;
+			size_t size;
+		};
+		std::vector<IndexBufferData> m_ib;
+		std::vector<size_t> m_ib_ref;
+		void push_index_buffer(IndexBufferData ib, size_t ref);
 	};
 
 }
