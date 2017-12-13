@@ -22,6 +22,11 @@ bool FontAsset::inner_load()
 	return true;
 }
 
+void FontAsset::handle_render_message(RenderResourceMessage* msg)
+{
+
+}
+
 ////////////////////////////////////////
 // TEXTUREASSET
 ////////////////////////////////////////
@@ -40,10 +45,14 @@ bool TextureAsset::inner_load()
 }
 void TextureAsset::inner_free()
 {
-	/*m_logger->info("Freeing texture...");
-	stbi_image_free(&m_data);*/
+	m_logger->info("Freeing texture...");
+	stbi_image_free(&m_data);
 }
 
+void TextureAsset::handle_render_message(RenderResourceMessage* msg)
+{
+	
+}
 
 ////////////////////////////////////////
 // MATERIALASSET
@@ -60,19 +69,59 @@ MaterialAsset::~MaterialAsset()
 
 bool MaterialAsset::inner_load()
 {
-
+	return true;
 }
 void MaterialAsset::inner_free()
 {
 
 }
 
+void MaterialAsset::handle_render_message(RenderResourceMessage* msg)
+{
+	
+}
+
+////////////////////////////////////////
+// MODELASSET
+////////////////////////////////////////
+MeshAsset::MeshAsset(const std::string name)
+	: Asset::Asset("Mesh." + name)
+{
+
+}
+MeshAsset::~MeshAsset()
+{
+
+}
+
+bool MeshAsset::inner_load()
+{
+	return true;
+}
+void MeshAsset::inner_free()
+{
+	m_verts.clear();
+}
+
+void MeshAsset::handle_render_message(RenderResourceMessage* msg)
+{
+	switch(msg->m_instance.m_type) {
+	case RenderResource::Type::VERTEX_BUFFER:
+		m_vb_handle = msg->m_instance;
+		break;
+	case RenderResource::Type::INDEX_BUFFER:
+		m_ib_handle = msg->m_instance;
+		break;
+	default:
+		break;
+	}
+}
 
 ////////////////////////////////////////
 // MODELASSET
 ////////////////////////////////////////
 ModelAsset::ModelAsset(const std::string name)
-	: Asset::Asset("ModelAsset." + name), m_material(0)
+	: Asset::Asset("ModelAsset." + name)
 {
 }
 ModelAsset::~ModelAsset()
@@ -81,48 +130,16 @@ ModelAsset::~ModelAsset()
 }
 bool ModelAsset::inner_load()
 {
-	/*for(auto& m : m_meshes) {
-		glGenVertexArrays(1, &m.m_vao);
-		glGenBuffers(1, &m.m_vbo);
-		
-		glBindVertexArray(m.m_vao);
-		glBindBuffer(GL_ARRAY_BUFFER, m.m_vbo);
-
-		// upload vertex data
-		glBufferData(
-			GL_ARRAY_BUFFER,
-			m.m_verts.size() * sizeof(Vertex),
-			&m.m_verts[0],
-			GL_STATIC_DRAW
-		);
-		
-		// declare vertex structure
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3,
-			GL_FLOAT, GL_FALSE,
-			sizeof(Vertex), (void*)offsetof(Vertex, m_position)
-		);
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 3,
-			GL_FLOAT, GL_FALSE,
-			sizeof(Vertex), (void*)offsetof(Vertex, m_normal)
-		);
-		glEnableVertexAttribArray(2);
-		glVertexAttribPointer(2, 2,
-			GL_FLOAT, GL_FALSE,
-			sizeof(Vertex), (void*)offsetof(Vertex, m_texture)
-		);
-	}*/
-
 	return true;
 }
 void ModelAsset::inner_free()
 {
-	/*for(auto& m : m_meshes) {
-		glDeleteBuffers(1, &m.m_vbo);
-		glDeleteVertexArrays(1, &m.m_vao);
-	}*/
 	m_meshes.clear();
+}
+
+void ModelAsset::handle_render_message(RenderResourceMessage* msg)
+{
+	
 }
 
 ////////////////////////////////////////
@@ -206,6 +223,11 @@ void ShaderProgramAsset::inner_free()
 	//glDeleteShader(m_prog_id);
 }
 
+void ShaderProgramAsset::handle_render_message(RenderResourceMessage* msg)
+{
+	
+}
+
 ////////////////////////////////////////
 // SCRIPTASSET
 ////////////////////////////////////////
@@ -222,6 +244,11 @@ ScriptAsset::~ScriptAsset()
 bool ScriptAsset::inner_load()
 {
 	return true;
+}
+
+void ScriptAsset::handle_render_message(RenderResourceMessage* msg)
+{
+	
 }
 
 
@@ -286,15 +313,24 @@ void Alexandria::update()
 			auto rrm = static_cast<RenderResourceMessage*>(msg);
 			// use base class `RenderableAsset` for all assets that need render representation?
 			// we are assuming the message is of type `CREATED`, for now...
-			switch(rrm->m_instance.m_type) {
+
+			auto* asset = get_asset(rrm->m_creator);
+			if(asset != nullptr) {
+				// delegate
+				asset->handle_render_message(rrm);
+			} else {
+				m_log->info("Cannot delegate render message!");
+			}
+
+			/*switch(rrm->m_instance.m_type) {
 			case RenderResource::TEXTURE: {
 				auto tex = (TextureAsset*)get_asset(rrm->m_creator, NO_LOAD);
 				tex->m_handle = rrm->m_instance;
 				break;
 			}
 			case RenderResource::VERTEX_BUFFER: {
-				auto& mesh = ((ModelAsset*)get_asset(rrm->m_creator, NO_LOAD))->m_meshes[0];
-				mesh.m_handle = rrm->m_instance;
+				auto mesh = (MeshAsset*)get_asset(rrm->m_creator, NO_LOAD);
+				mesh->m_handle = rrm->m_instance;
 				break;
 			}
 			case RenderResource::VERTEX_LAYOUT: {
@@ -305,7 +341,7 @@ void Alexandria::update()
 			}
 			default:
 				break;
-			}
+			}*/
 		}
 	}
 
@@ -445,16 +481,22 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 		
 		// Prepare asset -- TODO: pool this allocation? let `Alexandria` manage it
 		ModelAsset* model = static_cast<ModelAsset*>(place_asset(hash, new ModelAsset(short_id)));
-		model->m_meshes.push_back({});
-		Mesh& mesh = model->m_meshes.back();
+		apathy::Path mesh_id(path);
+		mesh_id = mesh_id.append("Mesh0");
+		auto mesh_hash = Crypto::HASH(mesh_id.string());
+		MeshAsset* mesh = static_cast<MeshAsset*>(place_asset(
+			mesh_hash,
+			new MeshAsset(short_id + ".0")
+		));
+		model->m_meshes.push_back(mesh_hash);
 
 		// Copy vertex data
 		const bool has_tex = attrib.texcoords.size() > 0;
 		const size_t vertices = attrib.vertices.size() / 3;
-		mesh.m_verts.resize(vertices);
+		mesh->m_verts.resize(vertices);
 
 		for(size_t i = 0; i < vertices; i++) {
-			mesh.m_verts[i] = {
+			mesh->m_verts[i] = {
 				glm::vec3(attrib.vertices[3*i], attrib.vertices[3*i+1], attrib.vertices[3*i+2]),
 				glm::vec3(attrib.normals[3*i], attrib.normals[3*i+1], attrib.normals[3*i+2]),
 				(has_tex) ? glm::vec2(attrib.texcoords[2*i], attrib.texcoords[2*i+1]) : glm::vec2(0)
@@ -465,7 +507,7 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 		RenderResourceContext* rrc = alloc_rrc();
 		RenderResourceContext::VertexBufferData buff = {
 			.chunks = {
-				{.data = &mesh.m_verts[0], .size = vertices * sizeof(Vertex)}
+				{.data = &mesh->m_verts[0], .size = vertices * sizeof(Vertex)}
 			},
 			.usage = RenderResourceContext::VertexBufferData::STATIC
 		};
@@ -478,7 +520,7 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 			apathy::Path material_id(path);
 			material_id = material_id.append("Material");
 			add_asset(material_id, "material", &(*material_root), db_name, short_id + ".Material");
-			model->m_material = Crypto::HASH(material_id.string());
+			mesh->m_material = Crypto::HASH(material_id.string());
 		}
 
 	} else if(type == "texture") {
@@ -534,19 +576,24 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 		stbi_set_flip_vertically_on_load(true);
 		texture.m_data = stbi_load(noise_id.string().c_str(), &texture.m_width, &texture.m_height, &texture.m_channels, 0);
 
-		m_log->info("{} components in map texture {}", texture.m_channels, noise_id.string());
-		m_log->info("(0,0) : {})", texture.m_data[0]);
-
 		// Populate vertex and index buffers
-		const size_t w = texture.m_width;
+		const size_t w = texture.m_width;\
 		const size_t h = texture.m_height;
 		const size_t vlen = w * h;
 		const size_t tris = (w-1)*(h-1)*2;
 		const size_t ilen = tris*3;
 
-		// These guys die before Render is able to upload them, dummie
-		std::vector<glm::vec3> vbuffer;
-		std::vector<GLuint> ibuffer;
+		// Create mesh asset
+		apathy::Path mesh_id(path);
+		mesh_id = mesh_id.append("Mesh");
+		auto mesh_hash = Crypto::HASH(mesh_id.string());
+		MeshAsset* mesh = static_cast<MeshAsset*>(place_asset(
+			mesh_hash,
+			new MeshAsset(short_id + ".Mesh")
+		));
+		
+		auto& vbuffer = mesh->m_verts;
+		auto& ibuffer = mesh->m_indices;
 		vbuffer.resize(vlen);
 		ibuffer.resize(ilen);
 
@@ -556,7 +603,7 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 			pos.z = (size_t)(i / h);
 			pos.y = (float)texture.m_data[i] / 4.f;
 			//m_log->info("{}", glm::to_string(pos));
-			vbuffer[i] = pos;
+			vbuffer[i].m_position = pos;
 		}
 		for(size_t i = 0; i < tris; i++) {
 			if(i % 2 == 0) {
@@ -576,14 +623,14 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 			.data = &ibuffer[0],
 			.size = ilen * sizeof(GLuint)
 		};
-		rrc->push_index_buffer(ib, Crypto::HASH("Map." + short_id));
+		rrc->push_index_buffer(ib, mesh_hash);
 		RenderResourceContext::VertexBufferData vb = {
 			.chunks = {
 				{.data = &vbuffer[0], .size = vlen * sizeof(glm::vec3)}
 			},
 			.usage = RenderResourceContext::VertexBufferData::Usage::STATIC
 		};
-		rrc->push_vertex_buffer(vb, Crypto::HASH("Map." + short_id));
+		rrc->push_vertex_buffer(vb, mesh_hash);
 
 		m_sys_render->dispatch(rrc);
 	}

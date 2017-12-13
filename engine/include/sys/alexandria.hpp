@@ -45,6 +45,9 @@ namespace MilSim {
 				inner_free();
 			}
 		};
+
+		virtual void handle_render_message(RenderResourceMessage* msg) = 0;
+
 	protected:
 		t_logger m_logger;
 		apathy::Path m_path;
@@ -71,6 +74,8 @@ namespace MilSim {
 			TTF, OTF
 		};
 
+		void handle_render_message(RenderResourceMessage* msg);
+
 	private:
 		bool inner_load();
 		Format m_format;
@@ -88,6 +93,8 @@ namespace MilSim {
 		int m_width, m_height, m_channels;
 
 		RenderResourceInstance m_handle;
+
+		void handle_render_message(RenderResourceMessage* msg);
 	
 	private:
 		bool inner_load();
@@ -109,6 +116,8 @@ namespace MilSim {
 		t_asset_id m_diffuse_tex;
 		t_asset_id m_specular_tex;
 
+		void handle_render_message(RenderResourceMessage* msg);
+
 	private:
 		bool inner_load();
 		void inner_free();
@@ -122,26 +131,36 @@ namespace MilSim {
 	/**
 	 * Mesh: main structure for 3D geometry.
 	 */
-	struct Mesh {
+	class MeshAsset : public Asset {
+	public:
+		MeshAsset(const std::string name);
+		~MeshAsset();
 		/**
 		 * Back to the basics.
 		 */
 		std::vector<Vertex> m_verts;
-		RenderResourceInstance m_handle;
+		std::vector<GLuint> m_indices;
+		t_asset_id m_material;
+		RenderResourceInstance m_vb_handle;
+		RenderResourceInstance m_ib_handle;
+
+		void handle_render_message(RenderResourceMessage* msg);
+
+	private:
+		bool inner_load();
+		void inner_free();
 	};
 	/**
-	 * ModelAsset: lowest level of 3D organization,
-	 * since Meshes are *not* accessible by ID
-	 * (should they?...)
+	 * ModelAsset: 
 	 */
 	class ModelAsset : public Asset {
 	public:
 		ModelAsset(const std::string name);
 		~ModelAsset();
 
-		std::vector<Mesh> m_meshes;
-		//std::vector<Material> m_materials;
-		t_asset_id m_material;
+		std::vector<t_asset_id> m_meshes;
+
+		void handle_render_message(RenderResourceMessage* msg);
 
 	private:
 		bool inner_load();
@@ -163,6 +182,8 @@ namespace MilSim {
 		std::string m_vert_source;
 		std::string m_frag_source;
 		std::map<std::string, GLuint> m_uniforms;
+
+		void handle_render_message(RenderResourceMessage* msg);
 	
 	private:
 		bool inner_load();
@@ -176,6 +197,8 @@ namespace MilSim {
 	public:
 		ScriptAsset();
 		~ScriptAsset();
+
+		void handle_render_message(RenderResourceMessage* msg);
 
 	private:
 		bool inner_load();
