@@ -21,19 +21,12 @@ namespace MilSim {
 	 */
 	class Asset {
 	public:
-		Asset(const std::string logname) {
+		Asset(const apathy::Path id, const std::string prefix) {
 			m_loaded = false;
-			m_name = "Sys.Alexandria." + logname;
-			m_logger = Logger::create(m_name);
+			m_id = id;
+			m_logger = Logger::create("Sys.Alexandria." + prefix + "::" + m_id.string());
 		};
 		virtual ~Asset() {};
-
-		void set_hash(t_asset_id hash) {
-			m_hash = hash;
-		};
-		void set_path(apathy::Path path) {
-			m_path = path;
-		};
 
 		bool m_loaded;
 		bool load() {
@@ -50,8 +43,7 @@ namespace MilSim {
 
 	protected:
 		t_logger m_logger;
-		apathy::Path m_path;
-		std::string m_name;
+		apathy::Path m_id;
 		t_asset_id m_hash;
 
 		virtual bool inner_load() = 0;
@@ -86,7 +78,7 @@ namespace MilSim {
 	 */
 	class TextureAsset : public Asset {
 	public:
-		TextureAsset(const std::string name);
+		TextureAsset(const apathy::Path id);
 		~TextureAsset();
 
 		unsigned char* m_data;
@@ -106,7 +98,7 @@ namespace MilSim {
 	 */
 	class MaterialAsset : public Asset {
 	public:
-		MaterialAsset(const std::string name);
+		MaterialAsset(const apathy::Path id);
 		~MaterialAsset();
 
 		glm::vec3 m_ambient;
@@ -133,7 +125,7 @@ namespace MilSim {
 	 */
 	class MeshAsset : public Asset {
 	public:
-		MeshAsset(const std::string name);
+		MeshAsset(const apathy::Path id);
 		~MeshAsset();
 		/**
 		 * Back to the basics.
@@ -155,7 +147,7 @@ namespace MilSim {
 	 */
 	class ModelAsset : public Asset {
 	public:
-		ModelAsset(const std::string name);
+		ModelAsset(const apathy::Path id);
 		~ModelAsset();
 
 		std::vector<t_asset_id> m_meshes;
@@ -172,7 +164,7 @@ namespace MilSim {
 	 */
 	class ShaderProgramAsset : public Asset {
 	public:
-		ShaderProgramAsset(const std::string name);
+		ShaderProgramAsset(const apathy::Path id);
 		~ShaderProgramAsset();
 
 	// private:?
@@ -252,7 +244,6 @@ namespace MilSim {
 				return nullptr;
 			}
 			m_assets[hash] = t_asset_ptr(asset);
-			m_assets[hash]->set_hash(hash);
 			return asset;
 		}
 

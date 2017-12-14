@@ -12,7 +12,7 @@ using namespace MilSim;
 // FONTASSET
 ////////////////////////////////////////
 FontAsset::FontAsset()
-	: Asset::Asset("FontAsset")
+	: Asset::Asset(apathy::Path(), "FontAsset")
 {}
 FontAsset::~FontAsset()
 {}
@@ -30,8 +30,8 @@ void FontAsset::handle_render_message(RenderResourceMessage* msg)
 ////////////////////////////////////////
 // TEXTUREASSET
 ////////////////////////////////////////
-TextureAsset::TextureAsset(const std::string name)
-	: Asset::Asset("Texture::" + name)
+TextureAsset::TextureAsset(const apathy::Path id)
+	: Asset::Asset(id, "Texture")
 {
 
 }
@@ -56,8 +56,8 @@ void TextureAsset::handle_render_message(RenderResourceMessage* msg)
 ////////////////////////////////////////
 // MATERIALASSET
 ////////////////////////////////////////
-MaterialAsset::MaterialAsset(const std::string name)
-	: Asset::Asset("Material::" + name)
+MaterialAsset::MaterialAsset(const apathy::Path id)
+	: Asset::Asset(id, "Material")
 {
 
 }
@@ -83,10 +83,10 @@ void MaterialAsset::handle_render_message(RenderResourceMessage* msg)
 ////////////////////////////////////////
 // MODELASSET
 ////////////////////////////////////////
-MeshAsset::MeshAsset(const std::string name)
-	: Asset::Asset("Mesh::" + name)
+MeshAsset::MeshAsset(const apathy::Path id)
+	: Asset::Asset(id, "Mesh")
 {
-	m_logger->info("hi from a mesh!");
+	
 }
 MeshAsset::~MeshAsset()
 {
@@ -119,8 +119,8 @@ void MeshAsset::handle_render_message(RenderResourceMessage* msg)
 ////////////////////////////////////////
 // MODELASSET
 ////////////////////////////////////////
-ModelAsset::ModelAsset(const std::string name)
-	: Asset::Asset("Model::" + name)
+ModelAsset::ModelAsset(const apathy::Path id)
+	: Asset::Asset(id, "Model")
 {
 }
 ModelAsset::~ModelAsset()
@@ -144,8 +144,8 @@ void ModelAsset::handle_render_message(RenderResourceMessage* msg)
 ////////////////////////////////////////
 // SHADERPROGRAMASSET
 ////////////////////////////////////////
-ShaderProgramAsset::ShaderProgramAsset(const std::string name)
-	: Asset::Asset("ShaderProgram::" + name)
+ShaderProgramAsset::ShaderProgramAsset(const apathy::Path id)
+	: Asset::Asset(id, "ShaderProgram")
 {
 
 }
@@ -231,7 +231,7 @@ void ShaderProgramAsset::handle_render_message(RenderResourceMessage* msg)
 // SCRIPTASSET
 ////////////////////////////////////////
 ScriptAsset::ScriptAsset()
-	: Asset::Asset("ScriptAsset")
+	: Asset::Asset(apathy::Path(), "ScriptAsset")
 {
 	
 }

@@ -16,7 +16,8 @@
 - [x] Legit `Material` asset.
 	+ [ ] Test it!
 - [x] Write Alexandria member functions to load assets (no OOP).
-- [ ] Use `apathy::Path` for everything in Alexandria.
+- [x] Use `apathy::Path` for everything in Alexandria.
+- [ ] Figure out how Alexandria deals with loading assets. Should assets be PODs (mostly)?
 - [ ] Start thinking about a minimal Lua binding interface (use `talloc`)
 	+ [Think twice before eating all that glue](http://purplepwny.com/blog/binding_lua_to_c_think_twice_before_eating_that_glue.html).
 	+ [Lightweight Lua bindings (Bitsquid)](http://bitsquid.blogspot.com.es/2011/06/lightweight-lua-bindings.html).
