@@ -127,6 +127,7 @@ namespace MilSim {
 		/**
 		 * Render thread and synchronization.
 		 */
+		void _inner_thread_entry();
 		std::thread m_thread;
 		std::atomic<bool> m_should_stop;
 

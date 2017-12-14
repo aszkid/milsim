@@ -31,7 +31,7 @@ void FontAsset::handle_render_message(RenderResourceMessage* msg)
 // TEXTUREASSET
 ////////////////////////////////////////
 TextureAsset::TextureAsset(const std::string name)
-	: Asset::Asset("TextureAsset." + name)
+	: Asset::Asset("Texture::" + name)
 {
 
 }
@@ -57,7 +57,7 @@ void TextureAsset::handle_render_message(RenderResourceMessage* msg)
 // MATERIALASSET
 ////////////////////////////////////////
 MaterialAsset::MaterialAsset(const std::string name)
-	: Asset::Asset("MaterialAsset." + name)
+	: Asset::Asset("Material::" + name)
 {
 
 }
@@ -84,9 +84,9 @@ void MaterialAsset::handle_render_message(RenderResourceMessage* msg)
 // MODELASSET
 ////////////////////////////////////////
 MeshAsset::MeshAsset(const std::string name)
-	: Asset::Asset("Mesh." + name)
+	: Asset::Asset("Mesh::" + name)
 {
-
+	m_logger->info("hi from a mesh!");
 }
 MeshAsset::~MeshAsset()
 {
@@ -120,7 +120,7 @@ void MeshAsset::handle_render_message(RenderResourceMessage* msg)
 // MODELASSET
 ////////////////////////////////////////
 ModelAsset::ModelAsset(const std::string name)
-	: Asset::Asset("ModelAsset." + name)
+	: Asset::Asset("Model::" + name)
 {
 }
 ModelAsset::~ModelAsset()
@@ -145,7 +145,7 @@ void ModelAsset::handle_render_message(RenderResourceMessage* msg)
 // SHADERPROGRAMASSET
 ////////////////////////////////////////
 ShaderProgramAsset::ShaderProgramAsset(const std::string name)
-	: Asset::Asset("ShaderProgramAsset." + name)
+	: Asset::Asset("ShaderProgram::" + name)
 {
 
 }
@@ -313,12 +313,17 @@ void Alexandria::update()
 			// use base class `RenderableAsset` for all assets that need render representation?
 			// we are assuming the message is of type `CREATED`, for now...
 
+			if(rrm->m_creator == Crypto::HASH("VertexLayout/Mesh")) {
+				m_vl_mesh = rrm->m_instance;
+				continue;
+			}
+
 			auto* asset = get_asset(rrm->m_creator);
 			if(asset != nullptr) {
 				// delegate
 				asset->handle_render_message(rrm);
 			} else {
-				m_log->info("Cannot delegate render message of type {} to `{:x}`!", rrm->m_type, (uint64_t)asset);
+				m_log->info("Cannot delegate render message of type {} to `{:x}`!", rrm->m_type, rrm->m_creator);
 			}
 
 			/*switch(rrm->m_instance.m_type) {
@@ -493,8 +498,7 @@ bool Alexandria::_load_model_asset(ModelAsset* model, apathy::Path id, const jso
 {
 	const size_t hash = Crypto::HASH(id.string());
 	const std::string file = root->at("source");
-	apathy::Path working_path(m_local_root);
-	working_path.append(id).sanitize();
+	apathy::Path working_path(get_working_path(id));
 	
 	tinyobj::attrib_t attrib;
 	std::vector<tinyobj::shape_t> shapes;
@@ -516,8 +520,9 @@ bool Alexandria::_load_model_asset(ModelAsset* model, apathy::Path id, const jso
 	}
 	
 	// Prepare asset -- TODO: pool this allocation? let `Alexandria` manage it
+	// We assume the model is a single mesh... for now
 	apathy::Path mesh_id(id);
-	mesh_id = mesh_id.append(".Mesh0");
+	mesh_id = mesh_id.append("0");
 	auto mesh_hash = Crypto::HASH(mesh_id.string());
 	MeshAsset* mesh = static_cast<MeshAsset*>(place_asset(
 		mesh_hash,
@@ -564,8 +569,7 @@ bool Alexandria::_load_model_asset(ModelAsset* model, apathy::Path id, const jso
 bool Alexandria::_load_material_asset(MaterialAsset* material, apathy::Path id, const json* root)
 {
 	const size_t hash = Crypto::HASH(id.string());
-	apathy::Path working_path(m_local_root);
-	working_path.append(id).sanitize();
+	apathy::Path working_path(get_working_path(id));
 	
 	std::vector<float> Ka = root->at("Ka");
 	std::vector<float> Kd = root->at("Kd");
@@ -598,8 +602,7 @@ bool Alexandria::_load_shader_asset(ShaderProgramAsset* shader, apathy::Path id,
 {
 	const size_t hash = Crypto::HASH(id.string());
 	const std::string file = root->at("source");
-	apathy::Path working_path(m_local_root);
-	working_path.append(id).sanitize();
+	apathy::Path working_path(get_working_path(id));
 	
 	// TODO: catch exceptions...
 	auto vert_source = IO::read_file(apathy::Path(working_path).string() + ".vert");
@@ -611,8 +614,7 @@ bool Alexandria::_load_shader_asset(ShaderProgramAsset* shader, apathy::Path id,
 bool Alexandria::_load_texture_asset(TextureAsset* texture, apathy::Path id, const json* root)
 {
 	const size_t hash = Crypto::HASH(id.string());
-	apathy::Path working_path(m_local_root);
-	working_path.append(id).sanitize();
+	apathy::Path working_path(get_working_path(id));
 
 	stbi_set_flip_vertically_on_load(true);
 	texture->m_data = stbi_load(working_path.string().c_str(), &texture->m_width, &texture->m_height, &texture->m_channels, 0);
@@ -683,4 +685,11 @@ bool Alexandria::_load_map_asset(apathy::Path id, const json* root)
 	rrc->push_vertex_buffer(vb, mesh_hash);
 
 	m_sys_render->dispatch(rrc);
+}
+
+apathy::Path Alexandria::get_working_path(const apathy::Path id) const
+{
+	apathy::Path working_path(m_local_root);
+	working_path.append(id).sanitize();
+	return working_path;
 }

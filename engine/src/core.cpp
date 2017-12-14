@@ -91,6 +91,8 @@ void Core::loop()
 	m_prevtime = std::chrono::system_clock::now();
 	m_currtime = m_prevtime;
 
+	m_render->thread_entry();
+
 	bool should_close = false;
 	while(!glfwWindowShouldClose(m_window)) {
 		// Chrono stuff

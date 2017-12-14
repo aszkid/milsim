@@ -23,7 +23,7 @@ namespace MilSim {
 	public:
 		Asset(const std::string logname) {
 			m_loaded = false;
-			m_name = "Alexandria." + logname;
+			m_name = "Sys.Alexandria." + logname;
 			m_logger = Logger::create(m_name);
 		};
 		virtual ~Asset() {};
@@ -243,6 +243,8 @@ namespace MilSim {
 		bool _load_shader_asset(ShaderProgramAsset* shader, apathy::Path id, const json* root);
 		bool _load_texture_asset(TextureAsset* texture, apathy::Path id, const json* root);
 		bool _load_map_asset(apathy::Path id, const json* root);
+		
+		apathy::Path get_working_path(const apathy::Path id) const;
 
 		Asset* place_asset(const t_asset_id hash, Asset* asset) {
 			if(m_assets.find(hash) != m_assets.end()) {

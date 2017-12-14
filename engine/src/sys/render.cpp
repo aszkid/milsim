@@ -24,10 +24,7 @@ Render::~Render()
 
 void Render::init()
 {
-	m_thread = std::thread(
-		&Render::thread_entry,
-		this
-	);
+
 }
 void Render::kill()
 {
@@ -62,6 +59,14 @@ void Render::update()
 }
 
 void Render::thread_entry()
+{
+
+	m_thread = std::thread(
+		&Render::_inner_thread_entry,
+		this
+	);
+}
+void Render::_inner_thread_entry()
 {
 	// Initialize OpenGL context in the render thread
 	glfwMakeContextCurrent(m_window);
@@ -159,7 +164,6 @@ void Render::_handle_resource(RenderResourceContext* rrc)
 		}
 		glGenerateMipmap(GL_TEXTURE_2D);
 
-		// notify whoever holds the instance
 		// TODO: pack these up and send batched at the end
 		m_hermes->send(new RenderResourceMessage(
 			tex_instance,
