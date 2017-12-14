@@ -172,7 +172,7 @@ namespace MilSim {
 	 */
 	class ShaderProgramAsset : public Asset {
 	public:
-		ShaderProgramAsset(const std::string name, const std::string vert_source, const std::string frag_source);
+		ShaderProgramAsset(const std::string name);
 		~ShaderProgramAsset();
 
 	// private:?
@@ -235,7 +235,14 @@ namespace MilSim {
 
 		// Database loading
 		void load_folder(const json& root, apathy::Path path, const std::string db_name);
-		void add_asset(apathy::Path path, const std::string type, const json* root, const std::string db_name, const std::string short_id_override = "");
+		Asset* add_asset(apathy::Path path, const std::string type, const json* root);
+
+		// Asset-specific loading methods
+		bool _load_model_asset(ModelAsset* model, apathy::Path id, const json* root);
+		bool _load_material_asset(MaterialAsset* material, apathy::Path id, const json* root);
+		bool _load_shader_asset(ShaderProgramAsset* shader, apathy::Path id, const json* root);
+		bool _load_texture_asset(TextureAsset* texture, apathy::Path id, const json* root);
+		bool _load_map_asset(apathy::Path id, const json* root);
 
 		Asset* place_asset(const t_asset_id hash, Asset* asset) {
 			if(m_assets.find(hash) != m_assets.end()) {

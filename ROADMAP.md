@@ -15,7 +15,8 @@
 	+ [ ] Render commands basic design.
 - [x] Legit `Material` asset.
 	+ [ ] Test it!
-- [ ] Put `Alexandria` loading snippets in corresponding asset classes!
+- [x] Write Alexandria member functions to load assets (no OOP).
+- [ ] Use `apathy::Path` for everything in Alexandria.
 - [ ] Start thinking about a minimal Lua binding interface (use `talloc`)
 	+ [Think twice before eating all that glue](http://purplepwny.com/blog/binding_lua_to_c_think_twice_before_eating_that_glue.html).
 	+ [Lightweight Lua bindings (Bitsquid)](http://bitsquid.blogspot.com.es/2011/06/lightweight-lua-bindings.html).

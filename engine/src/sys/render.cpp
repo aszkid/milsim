@@ -154,7 +154,7 @@ void Render::_handle_resource(RenderResourceContext* rrc)
 		} else if(tex_data.channels == 4) {
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_data.width, tex_data.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data.source);
 		} else {
-			m_log->error("Texture is not RGB nor RGBA! Aborting...");
+			m_log->error("Texture is not RGB nor RGBA! {} channels. Aborting...", tex_data.channels);
 			abort();
 		}
 		glGenerateMipmap(GL_TEXTURE_2D);

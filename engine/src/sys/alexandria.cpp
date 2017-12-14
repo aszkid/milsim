@@ -144,8 +144,8 @@ void ModelAsset::handle_render_message(RenderResourceMessage* msg)
 ////////////////////////////////////////
 // SHADERPROGRAMASSET
 ////////////////////////////////////////
-ShaderProgramAsset::ShaderProgramAsset(const std::string name, const std::string vert_source, const std::string frag_source)
-	: Asset::Asset("ShaderProgramAsset." + name), m_vert_source(vert_source), m_frag_source(frag_source)
+ShaderProgramAsset::ShaderProgramAsset(const std::string name)
+	: Asset::Asset("ShaderProgramAsset." + name)
 {
 
 }
@@ -390,7 +390,7 @@ void Alexandria::load_folder(const json& root, apathy::Path path, const std::str
 			load_folder(node["contents"], apathy::Path(path).append(new_id).directory(), db_name);
 		}
 		else {
-			add_asset(apathy::Path(path).append(new_id), node["type"], &node, db_name);
+			add_asset(apathy::Path(path).append(new_id), node["type"], &node);
 		}
 	}
 }
@@ -422,115 +422,39 @@ RenderResourceInstance Alexandria::get_vertex_layout(const size_t kind)
 	}
 }
 
-void Alexandria::add_asset(apathy::Path path, const std::string type, const json* root, const std::string db_name, const std::string short_id_override)
+Asset* Alexandria::add_asset(apathy::Path path, const std::string type, const json* root)
 {
 	const std::string id = path.sanitize().string();
-	const std::string stem = path.stem().string();
 	auto hash = Crypto::HASH(id);
-	std::string short_id;
-	if(short_id_override.empty()) {
-		short_id = (root == nullptr) ? path.filename() : root->at("id").get<std::string>();
-	} else {
-		short_id = short_id_override;
-	}
 
 	m_log->info("Adding asset `{}` of type `{}` -- `{:x}`...", id, type, hash);
 
 	if(m_assets.find(hash) != m_assets.end()) {
 		m_log->info("Asset `{}` already in our database, skipping.", id);
-		return;
+		return nullptr;
 	}
-
-	apathy::Path working_path(m_local_root);
-	working_path.append(path).sanitize();
 
 	if(type == "font") {
 		//m_assets[hash] = t_asset_ptr(new FontAsset());
 
 	} else if(type == "shader") {
-		// TODO: catch exceptions...
-		auto vert_source = IO::read_file(apathy::Path(working_path).string() + ".vert");
-		auto frag_source = IO::read_file(apathy::Path(working_path).string() + ".frag");
-
-		auto shader = (ShaderProgramAsset*)place_asset(hash, new ShaderProgramAsset(
-			short_id, vert_source, frag_source
-		));
+		auto shader = (ShaderProgramAsset*)place_asset(hash, new ShaderProgramAsset(id));
+		shader->m_loaded = _load_shader_asset(shader, id, root);
+		return shader;
 
 	} else if(type == "model") {
-		tinyobj::attrib_t attrib;
-		std::vector<tinyobj::shape_t> shapes;
-		std::vector<tinyobj::material_t> materials;
-		std::string err;
-
-		const std::string file = (*root)["source"];
-
-		bool ret = tinyobj::LoadObj(
-			&attrib, &shapes, &materials, &err,
-			apathy::Path(working_path).append(file).string().c_str(),
-			apathy::Path(working_path).directory().string().c_str()
-		);
-		if(!err.empty()) {
-			// Do not worry of a 'material error' is printed: we take care of it manually, we use a different format
-			//m_log->info("Warning: {}", err);
-		}
-		if(!ret) {
-			m_log->error("Failed to load model {}!", id);
-			abort();
-		}
-		
-		// Prepare asset -- TODO: pool this allocation? let `Alexandria` manage it
-		ModelAsset* model = static_cast<ModelAsset*>(place_asset(hash, new ModelAsset(short_id)));
-		apathy::Path mesh_id(path);
-		mesh_id = mesh_id.append("Mesh0");
-		auto mesh_hash = Crypto::HASH(mesh_id.string());
-		MeshAsset* mesh = static_cast<MeshAsset*>(place_asset(
-			mesh_hash,
-			new MeshAsset(short_id + ".0")
-		));
-		model->m_meshes.push_back(mesh_hash);
-
-		// Copy vertex data
-		const bool has_tex = attrib.texcoords.size() > 0;
-		const size_t vertices = attrib.vertices.size() / 3;
-		mesh->m_verts.resize(vertices);
-
-		for(size_t i = 0; i < vertices; i++) {
-			mesh->m_verts[i] = {
-				glm::vec3(attrib.vertices[3*i], attrib.vertices[3*i+1], attrib.vertices[3*i+2]),
-				glm::vec3(attrib.normals[3*i], attrib.normals[3*i+1], attrib.normals[3*i+2]),
-				(has_tex) ? glm::vec2(attrib.texcoords[2*i], attrib.texcoords[2*i+1]) : glm::vec2(0)
-			};
-		}
-
-		// Prepare data buffer(s)
-		RenderResourceContext* rrc = alloc_rrc();
-		RenderResourceContext::VertexBufferData buff = {
-			.chunks = {
-				{.data = &mesh->m_verts[0], .size = vertices * sizeof(Vertex)}
-			},
-			.usage = RenderResourceContext::VertexBufferData::STATIC
-		};
-		rrc->push_vertex_buffer(buff, hash);
-		m_sys_render->dispatch(rrc);
-		
-		// Attach material, if any
-		auto material_root = root->find("material");
-		if(material_root != root->end()) {
-			apathy::Path material_id(path);
-			material_id = material_id.append("Material");
-			add_asset(material_id, "material", &(*material_root), db_name, short_id + ".Material");
-			mesh->m_material = Crypto::HASH(material_id.string());
-		}
+		auto model = static_cast<ModelAsset*>(place_asset(hash, new ModelAsset(id)));
+		model->m_loaded = _load_model_asset(model, id, root);
+		return model;
 	
 	} else if(type == "texture_local") {
-		TextureAsset* texture = static_cast<TextureAsset*>(place_asset(hash, new TextureAsset(short_id)));
-		stbi_set_flip_vertically_on_load(true);
-		texture->m_data = stbi_load(working_path.string().c_str(), &texture->m_width, &texture->m_height, &texture->m_channels, 0);
+		auto texture = static_cast<TextureAsset*>(place_asset(hash, new TextureAsset(id)));
+		texture->m_loaded = _load_texture_asset(texture, id, root);
+		return texture;
 
 	} else if(type == "texture") {
 		// Create local texture
-		add_asset(id, "texture_local", nullptr, db_name);
-		auto texture = static_cast<TextureAsset*>(get_asset(hash));
+		auto texture = static_cast<TextureAsset*>(add_asset(id, "texture_local", nullptr));
 
 		// Upload to the GPU
 		RenderResourceContext* rrc = alloc_rrc();
@@ -543,101 +467,17 @@ void Alexandria::add_asset(apathy::Path path, const std::string type, const json
 		rrc->push_texture(tex, hash);
 		m_sys_render->dispatch(rrc);
 
-		texture->load();
+		return texture;
 
 	} else if(type == "material") {
-		auto material = (MaterialAsset*)place_asset(hash, new MaterialAsset(short_id));
+		auto material = (MaterialAsset*)place_asset(hash, new MaterialAsset(id));
+		material->m_loaded = _load_material_asset(material, id, root);
+		return material;
 		
-		std::vector<float> Ka = root->at("Ka");
-		std::vector<float> Kd = root->at("Kd");
-		std::vector<float> Ks = root->at("Ks");
-
-		material->m_ambient = glm::vec3(Ka[0], Ka[1], Ka[2]);
-		material->m_diffuse = glm::vec3(Kd[0], Kd[1], Kd[2]);
-		material->m_specular = glm::vec3(Ks[0], Ks[1], Ks[2]);
-
-		auto Kd_tex = root->find("Kd_tex");
-		if(Kd_tex != root->end()) {
-			apathy::Path Kd_tex_id(path);
-			Kd_tex_id = Kd_tex_id.append(Kd_tex->get<std::string>());
-			add_asset(Kd_tex_id, "texture", nullptr, db_name);
-			material->m_diffuse_tex = Crypto::HASH(Kd_tex_id.sanitize().string());
-		}
-
-		auto Ks_tex = root->find("Ks_tex");
-		if(Ks_tex != root->end()) {
-			apathy::Path Ks_tex_id(path);
-			Ks_tex_id = Ks_tex_id.append(Ks_tex->get<std::string>());
-			add_asset(Ks_tex_id, "texture", nullptr, db_name);
-			material->m_specular_tex = Crypto::HASH(Ks_tex_id.sanitize().string());
-		}
 	} else if(type == "map_noise") {
-		apathy::Path map_tex(path);
-		map_tex = map_tex.append(root->at("source").get<std::string>());
-		add_asset(map_tex, "texture_local", nullptr, db_name);
-		auto texture = static_cast<TextureAsset*>(get_asset(Crypto::HASH(map_tex.string())));
-
-		// Populate vertex and index buffers
-		const size_t w = texture->m_width;
-		const size_t h = texture->m_height;
-		const size_t vlen = w * h;
-		const size_t tris = (w-1)*(h-1)*2;
-		const size_t ilen = tris*3;
-
-		// Create mesh asset
-		apathy::Path mesh_id(path);
-		mesh_id = mesh_id.append("Mesh");
-		auto mesh_hash = Crypto::HASH(mesh_id.string());
-		MeshAsset* mesh = static_cast<MeshAsset*>(place_asset(
-			mesh_hash,
-			new MeshAsset(short_id + ".Mesh")
-		));
-		
-		auto& vbuffer = mesh->m_verts;
-		auto& ibuffer = mesh->m_indices;
-		vbuffer.resize(vlen);
-		ibuffer.resize(ilen);
-
-		for(size_t i = 0; i < vlen; i++) {
-			glm::vec3 pos;
-			pos.x = i % w;
-			pos.z = (size_t)(i / h);
-			pos.y = (float)texture->m_data[i] / 4.f;
-			//m_log->info("{}", glm::to_string(pos));
-			vbuffer[i].m_position = pos;
-		}
-		for(size_t i = 0; i < tris; i++) {
-			if(i % 2 == 0) {
-				ibuffer[3*i]   = i/2;
-				ibuffer[3*i+1] = (i/2)+w;
-				ibuffer[3*i+2] = (i/2)+1; 
-			} else {
-				// https://oeis.org/A026741
-				ibuffer[3*i]   = (i-1)/2;
-				ibuffer[3*i+1] = ((i-1)/2)+w;
-				ibuffer[3*i+2] = ((i-1)/2)+w+1;
-			}
-		}
-
-		RenderResourceContext* rrc = alloc_rrc();
-		RenderResourceContext::IndexBufferData ib = {
-			.data = &ibuffer[0],
-			.size = ilen * sizeof(GLuint)
-		};
-		rrc->push_index_buffer(ib, mesh_hash);
-		RenderResourceContext::VertexBufferData vb = {
-			.chunks = {
-				{.data = &vbuffer[0], .size = vlen * sizeof(glm::vec3)}
-			},
-			.usage = RenderResourceContext::VertexBufferData::Usage::STATIC
-		};
-		rrc->push_vertex_buffer(vb, mesh_hash);
-
-		m_sys_render->dispatch(rrc);
+		_load_map_asset(id, root);
+		return nullptr;
 	}
-	
-	// TODO: 
-	// m_assets[hash]->set_path(path); ??
 }
 
 RenderResourceContext* Alexandria::alloc_rrc()
@@ -646,4 +486,201 @@ RenderResourceContext* Alexandria::alloc_rrc()
 	auto* rrc = m_rrc_pool.back().get();
 	rrc->m_delete.store(false);
 	return m_rrc_pool.back().get();
+}
+
+
+bool Alexandria::_load_model_asset(ModelAsset* model, apathy::Path id, const json* root)
+{
+	const size_t hash = Crypto::HASH(id.string());
+	const std::string file = root->at("source");
+	apathy::Path working_path(m_local_root);
+	working_path.append(id).sanitize();
+	
+	tinyobj::attrib_t attrib;
+	std::vector<tinyobj::shape_t> shapes;
+	std::vector<tinyobj::material_t> materials;
+	std::string err;
+
+	bool ret = tinyobj::LoadObj(
+		&attrib, &shapes, &materials, &err,
+		apathy::Path(working_path).append(file).string().c_str(),
+		apathy::Path(working_path).directory().string().c_str()
+	);
+	if(!err.empty()) {
+		// Do not worry of a 'material error' is printed: we take care of it manually, we use a different format
+		//m_log->info("Warning: {}", err);
+	}
+	if(!ret) {
+		m_log->error("Failed to load model {}!", id.string());
+		abort();
+	}
+	
+	// Prepare asset -- TODO: pool this allocation? let `Alexandria` manage it
+	apathy::Path mesh_id(id);
+	mesh_id = mesh_id.append(".Mesh0");
+	auto mesh_hash = Crypto::HASH(mesh_id.string());
+	MeshAsset* mesh = static_cast<MeshAsset*>(place_asset(
+		mesh_hash,
+		new MeshAsset(mesh_id.string())
+	));
+	model->m_meshes.push_back(mesh_hash);
+
+	// Copy vertex data
+	const bool has_tex = attrib.texcoords.size() > 0;
+	const size_t vertices = attrib.vertices.size() / 3;
+	mesh->m_verts.resize(vertices);
+
+	for(size_t i = 0; i < vertices; i++) {
+		mesh->m_verts[i] = {
+			glm::vec3(attrib.vertices[3*i], attrib.vertices[3*i+1], attrib.vertices[3*i+2]),
+			glm::vec3(attrib.normals[3*i], attrib.normals[3*i+1], attrib.normals[3*i+2]),
+			(has_tex) ? glm::vec2(attrib.texcoords[2*i], attrib.texcoords[2*i+1]) : glm::vec2(0)
+		};
+	}
+
+	// Prepare data buffer(s)
+	RenderResourceContext* rrc = alloc_rrc();
+	RenderResourceContext::VertexBufferData buff = {
+		.chunks = {
+			{.data = &mesh->m_verts[0], .size = vertices * sizeof(Vertex)}
+		},
+		.usage = RenderResourceContext::VertexBufferData::STATIC
+	};
+	rrc->push_vertex_buffer(buff, hash);
+	m_sys_render->dispatch(rrc);
+	
+	// Attach material, if any
+	auto material_root = root->find("material");
+	if(material_root != root->end()) {
+		apathy::Path material_id(id);
+		material_id = material_id.append("Material");
+		add_asset(material_id, "material", &(*material_root));
+		mesh->m_material = Crypto::HASH(material_id.string());
+	}
+
+	return true;
+}
+
+bool Alexandria::_load_material_asset(MaterialAsset* material, apathy::Path id, const json* root)
+{
+	const size_t hash = Crypto::HASH(id.string());
+	apathy::Path working_path(m_local_root);
+	working_path.append(id).sanitize();
+	
+	std::vector<float> Ka = root->at("Ka");
+	std::vector<float> Kd = root->at("Kd");
+	std::vector<float> Ks = root->at("Ks");
+
+	material->m_ambient = glm::vec3(Ka[0], Ka[1], Ka[2]);
+	material->m_diffuse = glm::vec3(Kd[0], Kd[1], Kd[2]);
+	material->m_specular = glm::vec3(Ks[0], Ks[1], Ks[2]);
+
+	auto Kd_tex = root->find("Kd_tex");
+	if(Kd_tex != root->end()) {
+		apathy::Path Kd_tex_id(id);
+		Kd_tex_id = Kd_tex_id.append(Kd_tex->get<std::string>());
+		add_asset(Kd_tex_id, "texture", nullptr);
+		material->m_diffuse_tex = Crypto::HASH(Kd_tex_id.sanitize().string());
+	}
+
+	auto Ks_tex = root->find("Ks_tex");
+	if(Ks_tex != root->end()) {
+		apathy::Path Ks_tex_id(id);
+		Ks_tex_id = Ks_tex_id.append(Ks_tex->get<std::string>());
+		add_asset(Ks_tex_id, "texture", nullptr);
+		material->m_specular_tex = Crypto::HASH(Ks_tex_id.sanitize().string());
+	}
+
+	return true;
+}
+
+bool Alexandria::_load_shader_asset(ShaderProgramAsset* shader, apathy::Path id, const json* root)
+{
+	const size_t hash = Crypto::HASH(id.string());
+	const std::string file = root->at("source");
+	apathy::Path working_path(m_local_root);
+	working_path.append(id).sanitize();
+	
+	// TODO: catch exceptions...
+	auto vert_source = IO::read_file(apathy::Path(working_path).string() + ".vert");
+	auto frag_source = IO::read_file(apathy::Path(working_path).string() + ".frag");
+
+	return true;
+}
+
+bool Alexandria::_load_texture_asset(TextureAsset* texture, apathy::Path id, const json* root)
+{
+	const size_t hash = Crypto::HASH(id.string());
+	apathy::Path working_path(m_local_root);
+	working_path.append(id).sanitize();
+
+	stbi_set_flip_vertically_on_load(true);
+	texture->m_data = stbi_load(working_path.string().c_str(), &texture->m_width, &texture->m_height, &texture->m_channels, 0);
+
+	return true;
+}
+
+bool Alexandria::_load_map_asset(apathy::Path id, const json* root)
+{
+	apathy::Path map_tex(id);
+	map_tex = map_tex.append(root->at("source").get<std::string>());
+	auto texture = static_cast<TextureAsset*>(add_asset(map_tex, "texture_local", nullptr));
+
+	// Populate vertex and index buffers
+	const size_t w = texture->m_width;
+	const size_t h = texture->m_height;
+	const size_t vlen = w * h;
+	const size_t tris = (w-1)*(h-1)*2;
+	const size_t ilen = tris*3;
+
+	// Create mesh asset
+	apathy::Path mesh_id(id);
+	mesh_id = mesh_id.append("Mesh");
+	auto mesh_hash = Crypto::HASH(mesh_id.string());
+	MeshAsset* mesh = static_cast<MeshAsset*>(place_asset(
+		mesh_hash,
+		new MeshAsset(id.string())
+	));
+	
+	auto& vbuffer = mesh->m_verts;
+	auto& ibuffer = mesh->m_indices;
+	vbuffer.resize(vlen);
+	ibuffer.resize(ilen);
+
+	for(size_t i = 0; i < vlen; i++) {
+		glm::vec3 pos;
+		pos.x = i % w;
+		pos.z = (size_t)(i / h);
+		pos.y = (float)texture->m_data[i] / 4.f;
+		//m_log->info("{}", glm::to_string(pos));
+		vbuffer[i].m_position = pos;
+	}
+	for(size_t i = 0; i < tris; i++) {
+		if(i % 2 == 0) {
+			ibuffer[3*i]   = i/2;
+			ibuffer[3*i+1] = (i/2)+w;
+			ibuffer[3*i+2] = (i/2)+1; 
+		} else {
+			// https://oeis.org/A026741
+			ibuffer[3*i]   = (i-1)/2;
+			ibuffer[3*i+1] = ((i-1)/2)+w;
+			ibuffer[3*i+2] = ((i-1)/2)+w+1;
+		}
+	}
+
+	RenderResourceContext* rrc = alloc_rrc();
+	RenderResourceContext::IndexBufferData ib = {
+		.data = &ibuffer[0],
+		.size = ilen * sizeof(GLuint)
+	};
+	rrc->push_index_buffer(ib, mesh_hash);
+	RenderResourceContext::VertexBufferData vb = {
+		.chunks = {
+			{.data = &vbuffer[0], .size = vlen * sizeof(glm::vec3)}
+		},
+		.usage = RenderResourceContext::VertexBufferData::Usage::STATIC
+	};
+	rrc->push_vertex_buffer(vb, mesh_hash);
+
+	m_sys_render->dispatch(rrc);
 }
