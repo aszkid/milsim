@@ -77,8 +77,8 @@ namespace MilSim {
 			unsigned char* source;
 		};
 		std::vector<TextureData> m_tex;
-		std::vector<uint64_t> m_tex_ref;
-		void push_texture(TextureData tex, uint64_t ref);
+		std::vector<RenderResource> m_tex_ref;
+		void push_texture(TextureData tex, RenderResource ref);
 
 		/**
 		 * VERTEX BUFFER
@@ -101,8 +101,8 @@ namespace MilSim {
 			Usage usage;
 		};
 		std::vector<VertexBufferData> m_vb;
-		std::vector<uint64_t> m_vb_ref;
-		void push_vertex_buffer(VertexBufferData vb, uint64_t ref);
+		std::vector<RenderResource> m_vb_ref;
+		void push_vertex_buffer(VertexBufferData vb, RenderResource ref);
 
 		/**
 		 * VERTEX LAYOUT
@@ -128,8 +128,8 @@ namespace MilSim {
 			std::vector<Attribute> attribs;
 		};
 		std::vector<VertexLayoutData> m_vl;
-		std::vector<uint64_t> m_vl_ref;
-		void push_vertex_layout(VertexLayoutData vl, uint64_t ref);
+		std::vector<RenderResource> m_vl_ref;
+		void push_vertex_layout(VertexLayoutData vl, RenderResource ref);
 
 		/**
 		 * INDEX BUFFER
@@ -144,8 +144,8 @@ namespace MilSim {
 			size_t size;
 		};
 		std::vector<IndexBufferData> m_ib;
-		std::vector<uint64_t> m_ib_ref;
-		void push_index_buffer(IndexBufferData ib, uint64_t ref);
+		std::vector<RenderResource> m_ib_ref;
+		void push_index_buffer(IndexBufferData ib, RenderResource ref);
 	};
 
 }

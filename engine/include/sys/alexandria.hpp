@@ -1,5 +1,6 @@
 #pragma once
 
+#include <unordered_set>
 #include <json.hpp>
 #include <glbinding/gl/gl.h>
 #include <glm/glm.hpp>
@@ -164,13 +165,13 @@ namespace MilSim {
 		Asset* add_asset(apathy::Path path, const std::string type, const json* root);
 
 		/**
-		 * Asset database.
+		 * Hot assets.
 		 */
-		std::vector<std::unique_ptr<FontAsset>> m_fonts;
-		std::vector<std::unique_ptr<TextureAsset>> m_textures;
-
-		std::vector<size_t> m_loaded_fonts;
-		std::vector<size_t> m_loaded_textures;
+		std::unordered_set<uint32_t> m_loaded_fonts;
+		std::unordered_set<uint32_t> m_loaded_textures;
+		std::unordered_set<uint32_t> m_loaded_meshes;
+		std::unordered_set<uint32_t> m_loaded_models;
+		std::unordered_set<uint32_t> m_loaded_materials;
 
 		// Asset-specific loading methods
 		bool _load_model(ModelAsset* model, apathy::Path id, const json* root);

@@ -211,7 +211,7 @@ void Alexandria::kill()
 		// free data in m_font_assets[font]
 	}
 	for(auto texture : m_loaded_textures) {
-		stbi_image_free(m_textures[texture]->m_data);
+		stbi_image_free(((TextureAsset*)m_assets[texture].get())->m_data);
 	}
 	m_loaded_textures.clear();
 }
@@ -353,7 +353,7 @@ Asset* Alexandria::add_asset(apathy::Path path, const std::string type, const js
 
 bool Alexandria::_load_model(ModelAsset* model, apathy::Path id, const json* root)
 {
-	const size_t hash = Crypto::HASH(id.string());
+	const uint32_t hash = Crypto::HASH(id.string());
 	const std::string file = root->at("source");
 	apathy::Path working_path(get_working_path(id));
 	
@@ -421,12 +421,13 @@ bool Alexandria::_load_model(ModelAsset* model, apathy::Path id, const json* roo
 		mesh->m_material = Crypto::HASH(material_id.string());
 	}
 
+	m_loaded_models.emplace(hash);
 	return true;
 }
 
 bool Alexandria::_load_material(MaterialAsset* material, apathy::Path id, const json* root)
 {
-	const size_t hash = Crypto::HASH(id.string());
+	const uint32_t hash = Crypto::HASH(id.string());
 	apathy::Path working_path(get_working_path(id));
 	
 	std::vector<float> Ka = root->at("Ka");
@@ -453,6 +454,7 @@ bool Alexandria::_load_material(MaterialAsset* material, apathy::Path id, const 
 		material->m_specular_tex = Crypto::HASH(Ks_tex_id.sanitize().string());
 	}
 
+	m_loaded_materials.emplace(hash);
 	return true;
 }
 
@@ -471,12 +473,13 @@ bool Alexandria::_load_shader(ShaderProgramAsset* shader, apathy::Path id, const
 
 bool Alexandria::_load_texture(TextureAsset* texture, apathy::Path id, const json* root)
 {
-	const size_t hash = Crypto::HASH(id.string());
+	const uint32_t hash = Crypto::HASH(id.string());
 	apathy::Path working_path(get_working_path(id));
 
 	stbi_set_flip_vertically_on_load(true);
 	texture->m_data = stbi_load(working_path.string().c_str(), &texture->m_width, &texture->m_height, &texture->m_channels, 0);
 
+	m_loaded_textures.emplace(hash);
 	return true;
 }
 
