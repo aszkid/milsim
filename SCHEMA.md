@@ -58,6 +58,10 @@ How I currently envision the `Render` system design:
 
 Having such a compartmentalized workflow paves the ground for parallelization. All of this is really me trying to grok the modern approach of "data-oriented" design. It leads to cleaner division between logical states of a program (update, draw, dispatch) and other nice things, probably. At any rate, I do not want a monster all-encompassing `Game` class. Let each do one thing (or as few as possible) well.
 
+More stuff (15/12/17): the `Render` system running on its own thread is good thing overall, but adds certain complexity to our code. We cannot say `mesh::create()` and expect to get at that exact moment a VBO handle from `Render`, because the render thread might be busy drawing stuff. What happens behind the scenes is that we populate a command buffer, consumed by the render thread at the beginning of each render frame, and only then have the mesh actually uploaded to GPU memory. But that's fine: game-level objects do not really care about the GPU handle, since it's only useful for the render thread itself, and by the time it executes a render command referencing that specific handle, the previous `upload` has already been processed.
+
+We avoid having to "sync with the render thread" by completely delegating the job. The idea is that a scene object can be created, exist, interact with its environment and die *even without having a graphics representation drawn to screen*. The real delay though, will be a single frame at most, which is optimal enough.
+
 ### Sys.Net
 
 Deals with networking.
@@ -98,15 +102,13 @@ Two functions are of utmost important:
 - `render`: does all necessary culling, batching, etc. based on the `SceneGraph` and `SceneDrawable` objects.
 - `update`: updates every component of the scene based on policies set at creation (physics? etc.)
 
-On the highest level, a `Scene` object contains a vector of `Scene::Node`s, very much a la Godot. Internally, a `Node` may reference a `Drawable` component, a `Physics` component, etc. by having children.
-
 On the highest level, a `Scene` consists of a vector of `Scene::Node`s (entity). Every node has a set of components, queryable from the corresponding component manager.
 
-### SceneGraph
+### Component.Transform
 
-A simple scene graph implementation; directed tree holding *spatial* information about objects in a scene. Every `Scene` holds some of them. The important thing is to notice that *there is no single array of ~things~* in the engine: the `SceneGraph` provides a *hirearchical spatial representation* of scene 'objects' (might be cameras, lights, people, bridges...), while other structures hold *renderable representations* of them. It is the combination of them that is powerful.
+A simple scene graph implementation; directed tree holding *spatial* information about objects in a scene. The important thing is to notice that *there is no single array of ~things~* in the engine: the `Transform` component provides a *hirearchical spatial representation* of scene physical 'objects' (might be cameras, lights, people, bridges...), while other components might hold *renderable representations* of them. It is the combination of them that is powerful.
 
-This separation of concerns is useful, because it allows us to efficiently traverse a scene spatially, and batch geometry to execute few OpenGL calls.
+This separation of concerns is useful, because it allows us to efficiently traverse a scene spatially, and batch geometry to execute few OpenGL calls by looking at a different, tightly packed array of renderable stuff.
 
 Read [this post by L. Spiro](https://www.gamedev.net/forums/topic/672161-need-scene-graph-advice-please/?tab=comments#comment-5255071) on the function of scene graphs for clarification: *"Scene graphs do not supply anything. They propagate data and transforms down. These transforms may be used for rendering, but that is not the scene graph’s problem. They can also be used for physics or whatever. After the scene graph facilitates the creation of the world coordinates of an object, it sits back and lets the other systems use that data as they please. That’s their problem, not Mr. Graph’s."*
 

@@ -10,11 +10,24 @@ namespace MilSim {
 
 	using namespace gl;
 
+	const uint64_t INDEX_BITS = 56;
+	const uint64_t INDEX_MASK = ((uint64_t)1 << INDEX_BITS) - 1;
+	const uint64_t TYPE_MASK = ~INDEX_MASK;
+	inline uint64_t RR_index(const uint64_t id) {
+		return id & INDEX_MASK;
+	};
+	inline uint64_t RR_type(const uint64_t id) {
+		return (id & TYPE_MASK) >> INDEX_BITS;
+	};
+	inline uint64_t RR_pack(const uint8_t t, const uint64_t i) {
+		return ((uint64_t)t << INDEX_BITS) | (i & INDEX_MASK);
+	};
 	/**
 	 * Render-level representation of resources.
 	 */
 	struct RenderResource {
-		enum Type {
+
+		enum Type : uint8_t {
 			TEXTURE,
 			RENDER_TARGET,
 			VERTEX_BUFFER,
@@ -23,73 +36,26 @@ namespace MilSim {
 			SHADER,
 			NONE
 		};
-		Type m_type;
-	};
-
-	struct TextureResource : public RenderResource {
-		GLuint m_tex_id;
-		int m_width, m_height;
-	};
-
-	struct VertexBufferResource : public RenderResource {
-		GLuint m_buf;
-		GLsizeiptr m_size;
-		GLenum m_usage;
-	};
-
-	struct VertexLayoutResource : public RenderResource {
-		GLuint m_vao;
-		// how to store attribs? should we?
-		// we would duplicate information in RRC::VertexLayoutData... mostly
-		// if we let the user deal with attribute storage, and only care about uploading it...
-		// we should *not* store the attribs. this system does not care.
-	};
-
-	struct IndexBufferResource : public RenderResource {
-		GLuint m_ibo;
-	};
-
-	struct FrameBufferResource : public RenderResource {
-		GLuint m_fbo;
-	};
-
-	const uint64_t INDEX_BITS = 52;
-	const uint64_t INDEX_MASK = ((uint64_t)1 << INDEX_BITS) - 1;
-	const uint64_t GENERATION_MASK = ~INDEX_MASK;
-	inline uint64_t RI_index(const uint64_t id) {
-		return id & INDEX_MASK;
-	};
-	inline uint64_t RI_generation(const uint64_t id) {
-		return (id & GENERATION_MASK) >> INDEX_BITS;
-	};
-	/**
-	 * GPU resource handle that is looked up by `RenderScene` to 
-	 * generate draw calls and etc.
-	 */
-	struct RenderResourceInstance {
 		/**
-		 * |xxxx|yyyyyyyyyyyyyyyyy|
-		 * |              |
-		 * |_ generation  |
-		 *    (12 bits)   |_ index
-		 *                   (52 bits)
-		 * I suppose this is more than enough
-		 * TODO: add a few bits for TYPE!!!
+		 * | TYPE | INDEX |
+		 *   |      |
+		 *   ---> 1 byte
+		 *          |
+		 *          ----> 63 bytes
 		 */
-		uint64_t m_id;
-		RenderResource::Type m_type;
+		uint64_t m_handle;
 
 		/**
-		 * Returns real array index.
+		 * Casting to integer returns the index.
 		 */
 		inline operator uint64_t() const {
-			return RI_index(m_id);
+			return RR_index(m_handle);
 		};
 		inline uint64_t index() const {
-			return RI_index(m_id);
+			return RR_index(m_handle);
 		};
-		inline uint64_t generation() const {
-			return RI_generation(m_id);
+		inline uint64_t type() const {
+			return RR_type(m_handle);
 		};
 	};
 
@@ -111,8 +77,8 @@ namespace MilSim {
 			unsigned char* source;
 		};
 		std::vector<TextureData> m_tex;
-		std::vector<size_t> m_tex_ref;
-		void push_texture(TextureData tex, size_t ref);
+		std::vector<uint64_t> m_tex_ref;
+		void push_texture(TextureData tex, uint64_t ref);
 
 		/**
 		 * VERTEX BUFFER
@@ -135,8 +101,8 @@ namespace MilSim {
 			Usage usage;
 		};
 		std::vector<VertexBufferData> m_vb;
-		std::vector<size_t> m_vb_ref;
-		void push_vertex_buffer(VertexBufferData vb, size_t ref);
+		std::vector<uint64_t> m_vb_ref;
+		void push_vertex_buffer(VertexBufferData vb, uint64_t ref);
 
 		/**
 		 * VERTEX LAYOUT
@@ -162,8 +128,8 @@ namespace MilSim {
 			std::vector<Attribute> attribs;
 		};
 		std::vector<VertexLayoutData> m_vl;
-		std::vector<size_t> m_vl_ref;
-		void push_vertex_layout(VertexLayoutData vl, size_t ref);
+		std::vector<uint64_t> m_vl_ref;
+		void push_vertex_layout(VertexLayoutData vl, uint64_t ref);
 
 		/**
 		 * INDEX BUFFER
@@ -178,8 +144,8 @@ namespace MilSim {
 			size_t size;
 		};
 		std::vector<IndexBufferData> m_ib;
-		std::vector<size_t> m_ib_ref;
-		void push_index_buffer(IndexBufferData ib, size_t ref);
+		std::vector<uint64_t> m_ib_ref;
+		void push_index_buffer(IndexBufferData ib, uint64_t ref);
 	};
 
 }

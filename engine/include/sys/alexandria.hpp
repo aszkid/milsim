@@ -19,8 +19,7 @@ namespace MilSim {
 	/**
 	 * Asset: abstract base class for assets.
 	 */
-	class Asset {
-	public:
+	struct Asset {
 		Asset(const apathy::Path id, const std::string prefix) {
 			m_loaded = false;
 			m_id = id;
@@ -28,27 +27,9 @@ namespace MilSim {
 		};
 		virtual ~Asset() {};
 
-		bool m_loaded;
-		bool load() {
-			m_loaded = inner_load();
-			return m_loaded;
-		};
-		void free() {
-			if(m_loaded) {
-				inner_free();
-			}
-		};
-
-		virtual void handle_render_message(RenderResourceMessage* msg) = 0;
-
-	protected:
 		t_logger m_logger;
 		apathy::Path m_id;
-		t_asset_id m_hash;
-
-		virtual bool inner_load() = 0;
-		virtual void inner_free() = 0;
-
+		bool m_loaded;
 	};
 
 	// helper types
@@ -57,8 +38,7 @@ namespace MilSim {
 	/**
 	 * FontAsset: loads font files and prepares texturemaps.
 	 */
-	class FontAsset : public Asset {
-	public:
+	struct FontAsset : public Asset {
 		FontAsset();
 		~FontAsset();
 
@@ -66,38 +46,26 @@ namespace MilSim {
 			TTF, OTF
 		};
 
-		void handle_render_message(RenderResourceMessage* msg);
-
-	private:
-		bool inner_load();
 		Format m_format;
 	};
 
 	/**
 	 * Texture asset.
 	 */
-	class TextureAsset : public Asset {
-	public:
+	struct TextureAsset : public Asset {
 		TextureAsset(const apathy::Path id);
 		~TextureAsset();
 
 		unsigned char* m_data;
 		int m_width, m_height, m_channels;
 
-		RenderResourceInstance m_handle;
-
-		void handle_render_message(RenderResourceMessage* msg);
-	
-	private:
-		bool inner_load();
-		void inner_free();
+		RenderResource m_handle;
 	};
 
 	/**
 	 * Material asset.
 	 */
-	class MaterialAsset : public Asset {
-	public:
+	struct MaterialAsset : public Asset {
 		MaterialAsset(const apathy::Path id);
 		~MaterialAsset();
 
@@ -107,12 +75,6 @@ namespace MilSim {
 
 		t_asset_id m_diffuse_tex;
 		t_asset_id m_specular_tex;
-
-		void handle_render_message(RenderResourceMessage* msg);
-
-	private:
-		bool inner_load();
-		void inner_free();
 	};
 
 	struct Vertex {
@@ -123,8 +85,7 @@ namespace MilSim {
 	/**
 	 * Mesh: main structure for 3D geometry.
 	 */
-	class MeshAsset : public Asset {
-	public:
+	struct MeshAsset : public Asset {
 		MeshAsset(const apathy::Path id);
 		~MeshAsset();
 		/**
@@ -133,67 +94,40 @@ namespace MilSim {
 		std::vector<Vertex> m_verts;
 		std::vector<GLuint> m_indices;
 		t_asset_id m_material;
-		RenderResourceInstance m_vb_handle;
-		RenderResourceInstance m_ib_handle;
-
-		void handle_render_message(RenderResourceMessage* msg);
-
-	private:
-		bool inner_load();
-		void inner_free();
+		RenderResource m_vb_handle;
+		RenderResource m_ib_handle;
 	};
 	/**
 	 * ModelAsset: 
 	 */
-	class ModelAsset : public Asset {
-	public:
+	struct ModelAsset : public Asset {
 		ModelAsset(const apathy::Path id);
 		~ModelAsset();
 
 		std::vector<t_asset_id> m_meshes;
-
-		void handle_render_message(RenderResourceMessage* msg);
-
-	private:
-		bool inner_load();
-		void inner_free();
 	};
 
 	/**
 	 * Compiles shaders.
 	 */
-	class ShaderProgramAsset : public Asset {
-	public:
+	struct ShaderProgramAsset : public Asset {
 		ShaderProgramAsset(const apathy::Path id);
 		~ShaderProgramAsset();
 
-	// private:?
 		GLuint m_vert_id;
 		GLuint m_frag_id;
 		GLuint m_prog_id;
 		std::string m_vert_source;
 		std::string m_frag_source;
 		std::map<std::string, GLuint> m_uniforms;
-
-		void handle_render_message(RenderResourceMessage* msg);
-	
-	private:
-		bool inner_load();
-		void inner_free();
 	};
 
 	/**
 	 * For now, a container for sel::State.
 	 */
-	class ScriptAsset : public Asset {
-	public:
+	struct ScriptAsset : public Asset {
 		ScriptAsset();
 		~ScriptAsset();
-
-		void handle_render_message(RenderResourceMessage* msg);
-
-	private:
-		bool inner_load();
 	};
 
 	/**
@@ -218,7 +152,7 @@ namespace MilSim {
 		Asset* get_asset(const std::string id, const GetFlag flag = LOAD);
 		Asset* get_asset(const t_asset_id id, const GetFlag flag = LOAD);
 
-		RenderResourceInstance get_vertex_layout(const size_t kind);
+		RenderResource get_vertex_layout(const size_t kind);
 
 	private:
 		std::map<uint32_t, t_asset_ptr> m_assets;
@@ -229,12 +163,21 @@ namespace MilSim {
 		void load_folder(const json& root, apathy::Path path, const std::string db_name);
 		Asset* add_asset(apathy::Path path, const std::string type, const json* root);
 
+		/**
+		 * Asset database.
+		 */
+		std::vector<std::unique_ptr<FontAsset>> m_fonts;
+		std::vector<std::unique_ptr<TextureAsset>> m_textures;
+
+		std::vector<size_t> m_loaded_fonts;
+		std::vector<size_t> m_loaded_textures;
+
 		// Asset-specific loading methods
-		bool _load_model_asset(ModelAsset* model, apathy::Path id, const json* root);
-		bool _load_material_asset(MaterialAsset* material, apathy::Path id, const json* root);
-		bool _load_shader_asset(ShaderProgramAsset* shader, apathy::Path id, const json* root);
-		bool _load_texture_asset(TextureAsset* texture, apathy::Path id, const json* root);
-		bool _load_map_asset(apathy::Path id, const json* root);
+		bool _load_model(ModelAsset* model, apathy::Path id, const json* root);
+		bool _load_material(MaterialAsset* material, apathy::Path id, const json* root);
+		bool _load_shader(ShaderProgramAsset* shader, apathy::Path id, const json* root);
+		bool _load_texture(TextureAsset* texture, apathy::Path id, const json* root);
+		bool _load_map(apathy::Path id, const json* root);
 		
 		apathy::Path get_working_path(const apathy::Path id) const;
 
@@ -251,16 +194,13 @@ namespace MilSim {
 
 		// Handle for `Sys.Render` -- needed to upload assets to the GPU
 		Render* m_sys_render;
-		// Keeping track of RRCs -- we should have a thread-wide allocator
-		std::vector<std::unique_ptr<RenderResourceContext>> m_rrc_pool;
-		RenderResourceContext* alloc_rrc();
 
 		/**
 		 * Common vertex layout handles.
 		 * Every vertex buffer we populate has one of these
 		 * as their vertex layout. We create them at startup.
 		 */
-		RenderResourceInstance m_vl_mesh;
+		RenderResource m_vl_mesh;
 
 	};
 

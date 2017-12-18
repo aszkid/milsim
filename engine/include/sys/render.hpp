@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <mutex>
 
 #include <glbinding/gl/gl.h>
 #include <glbinding/Binding.h>
@@ -31,12 +32,36 @@ namespace MilSim {
 	};
 
 	/**
+	 * Concrete render resources; only handled by the internals
+	 * of `Sys.Render`.
+	 * Outside systems must use the `RenderResource` interface.
+	 */
+	struct TextureResource {
+		GLuint m_tex_id;
+		int m_width, m_height;
+	};
+	struct VertexBufferResource {
+		GLuint m_buf;
+		GLsizeiptr m_size;
+		GLenum m_usage;
+	};
+	struct VertexLayoutResource {
+		GLuint m_vao;
+	};
+	struct IndexBufferResource {
+		GLuint m_ibo;
+	};
+	struct FrameBufferResource {
+		GLuint m_fbo;
+	};
+
+	/**
 	 * Building block of a render pipeline.
 	 */
 	struct RenderLayer {
-		std::vector<RenderResourceInstance> m_render_targets;
-		RenderResourceInstance m_depth_stencil_target;
-		RenderResourceInstance m_framebuffer;
+		std::vector<RenderResource> m_render_targets;
+		RenderResource m_depth_stencil_target;
+		RenderResource m_framebuffer;
 		enum Sort {
 			FRONT_BACK,
 			BACK_FRONT
@@ -72,10 +97,13 @@ namespace MilSim {
 		void setup_pipeline();
 
 		/**
-		 * All communication with the render thread happens through this method.
+		 * All communication with the render thread happens through these few methods.
 		 * Q: should we now own the RRC?
 		 */
 		void dispatch(RenderResourceContext* rrc);
+		void alloc(RenderResource* rrc, RenderResource::Type t);
+
+		RenderResourceContext* new_rrc();
 
 	private:
 		
@@ -105,6 +133,8 @@ namespace MilSim {
 		std::vector<IndexBufferResource> m_index_buffers;
 		std::vector<uint64_t> m_index_buffers_free;
 
+		std::mutex m_resource_lock;
+
 		/**
 		 * Pipeline description.
 		 */
@@ -112,17 +142,21 @@ namespace MilSim {
 
 		/**
 		 * Resource allocation and destruction methods.
-		 * It is important to note that these are *ONLY* called from
-		 * the render thread! OpenGL does not play nicely with multithreading,
-		 * as far as I know.
+		 * These are only called 
 		 */
 		void _handle_resource(RenderResourceContext* rrc);
 		void _handle_command(RenderCommandContext* rcc);
 		
-		RenderResourceInstance _alloc_texture();
-		RenderResourceInstance _alloc_vertex_buffer();
-		RenderResourceInstance _alloc_vertex_layout();
-		RenderResourceInstance _alloc_index_buffer();
+		RenderResource _alloc_texture();
+		RenderResource _alloc_vertex_buffer();
+		RenderResource _alloc_vertex_layout();
+		RenderResource _alloc_index_buffer();
+
+		/**
+		 * Thread-local RenderResourceContexts.
+		 */
+		std::vector<RenderResourceContext*> m_rrcs;
+		std::mutex m_rrc_lock;
 
 		/**
 		 * Render thread and synchronization.

@@ -17,15 +17,6 @@ FontAsset::FontAsset()
 FontAsset::~FontAsset()
 {}
 
-bool FontAsset::inner_load()
-{
-	return true;
-}
-
-void FontAsset::handle_render_message(RenderResourceMessage* msg)
-{
-
-}
 
 ////////////////////////////////////////
 // TEXTUREASSET
@@ -38,19 +29,6 @@ TextureAsset::TextureAsset(const apathy::Path id)
 TextureAsset::~TextureAsset()
 {
 
-}
-bool TextureAsset::inner_load()
-{
-	return true;
-}
-void TextureAsset::inner_free()
-{
-	stbi_image_free(m_data);
-}
-
-void TextureAsset::handle_render_message(RenderResourceMessage* msg)
-{
-	
 }
 
 ////////////////////////////////////////
@@ -66,20 +44,6 @@ MaterialAsset::~MaterialAsset()
 
 }
 
-bool MaterialAsset::inner_load()
-{
-	return true;
-}
-void MaterialAsset::inner_free()
-{
-
-}
-
-void MaterialAsset::handle_render_message(RenderResourceMessage* msg)
-{
-	
-}
-
 ////////////////////////////////////////
 // MODELASSET
 ////////////////////////////////////////
@@ -93,29 +57,6 @@ MeshAsset::~MeshAsset()
 
 }
 
-bool MeshAsset::inner_load()
-{
-	return true;
-}
-void MeshAsset::inner_free()
-{
-	m_verts.clear();
-}
-
-void MeshAsset::handle_render_message(RenderResourceMessage* msg)
-{
-	switch(msg->m_instance.m_type) {
-	case RenderResource::Type::VERTEX_BUFFER:
-		m_vb_handle = msg->m_instance;
-		break;
-	case RenderResource::Type::INDEX_BUFFER:
-		m_ib_handle = msg->m_instance;
-		break;
-	default:
-		break;
-	}
-}
-
 ////////////////////////////////////////
 // MODELASSET
 ////////////////////////////////////////
@@ -127,20 +68,6 @@ ModelAsset::~ModelAsset()
 {
 	
 }
-bool ModelAsset::inner_load()
-{
-	return true;
-}
-void ModelAsset::inner_free()
-{
-	m_meshes.clear();
-}
-
-void ModelAsset::handle_render_message(RenderResourceMessage* msg)
-{
-	
-}
-
 ////////////////////////////////////////
 // SHADERPROGRAMASSET
 ////////////////////////////////////////
@@ -154,8 +81,8 @@ ShaderProgramAsset::~ShaderProgramAsset()
 
 }
 
-bool ShaderProgramAsset::inner_load()
-{
+//bool ShaderProgramAsset::inner_load()
+//{
 	/*const char *vert = m_vert_source.c_str();
 	const char *frag = m_frag_source.c_str();
 	
@@ -215,17 +142,8 @@ bool ShaderProgramAsset::inner_load()
 		m_uniforms[name] = values[3];
 	}*/
 
-	return true;
-}
-void ShaderProgramAsset::inner_free()
-{
-	//glDeleteShader(m_prog_id);
-}
-
-void ShaderProgramAsset::handle_render_message(RenderResourceMessage* msg)
-{
-	
-}
+//	return true;
+//}
 
 ////////////////////////////////////////
 // SCRIPTASSET
@@ -240,16 +158,6 @@ ScriptAsset::~ScriptAsset()
 
 }
 
-bool ScriptAsset::inner_load()
-{
-	return true;
-}
-
-void ScriptAsset::handle_render_message(RenderResourceMessage* msg)
-{
-	
-}
-
 
 ////////////////////////////////////////
 // ALEXANDRIA
@@ -261,10 +169,6 @@ Alexandria::Alexandria(apathy::Path local_root, Render* render)
 }
 Alexandria::~Alexandria()
 {
-	for(auto& a : m_assets) {
-		a.second->free();
-	}
-	m_assets.clear();
 }
 
 void Alexandria::init()
@@ -274,7 +178,8 @@ void Alexandria::init()
 	});
 
 	// Prepare common vertex layouts
-	RenderResourceContext* rrc = alloc_rrc();
+	RenderResourceContext* rrc = m_sys_render->new_rrc();
+	m_sys_render->alloc(&m_vl_mesh, RenderResource::VERTEX_LAYOUT);
 	RenderResourceContext::VertexLayoutData layout = {
 		.attribs = {
 			{
@@ -297,66 +202,24 @@ void Alexandria::init()
 			}
 		}
 	};
-	rrc->push_vertex_layout(layout, Crypto::HASH("VertexLayout/Mesh"));
+	rrc->push_vertex_layout(layout, m_vl_mesh);
 	m_sys_render->dispatch(rrc);
 }
 void Alexandria::kill()
 {
-
+	for(auto font : m_loaded_fonts) {
+		// free data in m_font_assets[font]
+	}
+	for(auto texture : m_loaded_textures) {
+		stbi_image_free(m_textures[texture]->m_data);
+	}
+	m_loaded_textures.clear();
 }
 
 void Alexandria::update()
 {
 	for(auto& msg : m_hermes->pull_inbox(Crypto::HASH("Alexandria"))) {
-		if(msg->m_chan == Crypto::HASH("RenderResource")) {
-			auto rrm = static_cast<RenderResourceMessage*>(msg);
-			// use base class `RenderableAsset` for all assets that need render representation?
-			// we are assuming the message is of type `CREATED`, for now...
-
-			if(rrm->m_creator == Crypto::HASH("VertexLayout/Mesh")) {
-				m_vl_mesh = rrm->m_instance;
-				continue;
-			}
-
-			auto* asset = get_asset(rrm->m_creator);
-			if(asset != nullptr) {
-				// delegate
-				asset->handle_render_message(rrm);
-			} else {
-				m_log->info("Cannot delegate render message of type {} to `{:x}`!", rrm->m_type, rrm->m_creator);
-			}
-
-			/*switch(rrm->m_instance.m_type) {
-			case RenderResource::TEXTURE: {
-				auto tex = (TextureAsset*)get_asset(rrm->m_creator, NO_LOAD);
-				tex->m_handle = rrm->m_instance;
-				break;
-			}
-			case RenderResource::VERTEX_BUFFER: {
-				auto mesh = (MeshAsset*)get_asset(rrm->m_creator, NO_LOAD);
-				mesh->m_handle = rrm->m_instance;
-				break;
-			}
-			case RenderResource::VERTEX_LAYOUT: {
-				if(rrm->m_creator == Crypto::HASH("VertexLayout/Mesh")) {
-					m_vl_mesh = rrm->m_instance;
-				}
-				break;
-			}
-			default:
-				break;
-			}*/
-		}
-	}
-
-	for(auto it = m_rrc_pool.begin(); it != m_rrc_pool.end(); ) {
-		// slow, use a `free_rrc` vector (or similar)
-		auto* rrc = (*it).get();
-		if(rrc->m_delete.load()) {
-			m_rrc_pool.erase(it);
-		} else {
-			++it;
-		}
+		
 	}
 }
 
@@ -405,8 +268,8 @@ Asset* Alexandria::get_asset(const t_asset_id id, const GetFlag flag)
 	// Find asset
 	auto asset = m_assets.find(id);
 	if(asset != m_assets.end()) {
-		if(asset->second->m_loaded == false && flag == LOAD)
-			asset->second->load();
+		/*if(asset->second->m_loaded == false && flag == LOAD)
+			asset->second->load();*/
 		return asset->second.get();
 	}
 	// Asset is not in our database!
@@ -418,12 +281,12 @@ Asset* Alexandria::get_asset(const std::string id, const GetFlag flag)
 	return get_asset(Crypto::HASH(id), flag);
 }
 
-RenderResourceInstance Alexandria::get_vertex_layout(const size_t kind)
+RenderResource Alexandria::get_vertex_layout(const size_t kind)
 {
 	if(kind == Crypto::HASH("VertexLayout/Mesh")) {
 		return m_vl_mesh;
 	} else {
-		return {0, RenderResource::Type::NONE};
+		return {0};
 	}
 }
 
@@ -444,17 +307,18 @@ Asset* Alexandria::add_asset(apathy::Path path, const std::string type, const js
 
 	} else if(type == "shader") {
 		auto shader = (ShaderProgramAsset*)place_asset(hash, new ShaderProgramAsset(id));
-		shader->m_loaded = _load_shader_asset(shader, id, root);
+		shader->m_loaded = _load_shader(shader, id, root);
 		return shader;
 
 	} else if(type == "model") {
 		auto model = static_cast<ModelAsset*>(place_asset(hash, new ModelAsset(id)));
-		model->m_loaded = _load_model_asset(model, id, root);
+		model->m_loaded = _load_model(model, id, root);
 		return model;
 	
 	} else if(type == "texture_local") {
 		auto texture = static_cast<TextureAsset*>(place_asset(hash, new TextureAsset(id)));
-		texture->m_loaded = _load_texture_asset(texture, id, root);
+		//m_textures.push_back(std::unique_ptr<TextureAsset>(texture));
+		texture->m_loaded = _load_texture(texture, id, root);
 		return texture;
 
 	} else if(type == "texture") {
@@ -462,39 +326,32 @@ Asset* Alexandria::add_asset(apathy::Path path, const std::string type, const js
 		auto texture = static_cast<TextureAsset*>(add_asset(id, "texture_local", nullptr));
 
 		// Upload to the GPU
-		RenderResourceContext* rrc = alloc_rrc();
+		RenderResourceContext* rrc = m_sys_render->new_rrc();
+		m_sys_render->alloc(&texture->m_handle, RenderResource::TEXTURE);
 		RenderResourceContext::TextureData tex = {
 			texture->m_width,
 			texture->m_height,
 			texture->m_channels,
 			texture->m_data
 		};
-		rrc->push_texture(tex, hash);
+		rrc->push_texture(tex, texture->m_handle);
 		m_sys_render->dispatch(rrc);
 
 		return texture;
 
 	} else if(type == "material") {
 		auto material = (MaterialAsset*)place_asset(hash, new MaterialAsset(id));
-		material->m_loaded = _load_material_asset(material, id, root);
+		material->m_loaded = _load_material(material, id, root);
 		return material;
 		
 	} else if(type == "map_noise") {
-		_load_map_asset(id, root);
+		_load_map(id, root);
 		return nullptr;
 	}
 }
 
-RenderResourceContext* Alexandria::alloc_rrc()
-{
-	m_rrc_pool.emplace_back(new RenderResourceContext());
-	auto* rrc = m_rrc_pool.back().get();
-	rrc->m_delete.store(false);
-	return m_rrc_pool.back().get();
-}
 
-
-bool Alexandria::_load_model_asset(ModelAsset* model, apathy::Path id, const json* root)
+bool Alexandria::_load_model(ModelAsset* model, apathy::Path id, const json* root)
 {
 	const size_t hash = Crypto::HASH(id.string());
 	const std::string file = root->at("source");
@@ -544,14 +401,15 @@ bool Alexandria::_load_model_asset(ModelAsset* model, apathy::Path id, const jso
 	}
 
 	// Prepare data buffer(s)
-	RenderResourceContext* rrc = alloc_rrc();
+	RenderResourceContext* rrc = m_sys_render->new_rrc();
+	m_sys_render->alloc(&mesh->m_vb_handle, RenderResource::VERTEX_BUFFER);
 	RenderResourceContext::VertexBufferData buff = {
 		.chunks = {
 			{.data = &mesh->m_verts[0], .size = vertices * sizeof(Vertex)}
 		},
 		.usage = RenderResourceContext::VertexBufferData::STATIC
 	};
-	rrc->push_vertex_buffer(buff, hash);
+	rrc->push_vertex_buffer(buff, mesh->m_vb_handle);
 	m_sys_render->dispatch(rrc);
 	
 	// Attach material, if any
@@ -566,7 +424,7 @@ bool Alexandria::_load_model_asset(ModelAsset* model, apathy::Path id, const jso
 	return true;
 }
 
-bool Alexandria::_load_material_asset(MaterialAsset* material, apathy::Path id, const json* root)
+bool Alexandria::_load_material(MaterialAsset* material, apathy::Path id, const json* root)
 {
 	const size_t hash = Crypto::HASH(id.string());
 	apathy::Path working_path(get_working_path(id));
@@ -598,7 +456,7 @@ bool Alexandria::_load_material_asset(MaterialAsset* material, apathy::Path id, 
 	return true;
 }
 
-bool Alexandria::_load_shader_asset(ShaderProgramAsset* shader, apathy::Path id, const json* root)
+bool Alexandria::_load_shader(ShaderProgramAsset* shader, apathy::Path id, const json* root)
 {
 	const size_t hash = Crypto::HASH(id.string());
 	const std::string file = root->at("source");
@@ -611,7 +469,7 @@ bool Alexandria::_load_shader_asset(ShaderProgramAsset* shader, apathy::Path id,
 	return true;
 }
 
-bool Alexandria::_load_texture_asset(TextureAsset* texture, apathy::Path id, const json* root)
+bool Alexandria::_load_texture(TextureAsset* texture, apathy::Path id, const json* root)
 {
 	const size_t hash = Crypto::HASH(id.string());
 	apathy::Path working_path(get_working_path(id));
@@ -622,7 +480,7 @@ bool Alexandria::_load_texture_asset(TextureAsset* texture, apathy::Path id, con
 	return true;
 }
 
-bool Alexandria::_load_map_asset(apathy::Path id, const json* root)
+bool Alexandria::_load_map(apathy::Path id, const json* root)
 {
 	apathy::Path map_tex(id);
 	map_tex = map_tex.append(root->at("source").get<std::string>());
@@ -670,19 +528,23 @@ bool Alexandria::_load_map_asset(apathy::Path id, const json* root)
 		}
 	}
 
-	RenderResourceContext* rrc = alloc_rrc();
+	RenderResourceContext* rrc = m_sys_render->new_rrc();
+
+	m_sys_render->alloc(&mesh->m_ib_handle, RenderResource::INDEX_BUFFER);
 	RenderResourceContext::IndexBufferData ib = {
 		.data = &ibuffer[0],
 		.size = ilen * sizeof(GLuint)
 	};
-	rrc->push_index_buffer(ib, mesh_hash);
+	rrc->push_index_buffer(ib, mesh->m_ib_handle);
+
+	m_sys_render->alloc(&mesh->m_vb_handle, RenderResource::VERTEX_BUFFER);
 	RenderResourceContext::VertexBufferData vb = {
 		.chunks = {
 			{.data = &vbuffer[0], .size = vlen * sizeof(glm::vec3)}
 		},
 		.usage = RenderResourceContext::VertexBufferData::Usage::STATIC
 	};
-	rrc->push_vertex_buffer(vb, mesh_hash);
+	rrc->push_vertex_buffer(vb, mesh->m_vb_handle);
 
 	m_sys_render->dispatch(rrc);
 }
