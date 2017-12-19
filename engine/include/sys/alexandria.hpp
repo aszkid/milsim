@@ -19,18 +19,34 @@ namespace MilSim {
 
 	/**
 	 * Asset: abstract base class for assets.
+	 * Assets have two states: REGISTERED or LOADED.
 	 */
 	struct Asset {
-		Asset(const apathy::Path id, const std::string prefix) {
-			m_loaded = false;
+		enum Type {
+			FONT,
+			TEXTURE,
+			MATERIAL,
+			MESH,
+			MODEL,
+			SHADER,
+			SCRIPT,
+			MAP,
+			NONE
+		};
+		static Type str_to_type(const std::string t);
+
+		Asset(const apathy::Path id, const std::string prefix, Type t) {
 			m_id = id;
 			m_logger = Logger::create("Sys.Alexandria." + prefix + "::" + m_id.string());
+			m_type = t;
 		};
 		virtual ~Asset() {};
 
+		virtual bool load(const json* root) = 0;
+
 		t_logger m_logger;
 		apathy::Path m_id;
-		bool m_loaded;
+		Type m_type;
 	};
 
 	// helper types
@@ -47,6 +63,8 @@ namespace MilSim {
 			TTF, OTF
 		};
 
+		bool load(const json* root);
+
 		Format m_format;
 	};
 
@@ -61,6 +79,8 @@ namespace MilSim {
 		int m_width, m_height, m_channels;
 
 		RenderResource m_handle;
+
+		bool load(const json* root);
 	};
 
 	/**
@@ -76,6 +96,8 @@ namespace MilSim {
 
 		t_asset_id m_diffuse_tex;
 		t_asset_id m_specular_tex;
+
+		bool load(const json* root);
 	};
 
 	struct Vertex {
@@ -97,6 +119,8 @@ namespace MilSim {
 		t_asset_id m_material;
 		RenderResource m_vb_handle;
 		RenderResource m_ib_handle;
+
+		bool load(const json* root);
 	};
 	/**
 	 * ModelAsset: 
@@ -106,6 +130,8 @@ namespace MilSim {
 		~ModelAsset();
 
 		std::vector<t_asset_id> m_meshes;
+
+		bool load(const json* root);
 	};
 
 	/**
@@ -121,6 +147,8 @@ namespace MilSim {
 		std::string m_vert_source;
 		std::string m_frag_source;
 		std::map<std::string, GLuint> m_uniforms;
+
+		bool load(const json* root);
 	};
 
 	/**
@@ -129,6 +157,20 @@ namespace MilSim {
 	struct ScriptAsset : public Asset {
 		ScriptAsset();
 		~ScriptAsset();
+
+		bool load(const json* root);
+	};
+
+	/**
+	 * Map asset. For now, noise.
+	 */
+	struct MapAsset : public Asset {
+		MapAsset(const apathy::Path id);
+		~MapAsset();
+
+		bool load(const json* root);
+
+		t_asset_id m_mesh;
 	};
 
 	/**
@@ -143,7 +185,7 @@ namespace MilSim {
 		void kill();
 		void update();
 
-		void load_database(const std::string filename);
+		void parse_database(const std::string filename);
 
 		enum GetFlag {
 			NO_LOAD,
@@ -152,26 +194,47 @@ namespace MilSim {
 	
 		Asset* get_asset(const std::string id, const GetFlag flag = LOAD);
 		Asset* get_asset(const t_asset_id id, const GetFlag flag = LOAD);
+		bool load_asset(const t_asset_id id);
+		void unload_asset(const t_asset_id id);
 
 		RenderResource get_vertex_layout(const size_t kind);
 
 	private:
 		std::map<uint32_t, t_asset_ptr> m_assets;
 
-		void load_asset();
-
-		// Database loading
-		void load_folder(const json& root, apathy::Path path, const std::string db_name);
-		Asset* add_asset(apathy::Path path, const std::string type, const json* root);
+		/**
+		 * Database book-keeping. Top-most directory, i.e.
+		 * `/Base/Models/Greek` model is from `Base` database.
+		 * Allows us to defer loading.
+		 */
+		std::map<uint32_t, json> m_dbs;
 
 		/**
-		 * Hot assets.
+		 * Iterates JSON database and calls `parse_asset` on each found asset.
 		 */
-		std::unordered_set<uint32_t> m_loaded_fonts;
-		std::unordered_set<uint32_t> m_loaded_textures;
-		std::unordered_set<uint32_t> m_loaded_meshes;
-		std::unordered_set<uint32_t> m_loaded_models;
-		std::unordered_set<uint32_t> m_loaded_materials;
+		void parse_folder(const json& root, apathy::Path path, const std::string db_name);
+		/**
+		 * Registers an asset by parsing a JSON snippet.
+		 */
+		t_asset_id parse_asset(apathy::Path path, const std::string type, const json* root);
+
+		template<class T>
+		T* register_asset(const apathy::Path id) {
+			static_assert(
+				std::is_base_of<Asset, T>::value,
+				"Asset passed is not derived from `Asset` base class!"
+			);
+			auto hash = Crypto::HASH(id.string());
+			if(m_assets.find(hash) != m_assets.end()) {
+				m_log->warn("Asset `{:x}` already registered, skipping...", hash);
+				return nullptr;
+			}
+			auto asset = new T(id);
+			m_assets[hash] = t_asset_ptr(asset);
+			return asset;
+		}
+
+		std::unordered_set<uint32_t> m_loaded;
 
 		// Asset-specific loading methods
 		bool _load_model(ModelAsset* model, apathy::Path id, const json* root);
@@ -181,15 +244,6 @@ namespace MilSim {
 		bool _load_map(apathy::Path id, const json* root);
 		
 		apathy::Path get_working_path(const apathy::Path id) const;
-
-		Asset* place_asset(const t_asset_id hash, Asset* asset) {
-			if(m_assets.find(hash) != m_assets.end()) {
-				m_log->warn("Asset `{:x}` already exists, skipping...");
-				return nullptr;
-			}
-			m_assets[hash] = t_asset_ptr(asset);
-			return asset;
-		}
 
 		apathy::Path m_local_root;
 
