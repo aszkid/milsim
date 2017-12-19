@@ -321,6 +321,7 @@ void Alexandria::update(std::chrono::milliseconds delta)
 	for(auto& msg : m_hermes->pull_inbox(Crypto::HASH("Alexandria"))) {
 		
 	}
+	//m_log->info("{} assets, {} hot.", m_assets.size(), m_loaded.size());
 }
 
 void Alexandria::parse_database(const std::string filename)
@@ -389,18 +390,31 @@ bool Alexandria::load_asset(const t_asset_id hash)
 		return false;
 	}
 
+	m_log->info("Loading asset `{}` [{}] ({:x})", asset->m_id.string(), Asset::type_to_str(asset->m_type), hash);
+
+	bool ok;
 	switch(asset->m_type) {
 	case Asset::MODEL:
-		return _load_model(hash, &data);
+		ok =  _load_model(hash, &data);
+		break;
 	case Asset::MATERIAL:
-		return _load_material(hash, &data);
+		ok =  _load_material(hash, &data);
+		break;
 	case Asset::TEXTURE:
-		return _load_texture(hash, &data);
+		ok =  _load_texture(hash, &data);
+		break;
 	case Asset::MAP:
-		return _load_map(hash, &data);
+		ok =  _load_map(hash, &data);
+		break;
 	default:
-		return false;
+		ok = false;
+		break;
 	}
+
+	if(ok)
+		m_loaded.emplace(hash);
+	
+	return ok;
 }
 void Alexandria::unload_asset(const t_asset_id hash)
 {
@@ -410,7 +424,7 @@ void Alexandria::unload_asset(const t_asset_id hash)
 		return;
 	auto asset = it->second.get();
 
-	m_log->info("Unloading asset `{}` [{}] ({:x})", asset->m_id.string(), Asset::type_to_str(asset->m_type), Crypto::HASH(asset->m_id.string()));
+	m_log->info("Unloading asset `{}` [{}] ({:x})", asset->m_id.string(), Asset::type_to_str(asset->m_type), hash);
 	
 	switch(asset->m_type) {
 	case Asset::MODEL:
@@ -452,18 +466,13 @@ t_asset_id Alexandria::parse_asset(apathy::Path path, const Asset::Type type, co
 
 	switch(type) {
 	case Asset::FONT:
-		//m_assets[hash] = t_asset_ptr(new FontAsset());
 		break;
 
 	case Asset::SHADER:
-		/*auto shader = (ShaderProgramAsset*)place_asset(hash, new ShaderProgramAsset(id));
-		shader->m_loaded = _load_shader(shader, id, root);*/
-		//place_asset(hash, new ShaderProgramAsset(id));
 		register_asset<ShaderProgramAsset>(id);
 		break;
 
 	case Asset::MODEL: {
-		// Register model
 		auto model = register_asset<ModelAsset>(id);
 
 		// Register zero mesh
@@ -471,6 +480,7 @@ t_asset_id Alexandria::parse_asset(apathy::Path path, const Asset::Type type, co
 		mesh_id = mesh_id.append("0");
 		auto mesh = register_asset<MeshAsset>(mesh_id);
 		model->m_meshes.push_back(Crypto::HASH(mesh_id.string()));
+
 		// Register mesh material, if any
 		auto material_root = root->find("material");
 		if(material_root != root->end()) {
@@ -508,11 +518,13 @@ t_asset_id Alexandria::parse_asset(apathy::Path path, const Asset::Type type, co
 
 	} case Asset::MAP: {
 		auto map = register_asset<MapAsset>(id);
+
 		// Register heightmap
 		apathy::Path tex_id(id);
 		tex_id = tex_id.append(root->at("source").get<std::string>());
 		register_asset<TextureAsset>(tex_id);
 		map->m_tex = Crypto::HASH(tex_id.string());
+
 		// Register mesh
 		apathy::Path mesh_id(id);
 		mesh_id = mesh_id.append("Mesh");
@@ -534,8 +546,6 @@ bool Alexandria::_load_model(const t_asset_id hash, const json* root)
 	auto model = get_asset<ModelAsset>(hash);
 	const std::string file = root->at("source");
 	apathy::Path working_path(get_working_path(model->m_id));
-	
-	m_log->info("Loading model `{}' ({:x})", model->m_id.string(), hash);
 
 	tinyobj::attrib_t attrib;
 	std::vector<tinyobj::shape_t> shapes;
@@ -559,6 +569,7 @@ bool Alexandria::_load_model(const t_asset_id hash, const json* root)
 	// Prepare asset -- TODO: pool this allocation? let `Alexandria` manage it
 	// We assume the model is a single mesh... for now
 	auto mesh = get_asset<MeshAsset>(model->m_meshes[0]);
+	m_loaded.emplace(model->m_meshes[0]);
 
 	// Copy vertex data
 	const bool has_tex = attrib.texcoords.size() > 0;
@@ -586,9 +597,9 @@ bool Alexandria::_load_model(const t_asset_id hash, const json* root)
 	m_sys_render->dispatch(rrc);
 	
 	// Load material
-	_load_material(mesh->m_material, &root->at("material"));
-
-	m_loaded.emplace(hash);
+	if(!_load_material(mesh->m_material, &root->at("material")))
+		return false;
+	m_loaded.emplace(mesh->m_material);
 	return true;
 }
 
@@ -596,7 +607,6 @@ bool Alexandria::_load_material(const t_asset_id hash, const json* root)
 {
 	auto material = get_asset<MaterialAsset>(hash);
 	apathy::Path working_path(get_working_path(material->m_id));
-	m_log->info("Loading material `{}` ({:x})", material->m_id.string(), hash);
 	
 	std::vector<float> Ka = root->at("Ka");
 	std::vector<float> Kd = root->at("Kd");
@@ -607,12 +617,17 @@ bool Alexandria::_load_material(const t_asset_id hash, const json* root)
 	material->m_specular = glm::vec3(Ks[0], Ks[1], Ks[2]);
 
 	// Load specular and diffuse textures
-	if(material->m_diffuse_tex != 0)
-		_load_texture(material->m_diffuse_tex, nullptr);
-	if(material->m_specular_tex != 0)
-		_load_texture(material->m_specular_tex, nullptr);
+	if(material->m_diffuse_tex != 0) {
+		if(!_load_texture(material->m_diffuse_tex, nullptr))
+			return false;
+		m_loaded.emplace(material->m_diffuse_tex);
+	}
+	if(material->m_specular_tex != 0) {
+		if(!_load_texture(material->m_specular_tex, nullptr))
+			return false;
+		m_loaded.emplace(material->m_specular_tex);
+	}
 
-	m_loaded.emplace(hash);
 	return true;
 }
 
@@ -633,7 +648,6 @@ bool Alexandria::_load_texture(const t_asset_id hash, const json* root, bool gpu
 {
 	auto texture = get_asset<TextureAsset>(hash);
 	apathy::Path working_path(get_working_path(texture->m_id));
-	m_log->info("Loading texture `{}` ({:x})", texture->m_id.string(), hash);
 
 	// Upload to memory
 	stbi_set_flip_vertically_on_load(true);
@@ -657,17 +671,17 @@ bool Alexandria::_load_texture(const t_asset_id hash, const json* root, bool gpu
 		m_sys_render->dispatch(rrc);
 	}
 
-	m_loaded.emplace(hash);
 	return true;
 }
 
 bool Alexandria::_load_map(const t_asset_id hash, const json* root)
 {
 	auto map = get_asset<MapAsset>(hash);
-	m_log->info("Loading map `{}` ({:x})", map->m_id.string(), hash);
 
 	auto texture = get_asset<TextureAsset>(map->m_tex);
-	_load_texture(map->m_tex, nullptr, false);
+	if(!_load_texture(map->m_tex, nullptr, false))
+		return false;
+	m_loaded.emplace(map->m_tex);
 
 	// Populate vertex and index buffers
 	const size_t w = texture->m_width;
@@ -681,6 +695,8 @@ bool Alexandria::_load_map(const t_asset_id hash, const json* root)
 	auto& ibuffer = mesh->m_indices;
 	vbuffer.resize(vlen);
 	ibuffer.resize(ilen);
+	// Add mesh to `loaded` list
+	m_loaded.emplace(map->m_mesh);
 
 	for(size_t i = 0; i < vlen; i++) {
 		glm::vec3 pos;
@@ -723,10 +739,6 @@ bool Alexandria::_load_map(const t_asset_id hash, const json* root)
 
 	m_sys_render->dispatch(rrc);
 
-	// Add mesh to `loaded` list
-	m_loaded.emplace(map->m_mesh);
-	// Add map itself to loaded list
-	m_loaded.emplace(hash);
 	return true;
 }
 
