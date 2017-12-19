@@ -1,12 +1,46 @@
 #include "sys/alexandria.hpp"
 #include "util/io.hpp"
 
+#include <deque>
 #include <glm/ext.hpp>
 #include <tiny_obj_loader.h>
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
 using namespace MilSim;
+
+const json MilSim::db_find(const json root, const std::string id, const std::string type)
+{
+	for(auto it = root.begin(); it != root.end(); it++) {
+		if(it->at("type") == type && it->at("id") == id) {
+			if(type == "folder") {
+				return it.value().at("contents");
+			} else {
+				return it.value();
+			}
+		}
+	}
+	return json();
+}
+const json MilSim::db_get_asset(const json root, const apathy::Path p, const Asset::Type t)
+{
+	auto v = p.split();
+	std::deque<apathy::Path::Segment> crumbs(v.begin(), v.end());
+	crumbs.pop_front(); // empty 0 element
+	crumbs.pop_front(); // pop db name
+	
+	auto asset_id = crumbs.back().segment;
+	crumbs.pop_back();
+
+	auto sub = root;
+	do {
+		auto seg = crumbs.front().segment;
+		crumbs.pop_front();
+		sub = db_find(sub, seg, "folder");
+	} while(!crumbs.empty() && !sub.empty());
+
+	return db_find(sub, asset_id, Asset::type_to_str(t));
+}
 
 ////////////////////////////////////////
 // ASSET BASE CLASS
@@ -30,6 +64,37 @@ Asset::Type Asset::str_to_type(const std::string t)
 	} else {
 		return NONE;
 	}
+}
+std::string Asset::type_to_str(const Type t)
+{
+	switch(t) {
+	case FONT:
+		return "font";
+		break;
+	case TEXTURE:
+		return "texture";
+		break;
+	case MATERIAL:
+		return "material";
+		break;
+	case MESH:
+		return "mesh";
+		break;
+	case MODEL:
+		return "model";
+		break;
+	case SHADER:
+		return "shader";
+		break;
+	case SCRIPT:
+		return "script";
+		break;
+	default:
+		abort();
+	}
+}
+std::string Asset::database() const {
+	return m_id.split()[1].segment;
 }
 
 ////////////////////////////////////////
@@ -294,8 +359,7 @@ void Alexandria::update()
 
 void Alexandria::parse_database(const std::string filename)
 {
-	apathy::Path dbpath(m_local_root);
-	dbpath.append(filename).sanitize();
+	apathy::Path dbpath(get_working_path(filename));
 	m_log->info("Loading database `{}`...", filename);
 
 	json _db = json::parse(IO::read_file(dbpath.string()));
@@ -333,32 +397,42 @@ void Alexandria::parse_folder(const json& root, apathy::Path path, const std::st
 	}
 }
 
-Asset* Alexandria::get_asset(const t_asset_id id, const GetFlag flag)
+Asset* Alexandria::get_asset(const t_asset_id hash, const GetFlag flag)
 {
-	// Find asset
-	auto asset = m_assets.find(id);
-	if(asset != m_assets.end()) {
-		/*if(asset->second->m_loaded == false && flag == LOAD)
-			asset->second->load();*/
-		return asset->second.get();
+	auto asset = m_assets.find(hash);
+	if(asset == m_assets.end()) {
+		m_log->info("Asset `{:x}` not registered!", hash);
+		return nullptr;
 	}
-	// Asset is not in our database!
-	m_log->info("Asset `{:x}` is not in our database!", id);
-	return nullptr;
+	return asset->second.get();
 }
-Asset* Alexandria::get_asset(const std::string id, const GetFlag flag)
+bool Alexandria::load_asset(const t_asset_id hash)
 {
-	return get_asset(Crypto::HASH(id), flag);
-}
-bool Alexandria::load_asset(const t_asset_id id)
-{
-	auto it = m_assets.find(id);
+	auto it = m_assets.find(hash);
 	if(it == m_assets.end())
 		return false;
 	auto asset = it->second.get();
 
+	const auto db_id = Crypto::HASH(asset->database());
+	const auto& db = m_dbs[db_id];
+	const auto& data = db_get_asset(db["data"], asset->m_id, asset->m_type);
+
+	if(data.empty())
+		return false;
+
+	bool result;
 	switch(asset->m_type) {
+	case Asset::MODEL:
+		result = _load_model(hash, &data);
+		break;
+	case Asset::MATERIAL:
+		result = _load_material(hash, &data);
+		break;
+	case Asset::TEXTURE:
+		result = _load_texture(hash, &data);
+		break;
 	default:
+		result = false;
 		break;
 	}
 
@@ -403,20 +477,43 @@ t_asset_id Alexandria::parse_asset(apathy::Path path, const std::string type, co
 		register_asset<ShaderProgramAsset>(id);
 
 	} else if(type == "model") {
-		//auto model = static_cast<ModelAsset*>(place_asset(hash, new ModelAsset(id)));
+		// Register model
 		auto model = register_asset<ModelAsset>(id);
-		//model->m_loaded = _load_model(model, id, root);
-	
+
+		// Register zero mesh
+		apathy::Path mesh_id(model->m_id);
+		mesh_id = mesh_id.append("0");
+		auto mesh = register_asset<MeshAsset>(mesh_id);
+		model->m_meshes.push_back(Crypto::HASH(mesh_id.string()));
+		// Register mesh material, if any
+		auto material_root = root->find("material");
+		if(material_root != root->end()) {
+			apathy::Path material_id(model->m_id);
+			material_id = material_id.append("Material");
+			parse_asset(material_id, "material", &(*material_root));
+			mesh->m_material = Crypto::HASH(material_id.string());
+		}
+
 	} else if(type == "texture") {
-		//auto texture = static_cast<TextureAsset*>(place_asset(hash, new TextureAsset(id)));
-		//m_textures.push_back(std::unique_ptr<TextureAsset>(texture));
-		//texture->m_loaded = _load_texture(texture, id, root);
 		auto texture = register_asset<TextureAsset>(id);
 
 	} else if(type == "material") {
-		//auto material = (MaterialAsset*)place_asset(hash, new MaterialAsset(id));
-		//material->m_loaded = _load_material(material, id, root);
 		auto material = register_asset<MaterialAsset>(id);
+
+		auto Kd_tex = root->find("Kd_tex");
+		if(Kd_tex != root->end()) {
+			apathy::Path Kd_tex_id(material->m_id);
+			Kd_tex_id = Kd_tex_id.append(Kd_tex->get<std::string>());
+			register_asset<TextureAsset>(Kd_tex_id);
+			material->m_diffuse_tex = Crypto::HASH(Kd_tex_id.sanitize().string());
+		}
+		auto Ks_tex = root->find("Ks_tex");
+		if(Ks_tex != root->end()) {
+			apathy::Path Ks_tex_id(material->m_id);
+			Ks_tex_id = Ks_tex_id.append(Ks_tex->get<std::string>());
+			register_asset<TextureAsset>(Ks_tex_id);
+			material->m_specular_tex = Crypto::HASH(Ks_tex_id.sanitize().string());
+		}
 		
 	} else if(type == "map_noise") {
 		//_load_map(id, root);
@@ -427,12 +524,14 @@ t_asset_id Alexandria::parse_asset(apathy::Path path, const std::string type, co
 }
 
 
-bool Alexandria::_load_model(ModelAsset* model, apathy::Path id, const json* root)
+bool Alexandria::_load_model(const t_asset_id hash, const json* root)
 {
-	const uint32_t hash = Crypto::HASH(id.string());
+	auto model = get_asset<ModelAsset>(hash);
 	const std::string file = root->at("source");
-	apathy::Path working_path(get_working_path(id));
+	apathy::Path working_path(get_working_path(model->m_id));
 	
+	m_log->info("Loading model `{:x}`", hash);
+
 	tinyobj::attrib_t attrib;
 	std::vector<tinyobj::shape_t> shapes;
 	std::vector<tinyobj::material_t> materials;
@@ -448,21 +547,13 @@ bool Alexandria::_load_model(ModelAsset* model, apathy::Path id, const json* roo
 		//m_log->info("Warning: {}", err);
 	}
 	if(!ret) {
-		m_log->error("Failed to load model {}!", id.string());
+		m_log->error("Failed to load model {}!", model->m_id.string());
 		abort();
 	}
 	
 	// Prepare asset -- TODO: pool this allocation? let `Alexandria` manage it
 	// We assume the model is a single mesh... for now
-	apathy::Path mesh_id(id);
-	mesh_id = mesh_id.append("0");
-	auto mesh_hash = Crypto::HASH(mesh_id.string());
-	/*MeshAsset* mesh = static_cast<MeshAsset*>(place_asset(
-		mesh_hash,
-		new MeshAsset(mesh_id.string())
-	));*/
-	auto mesh = register_asset<MeshAsset>(mesh_id);
-	model->m_meshes.push_back(mesh_hash);
+	auto mesh = get_asset<MeshAsset>(model->m_meshes[0]);
 
 	// Copy vertex data
 	const bool has_tex = attrib.texcoords.size() > 0;
@@ -489,23 +580,16 @@ bool Alexandria::_load_model(ModelAsset* model, apathy::Path id, const json* roo
 	rrc->push_vertex_buffer(buff, mesh->m_vb_handle);
 	m_sys_render->dispatch(rrc);
 	
-	// Attach material, if any
-	auto material_root = root->find("material");
-	if(material_root != root->end()) {
-		apathy::Path material_id(id);
-		material_id = material_id.append("Material");
-		//add_asset(material_id, "material", &(*material_root));
-		parse_asset(material_id, "material", &(*material_root));
-		mesh->m_material = Crypto::HASH(material_id.string());
-	}
+	// Load material
+	_load_material(mesh->m_material, &root->at("material"));
 
 	return true;
 }
 
-bool Alexandria::_load_material(MaterialAsset* material, apathy::Path id, const json* root)
+bool Alexandria::_load_material(const t_asset_id hash, const json* root)
 {
-	const uint32_t hash = Crypto::HASH(id.string());
-	apathy::Path working_path(get_working_path(id));
+	auto material = get_asset<MaterialAsset>(hash);
+	apathy::Path working_path(get_working_path(material->m_id));
 	
 	std::vector<float> Ka = root->at("Ka");
 	std::vector<float> Kd = root->at("Kd");
@@ -515,23 +599,9 @@ bool Alexandria::_load_material(MaterialAsset* material, apathy::Path id, const 
 	material->m_diffuse = glm::vec3(Kd[0], Kd[1], Kd[2]);
 	material->m_specular = glm::vec3(Ks[0], Ks[1], Ks[2]);
 
-	auto Kd_tex = root->find("Kd_tex");
-	if(Kd_tex != root->end()) {
-		apathy::Path Kd_tex_id(id);
-		Kd_tex_id = Kd_tex_id.append(Kd_tex->get<std::string>());
-		//add_asset(Kd_tex_id, "texture", nullptr);
-		register_asset<TextureAsset>(Kd_tex_id);
-		material->m_diffuse_tex = Crypto::HASH(Kd_tex_id.sanitize().string());
-	}
-
-	auto Ks_tex = root->find("Ks_tex");
-	if(Ks_tex != root->end()) {
-		apathy::Path Ks_tex_id(id);
-		Ks_tex_id = Ks_tex_id.append(Ks_tex->get<std::string>());
-		//add_asset(Ks_tex_id, "texture", nullptr);
-		register_asset<TextureAsset>(Ks_tex_id);
-		material->m_specular_tex = Crypto::HASH(Ks_tex_id.sanitize().string());
-	}
+	// Load specular and diffuse textures
+	_load_texture(material->m_diffuse_tex, nullptr);
+	_load_texture(material->m_specular_tex, nullptr);
 
 	return true;
 }
@@ -549,10 +619,10 @@ bool Alexandria::_load_shader(ShaderProgramAsset* shader, apathy::Path id, const
 	return true;
 }
 
-bool Alexandria::_load_texture(TextureAsset* texture, apathy::Path id, const json* root)
+bool Alexandria::_load_texture(const t_asset_id hash, const json* root)
 {
-	const uint32_t hash = Crypto::HASH(id.string());
-	apathy::Path working_path(get_working_path(id));
+	auto texture = get_asset<TextureAsset>(hash);
+	apathy::Path working_path(get_working_path(texture->m_id));
 
 	// Upload to memory
 	stbi_set_flip_vertically_on_load(true);
@@ -577,8 +647,6 @@ bool Alexandria::_load_map(apathy::Path id, const json* root)
 {
 	apathy::Path map_tex(id);
 	map_tex = map_tex.append(root->at("source").get<std::string>());
-	//auto texture = static_cast<TextureAsset*>(add_asset(map_tex, "texture_local", nullptr));
-	//auto texture = static_cast<TextureAsset*>(place_asset());
 	auto texture = register_asset<TextureAsset>(map_tex);
 
 	// Populate vertex and index buffers
@@ -592,10 +660,6 @@ bool Alexandria::_load_map(apathy::Path id, const json* root)
 	apathy::Path mesh_id(id);
 	mesh_id = mesh_id.append("Mesh");
 	auto mesh_hash = Crypto::HASH(mesh_id.string());
-	/*MeshAsset* mesh = static_cast<MeshAsset*>(place_asset(
-		mesh_hash,
-		new MeshAsset(id.string())
-	));*/
 	auto mesh = register_asset<MeshAsset>(mesh_id);
 	
 	auto& vbuffer = mesh->m_verts;
@@ -643,6 +707,8 @@ bool Alexandria::_load_map(apathy::Path id, const json* root)
 	rrc->push_vertex_buffer(vb, mesh->m_vb_handle);
 
 	m_sys_render->dispatch(rrc);
+
+	return true;
 }
 
 apathy::Path Alexandria::get_working_path(const apathy::Path id) const

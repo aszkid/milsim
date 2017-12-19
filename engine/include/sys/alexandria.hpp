@@ -16,7 +16,6 @@ namespace MilSim {
 	using json = nlohmann::json;
 
 	typedef uint32_t t_asset_id;
-
 	/**
 	 * Asset: abstract base class for assets.
 	 * Assets have two states: REGISTERED or LOADED.
@@ -34,6 +33,8 @@ namespace MilSim {
 			NONE
 		};
 		static Type str_to_type(const std::string t);
+		static std::string type_to_str(const Type t);
+		std::string database() const;
 
 		Asset(const apathy::Path id, const std::string prefix, Type t) {
 			m_id = id;
@@ -173,6 +174,14 @@ namespace MilSim {
 		t_asset_id m_mesh;
 	};
 
+
+	/**
+	 * Shitty database "filesystem".
+	 */
+	const json db_find(const json root, const std::string id, const std::string type);
+	const json db_get_asset(const json root, const apathy::Path p, const Asset::Type type);
+
+
 	/**
 	 * Alexandria (the library of). Asset manager.
 	 */
@@ -192,15 +201,28 @@ namespace MilSim {
 			LOAD
 		};
 	
-		Asset* get_asset(const std::string id, const GetFlag flag = LOAD);
-		Asset* get_asset(const t_asset_id id, const GetFlag flag = LOAD);
-		bool load_asset(const t_asset_id id);
-		void unload_asset(const t_asset_id id);
+		template<class T>
+		T* get_asset(const t_asset_id hash) {
+			static_assert(
+				std::is_base_of<Asset, T>::value,
+				"Asset passed is not derived from `Asset` base class!"
+			);
+			return static_cast<T*>(get_asset(hash));
+		};
+		Asset* get_asset(const t_asset_id hash, const GetFlag flag = LOAD);
+
+		bool load_asset(const t_asset_id hash);
+		void unload_asset(const t_asset_id hash);
 
 		RenderResource get_vertex_layout(const size_t kind);
 
 	private:
+		/**
+		 * Asset library. Registered assets are in `m_assets`,
+		 * while loaded assets are in `m_loaded`.
+		 */
 		std::map<uint32_t, t_asset_ptr> m_assets;
+		std::unordered_set<uint32_t> m_loaded;
 
 		/**
 		 * Database book-keeping. Top-most directory, i.e.
@@ -231,20 +253,22 @@ namespace MilSim {
 			}
 			auto asset = new T(id);
 			m_assets[hash] = t_asset_ptr(asset);
+			//m_log->info("Registering asset `{}` of type `{}`", id.string(), Asset::type_to_str(asset->m_type));
 			return asset;
+
 		}
 
-		std::unordered_set<uint32_t> m_loaded;
-
 		// Asset-specific loading methods
-		bool _load_model(ModelAsset* model, apathy::Path id, const json* root);
-		bool _load_material(MaterialAsset* material, apathy::Path id, const json* root);
+		bool _load_model(const t_asset_id hash, const json* root);
+		bool _load_material(const t_asset_id hash, const json* root);
 		bool _load_shader(ShaderProgramAsset* shader, apathy::Path id, const json* root);
-		bool _load_texture(TextureAsset* texture, apathy::Path id, const json* root);
+		bool _load_texture(const t_asset_id hash, const json* root);
 		bool _load_map(apathy::Path id, const json* root);
 		
+		/**
+		 * To deal with working paths vs. virtual database paths.
+		 */
 		apathy::Path get_working_path(const apathy::Path id) const;
-
 		apathy::Path m_local_root;
 
 		// Handle for `Sys.Render` -- needed to upload assets to the GPU
