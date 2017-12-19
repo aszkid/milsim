@@ -61,6 +61,8 @@ Asset::Type Asset::str_to_type(const std::string t)
 		return SHADER;
 	} else if(t == "script") {
 		return SCRIPT;
+	} else if(t == "map") {
+		return MAP;
 	} else {
 		return NONE;
 	}
@@ -70,27 +72,22 @@ std::string Asset::type_to_str(const Type t)
 	switch(t) {
 	case FONT:
 		return "font";
-		break;
 	case TEXTURE:
 		return "texture";
-		break;
 	case MATERIAL:
 		return "material";
-		break;
 	case MESH:
 		return "mesh";
-		break;
 	case MODEL:
 		return "model";
-		break;
 	case SHADER:
 		return "shader";
-		break;
 	case SCRIPT:
 		return "script";
-		break;
+	case MAP:
+		return "map";
 	default:
-		abort();
+		return "unknown";
 	}
 }
 std::string Asset::database() const {
@@ -460,8 +457,6 @@ t_asset_id Alexandria::parse_asset(apathy::Path path, const std::string type, co
 	const std::string id = path.sanitize().string();
 	auto hash = Crypto::HASH(id);
 
-	m_log->info("Adding asset `{}` of type `{}` -- `{:x}`...", id, type, hash);
-
 	if(m_assets.find(hash) != m_assets.end()) {
 		m_log->info("Asset `{}` already in our database, skipping.", id);
 		return 0;
@@ -519,6 +514,7 @@ t_asset_id Alexandria::parse_asset(apathy::Path path, const std::string type, co
 		//_load_map(id, root);
 		auto map = register_asset<MapAsset>(id);
 	}
+
 
 	return hash;
 }
@@ -656,7 +652,7 @@ bool Alexandria::_load_map(apathy::Path id, const json* root)
 	const size_t tris = (w-1)*(h-1)*2;
 	const size_t ilen = tris*3;
 
-	// Create mesh asset
+	// Create mesh asset -- DO THIS IN `parse_asset`
 	apathy::Path mesh_id(id);
 	mesh_id = mesh_id.append("Mesh");
 	auto mesh_hash = Crypto::HASH(mesh_id.string());

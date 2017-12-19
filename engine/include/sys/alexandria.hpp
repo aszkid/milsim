@@ -253,7 +253,7 @@ namespace MilSim {
 			}
 			auto asset = new T(id);
 			m_assets[hash] = t_asset_ptr(asset);
-			//m_log->info("Registering asset `{}` of type `{}`", id.string(), Asset::type_to_str(asset->m_type));
+			m_log->info("Registering asset `{}` of type `{}`", id.string(), Asset::type_to_str(asset->m_type));
 			return asset;
 
 		}
