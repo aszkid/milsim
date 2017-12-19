@@ -27,7 +27,7 @@ namespace MilSim {
 		};
 
 		Type m_type;
-		RenderResourceContext* m_resourcec;
+		RenderResourceContext m_resourcec;
 		RenderCommandContext* m_commandc;
 	};
 
@@ -102,10 +102,8 @@ namespace MilSim {
 		 * All communication with the render thread happens through these few methods.
 		 * Q: should we now own the RRC?
 		 */
-		void dispatch(RenderResourceContext* rrc);
+		void dispatch(RenderResourceContext rrc);
 		void alloc(RenderResource* rrc, RenderResource::Type t);
-
-		RenderResourceContext* new_rrc();
 
 	private:
 		
@@ -150,7 +148,7 @@ namespace MilSim {
 		 * Resource allocation and destruction methods.
 		 * These are only called 
 		 */
-		void _handle_resource(RenderResourceContext* rrc);
+		void _handle_resource(const RenderResourceContext& rrc);
 		void _handle_command(RenderCommandContext* rcc);
 		
 		RenderResource _alloc_texture();
@@ -159,10 +157,13 @@ namespace MilSim {
 		RenderResource _alloc_index_buffer();
 
 		/**
-		 * Thread-local RenderResourceContexts.
+		 * RenderResourceContexts. We keep track of them here (not optimal)
+		 * because of lifetime issues: the render thread will peek inside when
+		 * the calling thread is most certainly doing something else.
+		 * We might be OK with simply copying... yeah I think that works.
 		 */
-		std::vector<RenderResourceContext*> m_rrcs;
-		std::mutex m_rrc_lock;
+		/*std::vector<RenderResourceContext*> m_rrcs;
+		std::mutex m_rrc_lock;*/
 
 		/**
 		 * Render thread and synchronization.

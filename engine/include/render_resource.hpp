@@ -62,9 +62,6 @@ namespace MilSim {
 	 * Packed up and sent to the render thread.
 	 */
 	struct RenderResourceContext {
-		// flagged by `Sys.Render` for deletion
-		std::atomic_bool m_delete;
-
 		/**
 		 * TEXTURE
 		 */

@@ -279,7 +279,7 @@ void Alexandria::init()
 	});
 
 	// Prepare common vertex layouts
-	RenderResourceContext* rrc = m_sys_render->new_rrc();
+	RenderResourceContext rrc;
 	m_sys_render->alloc(&m_vl_mesh, RenderResource::VERTEX_LAYOUT);
 	RenderResourceContext::VertexLayoutData layout = {
 		.attribs = {
@@ -303,7 +303,7 @@ void Alexandria::init()
 			}
 		}
 	};
-	rrc->push_vertex_layout(layout, m_vl_mesh);
+	rrc.push_vertex_layout(layout, m_vl_mesh);
 	m_sys_render->dispatch(rrc);
 }
 void Alexandria::kill()
@@ -585,7 +585,7 @@ bool Alexandria::_load_model(const t_asset_id hash, const json* root)
 	}
 
 	// Prepare data buffer(s)
-	RenderResourceContext* rrc = m_sys_render->new_rrc();
+	RenderResourceContext rrc;
 	m_sys_render->alloc(&mesh->m_vb_handle, RenderResource::VERTEX_BUFFER);
 	RenderResourceContext::VertexBufferData buff = {
 		.chunks = {
@@ -593,7 +593,7 @@ bool Alexandria::_load_model(const t_asset_id hash, const json* root)
 		},
 		.usage = RenderResourceContext::VertexBufferData::STATIC
 	};
-	rrc->push_vertex_buffer(buff, mesh->m_vb_handle);
+	rrc.push_vertex_buffer(buff, mesh->m_vb_handle);
 	m_sys_render->dispatch(rrc);
 	
 	// Load material
@@ -677,7 +677,7 @@ bool Alexandria::_load_texture(const t_asset_id hash, const json* root, bool gpu
 
 	// Upload to the GPU
 	if(gpu) {
-		RenderResourceContext* rrc = m_sys_render->new_rrc();
+		RenderResourceContext rrc;
 		m_sys_render->alloc(&texture->m_handle, RenderResource::TEXTURE);
 		RenderResourceContext::TextureData tex = {
 			.width = texture->m_width,
@@ -688,7 +688,7 @@ bool Alexandria::_load_texture(const t_asset_id hash, const json* root, bool gpu
 			/*.mipmap = true,
 			.filter = RenderResourceContext::TextureData::Filter::LINEAR*/
 		};
-		rrc->push_texture(tex, texture->m_handle);
+		rrc.push_texture(tex, texture->m_handle);
 		m_sys_render->dispatch(rrc);
 	}
 
@@ -740,14 +740,14 @@ bool Alexandria::_load_map(const t_asset_id hash, const json* root)
 	}
 
 	// Upload to GPU memory
-	RenderResourceContext* rrc = m_sys_render->new_rrc();
+	RenderResourceContext rrc;
 
 	m_sys_render->alloc(&mesh->m_ib_handle, RenderResource::INDEX_BUFFER);
 	RenderResourceContext::IndexBufferData ib = {
 		.data = &ibuffer[0],
 		.size = ilen * sizeof(GLuint)
 	};
-	rrc->push_index_buffer(ib, mesh->m_ib_handle);
+	rrc.push_index_buffer(ib, mesh->m_ib_handle);
 
 	m_sys_render->alloc(&mesh->m_vb_handle, RenderResource::VERTEX_BUFFER);
 	RenderResourceContext::VertexBufferData vb = {
@@ -756,7 +756,7 @@ bool Alexandria::_load_map(const t_asset_id hash, const json* root)
 		},
 		.usage = RenderResourceContext::VertexBufferData::Usage::STATIC
 	};
-	rrc->push_vertex_buffer(vb, mesh->m_vb_handle);
+	rrc.push_vertex_buffer(vb, mesh->m_vb_handle);
 
 	m_sys_render->dispatch(rrc);
 

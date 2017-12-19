@@ -62,16 +62,6 @@ void Render::update(std::chrono::milliseconds delta)
 			//m_log->info("Updating window size...");
 		}
 	}
-
-	for(auto it = m_rrcs.begin(); it != m_rrcs.end(); ) {
-		auto rrc = *it;
-		if(rrc->m_delete.load()) {
-			delete rrc;
-			m_rrcs.erase(it);
-		} else {
-			++it;
-		}
-	}
 }
 
 void Render::thread_entry()
@@ -137,7 +127,7 @@ void Render::setup_pipeline()
 	m_log->info("Setting up render targets...");
 	auto ts = state["pipeline_targets"];
 	// This rrc will hold all our resource requests
-	auto rrc = new_rrc();
+	RenderResourceContext rrc;
 
 	size_t i = 1;
 	while(true) {
@@ -169,7 +159,7 @@ void Render::setup_pipeline()
 			}
 		}
 
-		rrc->push_texture(data, tex);
+		rrc.push_texture(data, tex);
 	}
 
 	dispatch(rrc);
@@ -178,7 +168,7 @@ void Render::setup_pipeline()
 /**
  * RENDER THREAD MESSAGE DISPATCH
  */
-void Render::dispatch(RenderResourceContext* rrc)
+void Render::dispatch(RenderResourceContext rrc)
 {
 	m_queue.enqueue(RenderMessage {RenderMessage::RESOURCE, rrc, nullptr});
 }
@@ -208,31 +198,22 @@ void Render::alloc(RenderResource* rr, RenderResource::Type t)
 
 	m_resource_lock.unlock();
 }
-RenderResourceContext* Render::new_rrc()
-{
-	m_rrc_lock.lock();
-		m_rrcs.push_back(new RenderResourceContext);
-		auto rrc = m_rrcs.back();
-		rrc->m_delete.store(false);
-	m_rrc_lock.unlock();
-	return rrc;
-}
 
 /**
  * PRIVATE METHODS -- only called from the render thread!
  */
-void Render::_handle_resource(RenderResourceContext* rrc)
+void Render::_handle_resource(const RenderResourceContext&  rrc)
 {
 	m_resource_lock.lock();
 
 	// assuming `rrc` not nullptr...
 	// 1) upload textures
-	size_t tex_n = rrc->m_tex.size();
-	assert(tex_n == rrc->m_tex_ref.size()); // debug
+	size_t tex_n = rrc.m_tex.size();
+	assert(tex_n == rrc.m_tex_ref.size()); // debug
 	for(size_t i = 0; i < tex_n; i++) {
-		auto tex_instance = rrc->m_tex_ref[i];
+		auto tex_instance = rrc.m_tex_ref[i];
 		auto& tex = m_textures[tex_instance];
-		auto& tex_data = rrc->m_tex[i];
+		auto& tex_data = rrc.m_tex[i];
 
 		glGenTextures(1, &tex.m_tex_id);
 		glBindTexture(GL_TEXTURE_2D, tex.m_tex_id);
@@ -250,13 +231,13 @@ void Render::_handle_resource(RenderResourceContext* rrc)
 	}
 
 	// 2) upload vertex buffers
-	size_t vbuf_n = rrc->m_vb.size();
-	assert(vbuf_n == rrc->m_vb_ref.size()); // debug
+	size_t vbuf_n = rrc.m_vb.size();
+	assert(vbuf_n == rrc.m_vb_ref.size()); // debug
 	for(size_t i = 0; i < vbuf_n; i++) {
-		auto vbuf_instance = rrc->m_vb_ref[i];
+		auto vbuf_instance = rrc.m_vb_ref[i];
 		auto& vbuf = m_vertex_buffers[vbuf_instance];
 		glGenBuffers(1, &vbuf.m_buf);
-		auto& vbuf_data = rrc->m_vb[i];
+		auto& vbuf_data = rrc.m_vb[i];
 
 		if(vbuf_data.chunks.size() > 1) {
 			m_log->info("We don't support multie buffer chunks yet!");
@@ -285,13 +266,13 @@ void Render::_handle_resource(RenderResourceContext* rrc)
 	}
 
 	// 3) Upload vertex array objects (format descriptors)
-	size_t vlayout_n  = rrc->m_vl.size();
-	assert(vlayout_n == rrc->m_vl_ref.size());
+	size_t vlayout_n  = rrc.m_vl.size();
+	assert(vlayout_n == rrc.m_vl_ref.size());
 	for(size_t i = 0; i < vlayout_n; i++) {
-		auto vlayout_instance = rrc->m_vl_ref[i];
+		auto vlayout_instance = rrc.m_vl_ref[i];
 		auto& vlayout = m_vertex_layouts[vlayout_instance];
 		glGenVertexArrays(1, &vlayout.m_vao);
-		auto& vlayout_data = rrc->m_vl[i];
+		auto& vlayout_data = rrc.m_vl[i];
 
 		glBindVertexArray(vlayout.m_vao);
 		for(size_t j = 0; j < vlayout_data.attribs.size(); j++) {
@@ -318,12 +299,12 @@ void Render::_handle_resource(RenderResourceContext* rrc)
 	}
 
 	// 4) Upload index buffers
-	size_t ibuf_n  = rrc->m_ib.size();
-	assert(ibuf_n == rrc->m_ib_ref.size());
+	size_t ibuf_n  = rrc.m_ib.size();
+	assert(ibuf_n == rrc.m_ib_ref.size());
 	for(size_t i = 0; i < ibuf_n; i++) {
-		auto ibuf_instance = rrc->m_ib_ref[i];
+		auto ibuf_instance = rrc.m_ib_ref[i];
 		auto& ibuf = m_index_buffers[ibuf_instance];
-		auto& ibuf_data = rrc->m_ib[i];
+		auto& ibuf_data = rrc.m_ib[i];
 
 		glBindBuffer(
 			GL_ELEMENT_ARRAY_BUFFER,
@@ -336,9 +317,6 @@ void Render::_handle_resource(RenderResourceContext* rrc)
 			GL_STATIC_DRAW //dictatorship
 		);
 	}
-
-	// this *is* safe
-	rrc->m_delete.store(true);
 
 	m_resource_lock.unlock();
 }
