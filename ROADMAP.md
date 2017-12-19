@@ -17,7 +17,8 @@
 	+ [ ] Test it!
 - [x] Write Alexandria member functions to load assets (no OOP).
 - [x] Use `apathy::Path` for everything in Alexandria.
-- [ ] Figure out how Alexandria deals with loading assets. Should assets be PODs (mostly)?
+- [x] Figure out how Alexandria deals with loading assets. Should assets be PODs (mostly)?
+- [ ] Deal with asset dependencies: `unload`ing an asset should somehow take into account the ones that depend on it. In other words, track dependencies and be mindful of them.
 - [ ] Start thinking about a minimal Lua binding interface (use `talloc`)
 	+ [Think twice before eating all that glue](http://purplepwny.com/blog/binding_lua_to_c_think_twice_before_eating_that_glue.html).
 	+ [Lightweight Lua bindings (Bitsquid)](http://bitsquid.blogspot.com.es/2011/06/lightweight-lua-bindings.html).
