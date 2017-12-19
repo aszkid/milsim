@@ -657,15 +657,36 @@ bool Alexandria::_load_texture(const t_asset_id hash, const json* root, bool gpu
 		return false;
 	}
 
+	GLenum pixf;
+	switch(texture->m_channels) {
+	case 1:
+		pixf = GL_RED;
+		break;
+	case 2:
+		pixf = GL_RG;
+		break;
+	case 3:
+		pixf = GL_RGB;
+		break;
+	case 4:
+		pixf = GL_RGBA;
+		break;
+	default:
+		abort();
+	}
+
 	// Upload to the GPU
 	if(gpu) {
 		RenderResourceContext* rrc = m_sys_render->new_rrc();
 		m_sys_render->alloc(&texture->m_handle, RenderResource::TEXTURE);
 		RenderResourceContext::TextureData tex = {
-			texture->m_width,
-			texture->m_height,
-			texture->m_channels,
-			texture->m_data
+			.width = texture->m_width,
+			.height = texture->m_height,
+			.source = texture->m_data,
+			.internal_format = pixf,
+			.pixel_format = pixf,
+			/*.mipmap = true,
+			.filter = RenderResourceContext::TextureData::Filter::LINEAR*/
 		};
 		rrc->push_texture(tex, texture->m_handle);
 		m_sys_render->dispatch(rrc);

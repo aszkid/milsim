@@ -71,8 +71,15 @@ namespace MilSim {
 		struct TextureData {
 			int width;
 			int height;
-			int channels;
 			unsigned char* source;
+			GLenum internal_format;
+			GLenum pixel_format;
+			/*bool mipmap;
+			enum Filter {
+				LINEAR,
+				NONE
+			};
+			uint8_t filter;*/
 		};
 		std::vector<TextureData> m_tex;
 		std::vector<RenderResource> m_tex_ref;

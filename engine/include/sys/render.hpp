@@ -57,11 +57,13 @@ namespace MilSim {
 
 	/**
 	 * Building block of a render pipeline.
+	 * Resources are hashed names.
 	 */
 	struct RenderLayer {
-		std::vector<RenderResource> m_render_targets;
-		RenderResource m_depth_stencil_target;
-		RenderResource m_framebuffer;
+		uint32_t m_name;
+		std::vector<uint32_t> m_render_targets;
+		uint32_t m_depth_stencil_target;
+		uint32_t m_framebuffer;
 		enum Sort {
 			FRONT_BACK,
 			BACK_FRONT
@@ -139,6 +141,9 @@ namespace MilSim {
 		 * Pipeline description.
 		 */
 		std::vector<RenderLayer> m_render_layers;
+		/**
+		 * Global render targets.
+		 */
 		std::map<std::string, RenderResource> m_render_targets;
 
 		/**

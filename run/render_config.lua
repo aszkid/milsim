@@ -1,23 +1,18 @@
 pipeline_targets = {
 	{
-		-- Depth-stencil special texture
+		-- Depth-stencil special texture target
 		name = "depth_stencil",
 		format = "DEPTH_STENCIL"
 	},
 	{
-		-- Diffuse/albedo texture
+		-- Diffuse/albedo texture target
 		name = "albedo",
-		format = "R8G8B8A8"
+		format = "RGBA8"
 	},
 	{
-		-- Position texture
-		name = "position",
-		format = "R8G8B8A8"
-	},
-	{
-		-- Normal texture
+		-- Normal texture target
 		name = "normal",
-		format = "R32G32B32F"
+		format = "RGB16F"
 	}
 }
 pipeline = {

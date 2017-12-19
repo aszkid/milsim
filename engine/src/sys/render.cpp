@@ -24,7 +24,9 @@ Render::~Render()
 
 void Render::init()
 {
-
+	m_hermes->subscribe(Crypto::HASH("Render"), {
+		Crypto::HASH("WindowSize")
+	});
 }
 void Render::kill()
 {
@@ -55,6 +57,12 @@ void Render::kill()
 }
 void Render::update(std::chrono::milliseconds delta)
 {
+	for(auto msg : m_hermes->pull_inbox(Crypto::HASH("Render"))) {
+		if(msg->m_chan == Crypto::HASH("WindowSize")) {
+			//m_log->info("Updating window size...");
+		}
+	}
+
 	for(auto it = m_rrcs.begin(); it != m_rrcs.end(); ) {
 		auto rrc = *it;
 		if(rrc->m_delete.load()) {
@@ -108,6 +116,19 @@ void Render::_inner_thread_entry()
 	}
 }
 
+static bool tex_format_gl(const std::string tex, GLenum* dst)
+{
+	if(tex == "DEPTH_STENCIL") {
+		*dst = GL_DEPTH32F_STENCIL8;
+	} else if(tex == "RGBA8") {
+		*dst = GL_RGBA8;
+	} else if(tex == "RGB16F") {
+		*dst = GL_RGB16F;
+	} else {
+		return false;
+	}
+	return true;
+}
 void Render::setup_pipeline()
 {
 	sel::State state;
@@ -115,8 +136,9 @@ void Render::setup_pipeline()
 
 	m_log->info("Setting up render targets...");
 	auto ts = state["pipeline_targets"];
+	// This rrc will hold all our resource requests
+	auto rrc = new_rrc();
 
-	sel::Selector* t;
 	size_t i = 1;
 	while(true) {
 		sel::Selector t = ts[i++];
@@ -124,15 +146,33 @@ void Render::setup_pipeline()
 			break;
 
 		const std::string name = t["name"];
-		m_log->info("Creating target `{}`...", name);
+		const std::string format = t["format"];
 
+		RenderResource tex;
+		alloc(&tex, RenderResource::TEXTURE);
+		RenderResourceContext::TextureData data = {
+			.width = m_winx,
+			.height = m_winy,
+			.source = nullptr
+		};
+
+		if(format == "DEPTH_STENCIL") {
+			m_log->info("Creating depth+stencil target {:x} (`{}`)...", tex.m_handle, name);
+			data.internal_format = GL_DEPTH32F_STENCIL8;
+
+		} else {
+			m_log->info("Creating regular texture target {:x} (`{}`)...", tex.m_handle, name);
+			
+			if(!tex_format_gl(format, &data.internal_format)) {
+				m_log->error("Texture target format `{}` not supported! Aborting pipeline creation...", format);
+				throw;
+			}
+		}
+
+		rrc->push_texture(data, tex);
 	}
 
-	/**
-	 * enqueue(framebuffer, texture0, texture1, etc)
-	 * OR
-	 * onsite?
-	 */
+	dispatch(rrc);
 }
 
 /**
@@ -192,23 +232,21 @@ void Render::_handle_resource(RenderResourceContext* rrc)
 	for(size_t i = 0; i < tex_n; i++) {
 		auto tex_instance = rrc->m_tex_ref[i];
 		auto& tex = m_textures[tex_instance];
-		glGenTextures(1, &tex.m_tex_id);
 		auto& tex_data = rrc->m_tex[i];
 
+		glGenTextures(1, &tex.m_tex_id);
 		glBindTexture(GL_TEXTURE_2D, tex.m_tex_id);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		if(tex_data.channels == 1) {
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, tex_data.width, tex_data.height, 0, GL_RED, GL_UNSIGNED_BYTE, tex_data.source);
-		} else if(tex_data.channels == 3) {
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, tex_data.width, tex_data.height, 0, GL_RGB, GL_UNSIGNED_BYTE, tex_data.source);
-		} else if(tex_data.channels == 4) {
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_data.width, tex_data.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data.source);
-		} else {
-			m_log->error("Texture is not RGB nor RGBA! {} channels. Aborting...", tex_data.channels);
-			abort();
-		}
-		glGenerateMipmap(GL_TEXTURE_2D);
+		/*if(tex_data.filter == RenderResourceContext::TextureData::Filter::LINEAR) {
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		}*/
+		glTexStorage2D(GL_TEXTURE_2D, 1, tex_data.internal_format, tex_data.width, tex_data.height);
+		if(tex_data.source != nullptr)
+			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tex_data.width, tex_data.height, tex_data.pixel_format, GL_UNSIGNED_BYTE, tex_data.source);
+		/*if(tex_data.mipmap)
+			glGenerateMipmap(GL_TEXTURE_2D);*/
+
+		m_log->info("Generated GL texture {:x}", tex.m_tex_id);
 	}
 
 	// 2) upload vertex buffers
