@@ -43,8 +43,6 @@ namespace MilSim {
 		};
 		virtual ~Asset() {};
 
-		virtual bool load(const json* root) = 0;
-
 		t_logger m_logger;
 		apathy::Path m_id;
 		Type m_type;
@@ -64,8 +62,6 @@ namespace MilSim {
 			TTF, OTF
 		};
 
-		bool load(const json* root);
-
 		Format m_format;
 	};
 
@@ -80,8 +76,6 @@ namespace MilSim {
 		int m_width, m_height, m_channels;
 
 		RenderResource m_handle;
-
-		bool load(const json* root);
 	};
 
 	/**
@@ -97,8 +91,6 @@ namespace MilSim {
 
 		t_asset_id m_diffuse_tex;
 		t_asset_id m_specular_tex;
-
-		bool load(const json* root);
 	};
 
 	struct Vertex {
@@ -120,8 +112,6 @@ namespace MilSim {
 		t_asset_id m_material;
 		RenderResource m_vb_handle;
 		RenderResource m_ib_handle;
-
-		bool load(const json* root);
 	};
 	/**
 	 * ModelAsset: 
@@ -131,8 +121,6 @@ namespace MilSim {
 		~ModelAsset();
 
 		std::vector<t_asset_id> m_meshes;
-
-		bool load(const json* root);
 	};
 
 	/**
@@ -148,8 +136,6 @@ namespace MilSim {
 		std::string m_vert_source;
 		std::string m_frag_source;
 		std::map<std::string, GLuint> m_uniforms;
-
-		bool load(const json* root);
 	};
 
 	/**
@@ -158,8 +144,6 @@ namespace MilSim {
 	struct ScriptAsset : public Asset {
 		ScriptAsset();
 		~ScriptAsset();
-
-		bool load(const json* root);
 	};
 
 	/**
@@ -169,9 +153,8 @@ namespace MilSim {
 		MapAsset(const apathy::Path id);
 		~MapAsset();
 
-		bool load(const json* root);
-
 		t_asset_id m_mesh;
+		t_asset_id m_tex;
 	};
 
 
@@ -253,17 +236,21 @@ namespace MilSim {
 			}
 			auto asset = new T(id);
 			m_assets[hash] = t_asset_ptr(asset);
-			m_log->info("Registering asset `{}` of type `{}`", id.string(), Asset::type_to_str(asset->m_type));
+			m_log->info("Registering asset `{}` of type `{}` ({:x})", id.string(), Asset::type_to_str(asset->m_type), hash);
 			return asset;
-
 		}
 
 		// Asset-specific loading methods
 		bool _load_model(const t_asset_id hash, const json* root);
 		bool _load_material(const t_asset_id hash, const json* root);
 		bool _load_shader(ShaderProgramAsset* shader, apathy::Path id, const json* root);
-		bool _load_texture(const t_asset_id hash, const json* root);
-		bool _load_map(apathy::Path id, const json* root);
+		bool _load_texture(const t_asset_id hash, const json* root, bool gpu = true);
+		bool _load_map(const t_asset_id hash, const json* root);
+
+		void _unload_model(const t_asset_id hash);
+		void _unload_material(const t_asset_id hash);
+		void _unload_texture(const t_asset_id hash);
+		void _unload_map(const t_asset_id hash);
 		
 		/**
 		 * To deal with working paths vs. virtual database paths.
