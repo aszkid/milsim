@@ -139,6 +139,7 @@ namespace MilSim {
 		 * Pipeline description.
 		 */
 		std::vector<RenderLayer> m_render_layers;
+		std::map<std::string, RenderResource> m_render_targets;
 
 		/**
 		 * Resource allocation and destruction methods.

@@ -29,11 +29,9 @@ namespace MilSim {
 
 		enum Type : uint8_t {
 			TEXTURE,
-			RENDER_TARGET,
 			VERTEX_BUFFER,
 			VERTEX_LAYOUT,
 			INDEX_BUFFER,
-			SHADER,
 			NONE
 		};
 		/**

@@ -424,7 +424,7 @@ void Alexandria::unload_asset(const t_asset_id hash)
 		return;
 	auto asset = it->second.get();
 
-	m_log->info("Unloading asset `{}` [{}] ({:x})", asset->m_id.string(), Asset::type_to_str(asset->m_type), hash);
+	m_log->debug("Unloading asset `{}` [{}] ({:x})", asset->m_id.string(), Asset::type_to_str(asset->m_type), hash);
 	
 	switch(asset->m_type) {
 	case Asset::MODEL:

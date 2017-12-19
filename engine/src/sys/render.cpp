@@ -115,15 +115,17 @@ void Render::setup_pipeline()
 
 	m_log->info("Setting up render targets...");
 	auto ts = state["pipeline_targets"];
+
+	sel::Selector* t;
 	size_t i = 1;
-	auto t = ts[i];
-	while(t.exists()) {
+	while(true) {
+		sel::Selector t = ts[i++];
+		if(!t.exists())
+			break;
+
 		const std::string name = t["name"];
 		m_log->info("Creating target `{}`...", name);
 
-		
-
-		t = ts[++i];
 	}
 
 	/**
