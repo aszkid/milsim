@@ -14,7 +14,7 @@
 			"id" : "Maps",
 			"contents" : [
 				{
-					"type" : "map_noise",
+					"type" : "map",
 					"id" : "TestMap",
 					"source" : "test.png"
 				}

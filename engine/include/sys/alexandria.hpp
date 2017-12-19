@@ -192,7 +192,7 @@ namespace MilSim {
 			);
 			return static_cast<T*>(get_asset(hash));
 		};
-		Asset* get_asset(const t_asset_id hash, const GetFlag flag = LOAD);
+		Asset* get_asset(const t_asset_id hash);
 
 		bool load_asset(const t_asset_id hash);
 		void unload_asset(const t_asset_id hash);
@@ -221,7 +221,7 @@ namespace MilSim {
 		/**
 		 * Registers an asset by parsing a JSON snippet.
 		 */
-		t_asset_id parse_asset(apathy::Path path, const std::string type, const json* root);
+		t_asset_id parse_asset(apathy::Path path, const Asset::Type type, const json* root);
 
 		template<class T>
 		T* register_asset(const apathy::Path id) {
@@ -236,7 +236,7 @@ namespace MilSim {
 			}
 			auto asset = new T(id);
 			m_assets[hash] = t_asset_ptr(asset);
-			m_log->info("Registering asset `{}` of type `{}` ({:x})", id.string(), Asset::type_to_str(asset->m_type), hash);
+			m_log->debug("Registering asset `{}` [{}] ({:x})", id.string(), Asset::type_to_str(asset->m_type), hash);
 			return asset;
 		}
 
