@@ -266,7 +266,7 @@ MapAsset::~MapAsset()
 Alexandria::Alexandria(apathy::Path local_root, Render* render)
 	: Sys::Sys("Alexandria"), m_local_root(local_root), m_sys_render(render)
 {
-
+	
 }
 Alexandria::~Alexandria()
 {
@@ -316,7 +316,7 @@ void Alexandria::kill()
 	}
 }
 
-void Alexandria::update()
+void Alexandria::update(std::chrono::milliseconds delta)
 {
 	for(auto& msg : m_hermes->pull_inbox(Crypto::HASH("Alexandria"))) {
 		
@@ -374,6 +374,8 @@ Asset* Alexandria::get_asset(const t_asset_id hash)
 }
 bool Alexandria::load_asset(const t_asset_id hash)
 {
+	if(m_loaded.find(hash) != m_loaded.end())
+		return true;
 	auto asset = get_asset(hash);
 	if(asset == nullptr)
 		return false;

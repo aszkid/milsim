@@ -48,6 +48,7 @@ int main(int argc, char** argv)
 	alexandria->parse_database("Base.json");
 
 	alexandria->load_asset(MilSim::Crypto::HASH("/Base/Models/Greek"));
+	alexandria->load_asset(MilSim::Crypto::HASH("/Base/Maps/TestMap"));
 
 	// Add base states -- `Core` dtor cleans up for us
 	auto main_screen = core.add_state<MainScreen>("MainScreen");

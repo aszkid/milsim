@@ -45,7 +45,7 @@ namespace MilSim{
 
 		void init();
 		void kill();
-		void update();
+		void update(std::chrono::milliseconds delta);
 	private:
 		std::unordered_set<Entity> m_entities;
 		size_t m_last;

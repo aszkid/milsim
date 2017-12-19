@@ -142,7 +142,7 @@ void Core::update()
 {
 	// Update the systems
 	for(auto& sys : m_systems) {
-		sys.second->update();
+		sys.second->update(m_MS_PER_UPDATE);
 	}
 
 	// Update the current state with elapsed time ("delta" in seconds)

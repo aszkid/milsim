@@ -42,7 +42,7 @@ void EntityManager::kill()
 {
 
 }
-void EntityManager::update()
+void EntityManager::update(std::chrono::milliseconds delta)
 {
 	
 }

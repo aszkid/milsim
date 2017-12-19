@@ -87,7 +87,7 @@ namespace MilSim {
 
 		void init();
 		void kill();
-		void update();
+		void update(std::chrono::milliseconds delta);
 
 		void thread_entry();
 

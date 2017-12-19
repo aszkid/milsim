@@ -59,7 +59,7 @@ void Input::kill()
 {
 
 }
-void Input::update()
+void Input::update(std::chrono::milliseconds delta)
 {
 
 }

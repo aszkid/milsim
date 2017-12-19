@@ -53,7 +53,7 @@ void Render::kill()
 	m_vertex_buffers_free.clear();
 	m_vertex_layouts_free.clear();
 }
-void Render::update()
+void Render::update(std::chrono::milliseconds delta)
 {
 	for(auto it = m_rrcs.begin(); it != m_rrcs.end(); ) {
 		auto rrc = *it;

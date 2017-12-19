@@ -1,6 +1,6 @@
 #pragma once
 
-#include <memory>
+#include <chrono>
 
 #include "logger.hpp"
 #include "hermes.hpp"
@@ -21,7 +21,7 @@ namespace MilSim {
 		virtual void init() = 0;
 		virtual void kill() = 0;
 
-		virtual void update() = 0;
+		virtual void update(std::chrono::milliseconds delta) = 0;
 	protected:
 		t_logger m_log;
 		Hermes* m_hermes;

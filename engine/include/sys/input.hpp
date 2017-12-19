@@ -15,7 +15,7 @@ namespace MilSim {
 
 		void init();
 		void kill();
-		void update();
+		void update(std::chrono::milliseconds delta);
 
 		void key_callback(GLFWwindow* win, int key, int scancode, int action, int mods);
 		void cursor_pos_callback(GLFWwindow* win, double xpos, double ypos);

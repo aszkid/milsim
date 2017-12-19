@@ -175,7 +175,7 @@ namespace MilSim {
 
 		void init();
 		void kill();
-		void update();
+		void update(std::chrono::milliseconds delta);
 
 		void parse_database(const std::string filename);
 
