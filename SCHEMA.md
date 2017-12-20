@@ -33,9 +33,10 @@ Asset manager. Abstracts away machine-specific paths and handles, and provides a
 Stuff like this.
 
 Asset discovery can happen in a few different ways:
-- `Alexandria::load_database(filename)`: this method opens an Alexandria database, i.e. a `Lua` file containing a description of resources in a table. See `run/alexandria.lua` for an example.
+- `Alexandria::load_database(filename)`: this method opens an Alexandria database, i.e. a `Lua` file containing a description of resources in a table. See `run/alexandria.lua` for an example. Useful for dev environment (flexible).
+- `Alexandria::load_binary(filename)`: this should load a tightly-packed binary file. Ideally, we would just `mmap` and copy straight into memory the stuff that needs to be held in RAM, and send to the GPU the stuff that does not. Useful for production environment (fast).
 
-Assets are referenced by strings with format `Database.Type.Name`. Behind the scenes, the string is hashed and the hash looked up on the resource database, i.e. `map<int, asset>`. (String hashes could be computed at compile-time for hard-coded stuff)
+Assets are referenced by strings with format `/Database/Path/Like/This`. Behind the scenes, the string is hashed and the hash looked up on the resource database, i.e. `map<int, asset>`. (String hashes could be computed at compile-time for hard-coded stuff).
 
 #### Ownership & Memory policy
 
@@ -47,7 +48,7 @@ Future: reference counting (`std::shared_ptr`?). Some profiling.
 
 ### Sys.Render
 
-The *Sys.Render* system deals with the graphics backend (OpenGL). No other part of the engine should ever talk with OpenGL, except for the `RenderScene` class (dedicated to *uploading* data to the GPU). This way, we make sure that all the rendering state is contained within `Sys.Render`.
+The *Sys.Render* system deals with the graphics backend (OpenGL). No other part of the engine should ever talk with OpenGL. This way, we make sure that all the rendering state is contained within `Sys.Render`.
 
 How I currently envision the `Render` system design:
 + Each `GameState` owns a certain amount of `Scene`s, each representing a physical world, a GUI layer, etc. at a *game* level, without caring at all for GPU state. Similarly, it owns a certain amount of `RenderScene`s, each being a specific graphical representation of the scene. The usual case is a single `Scene` representing 3D geometry (in a hirearchical way, easy for programmers to reason about) and a corresponding `RenderScene`, holding a "render"-view of the physical data in the `Scene`. `GameState` owns *a single `EntityManager` and a single `xComponent` manager*, and each scene type peeks into it to provide functionality. The `Scene` cares about lights, models, terrain, cameras, etc. The `RenderScene` only cares about meshes, shader programs, textures, and so on. An attempt at separating concerns and keeping code data-oriented.
@@ -64,11 +65,9 @@ We avoid having to "sync with the render thread" by completely delegating the jo
 
 ### Sys.Net
 
-Deals with networking.
 
 ### Sys.Script
 
-It has the ability to communicate with every other system, and relay information to script *capsules*. Furthermore, script capsules can communicate with each other. Heavy stuff.
 
 
 -----
@@ -78,8 +77,9 @@ It has the ability to communicate with every other system, and relay information
 ### Hermes
 The message passer. Lives in the main thread, but is multi-writer-ready. The current implementation is dead simple; a single `vector` of messages that are accumulated and flushed every frame. Writers acquire a lock on-write to push back, and readers do too (we assume there can be a read-write situation, which might be possible when the render thread is spinning on its own). When a game object wants to read messages, it calls `Hermes::pull_inbox(subscription)` which generates on-the-fly a vector of messages directed to one of the cannels the subscription is interested in. This is not ideal. What we can do better:
 
-+ Separate the inbox in a `write_queue` and a `read_queue` (or similar) to allow separate read and write locks.
++ Separate the inbox in a `write_queue` and a `read_queue` (or similar) to allow separate read and write locks (i.e. double buffering).
 + Allocate for each subscription a `ref_queue` and for each message received, push its index into every subscription queue. Pulling the inbox becomes lighter, but with an added overhead at every `send()`.
++ (20/12/17) TODO: change this around. Every writer has a channel. Readers peek through a channel. Fast, no copying.
 
 ### GameState
 
@@ -99,7 +99,7 @@ It keeps a list of skeletons, lights, cameras, ... abstracted away in the `Scene
 (Should the `Scene` interface with `Sys.Alexandria` to load all resources?? A: OF COURSE!)
 
 Two functions are of utmost important:
-- `render`: does all necessary culling, batching, etc. based on the `SceneGraph` and `SceneDrawable` objects.
+- `render`: iterates through renderables and generates draw commands.
 - `update`: updates every component of the scene based on policies set at creation (physics? etc.)
 
 On the highest level, a `Scene` consists of a vector of `Scene::Node`s (entity). Every node has a set of components, queryable from the corresponding component manager.
@@ -113,3 +113,7 @@ This separation of concerns is useful, because it allows us to efficiently trave
 Read [this post by L. Spiro](https://www.gamedev.net/forums/topic/672161-need-scene-graph-advice-please/?tab=comments#comment-5255071) on the function of scene graphs for clarification: *"Scene graphs do not supply anything. They propagate data and transforms down. These transforms may be used for rendering, but that is not the scene graph’s problem. They can also be used for physics or whatever. After the scene graph facilitates the creation of the world coordinates of an object, it sits back and lets the other systems use that data as they please. That’s their problem, not Mr. Graph’s."*
 
 And [more stuff](http://lspiroengine.com/?p=566).
+
+### Material
+
+We need a high-level material editor, graph-based, all that jazz. I envision two types of low-level shaders: a 3D-ready shader, dealing with vertex position, normal, texture coordinates and/or base color, and a 2D-ready shader, dealing with GUI rendering. The right tools for flexibility (no texture? no normals? etc) are [*GLSL subroutines*](https://www.khronos.org/opengl/wiki/Shader_Subroutine). Our material editor must feed the übershader with vertex/color data, through visual editing.

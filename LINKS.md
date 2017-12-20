@@ -31,3 +31,5 @@
 - [Moving Frostbite to PBR](https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf).
 - [Techniques used in Star Citizen](https://www.reddit.com/r/starcitizen/comments/3ogi3o/im_an_tech_artist_in_the_industry_and_id_love_to/).
 - [Two](https://github.com/gfx-rs/gfx/pull/828) [issues](https://github.com/gfx-rs/gfx/pull/828#issuecomment-170950109) on how `gfx-rs` work with pipeline state objects, plus [translation to OpenGL](https://github.com/gfx-rs/gfx/tree/master/src/backend/gl).
+- [On Über-shaders and modular shader program generation](https://gamedev.stackexchange.com/questions/57957/game-engine-design-ubershader-shader-management-design), and [graph-based material/shader systems](https://gamedev.stackexchange.com/questions/88199/in-a-graph-based-material-system-how-can-i-support-a-variety-of-input-and-outpu) (a la UE4).
+- [More](http://www.shaderplay.com/products/nodeflex/overview/overview.html) and [more](https://github.com/unconed/shadergraph) graph-based shader [authoring](https://shaderfrog.com/) tools.
