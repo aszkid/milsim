@@ -188,7 +188,7 @@ void Render::setup_pipeline()
 
 		m_log->info("Creating pipeline layer `{}`...", name);
 
-		const auto& ts = l.at("targets");
+		const auto& ts = l["render_targets"];
 		for(const auto& t : ts) {
 			const auto t_hash = Crypto::HASH(t.get<std::string>());
 			if(m_render_targets.find(t_hash) == m_render_targets.end()) {
@@ -212,7 +212,20 @@ void Render::setup_pipeline()
 		// Create framebuffer
 		RenderResource fbo;
 		alloc(&fbo, RenderResource::FRAME_BUFFER);
+
+		auto get_rt = [this](const std::vector<uint32_t>& ts) {
+			std::vector<RenderResource> res;
+			for(const auto t : ts) {
+				res.push_back(this->m_render_targets[t]);
+			}
+			return res;
+		};
 		
+		RenderResourceContext::FrameBufferData data {
+			.render_targets = get_rt(layer.render_targets),
+			.depth_stencil_target = get_rt({depth_stencil_hash})[0]
+		};
+		rrc.push_frame_buffer(data, fbo);
 	}
 
 	dispatch(rrc);
@@ -242,8 +255,10 @@ void Render::alloc(RenderResource* rr, RenderResource::Type t)
 	case RenderResource::INDEX_BUFFER:
 		*rr = _alloc_index_buffer();
 		break;
+	case RenderResource::FRAME_BUFFER:
+		*rr = _alloc_frame_buffer();
+		break;
 	// shader
-	// render_target
 	// none
 	default:
 		m_log->info("Render resource {} not supported yet! Aborting...", t);
@@ -372,6 +387,16 @@ void Render::_handle_resource(const RenderResourceContext& rrc)
 		);
 	}
 
+	// 5) Upload frame buffers
+	size_t fbuf_n  = rrc.m_fb.size();
+	assert(fbuf_n == rrc.m_fb_ref.size());
+	for(size_t i = 0; i < fbuf_n; i++) {
+		auto fbuf_instance = rrc.m_fb_ref[i];
+		auto& fbuf = m_index_buffers[fbuf_instance];
+		auto& fbuf_data = rrc.m_ib[i];
+		m_log->info("Preparing framebuffer {:x}...", fbuf_instance.m_handle);
+	}
+
 	m_resource_lock.unlock();
 }
 void Render::_handle_command(RenderCommandContext* rcc)
@@ -447,5 +472,23 @@ RenderResource Render::_alloc_index_buffer()
 	}
 
 	res.m_handle = RR_pack(RenderResource::INDEX_BUFFER, index);
+	return res;
+}
+
+RenderResource Render::_alloc_frame_buffer()
+{
+	RenderResource res;
+	uint64_t index = 0;
+
+	if(m_frame_buffers_free.empty()) {
+		m_frame_buffers.push_back({});
+		index = m_frame_buffers.size() - 1;
+	} else {
+		uint64_t old_handle = m_frame_buffers_free.back();
+		m_frame_buffers_free.pop_back();
+		index = RR_index(old_handle);
+	}
+
+	res.m_handle = RR_pack(RenderResource::FRAME_BUFFER, index);
 	return res;
 }

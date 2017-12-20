@@ -149,6 +149,17 @@ namespace MilSim {
 		std::vector<IndexBufferData> m_ib;
 		std::vector<RenderResource> m_ib_ref;
 		void push_index_buffer(IndexBufferData ib, RenderResource ref);
+
+		/**
+		 * FRAME BUFFER
+		 */
+		struct FrameBufferData {
+			std::vector<RenderResource> render_targets;
+			RenderResource depth_stencil_target;
+		};
+		std::vector<FrameBufferData> m_fb;
+		std::vector<RenderResource> m_fb_ref;
+		void push_frame_buffer(FrameBufferData fb, RenderResource ref);
 	};
 
 }

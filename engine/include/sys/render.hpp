@@ -133,6 +133,9 @@ namespace MilSim {
 		std::vector<IndexBufferResource> m_index_buffers;
 		std::vector<uint64_t> m_index_buffers_free;
 
+		std::vector<FrameBufferResource> m_frame_buffers;
+		std::vector<uint64_t> m_frame_buffers_free;
+
 		std::mutex m_resource_lock;
 
 		/**
@@ -155,6 +158,7 @@ namespace MilSim {
 		RenderResource _alloc_vertex_buffer();
 		RenderResource _alloc_vertex_layout();
 		RenderResource _alloc_index_buffer();
+		RenderResource _alloc_frame_buffer();
 
 		/**
 		 * RenderResourceContexts. We keep track of them here (not optimal)

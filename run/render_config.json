@@ -16,7 +16,7 @@
     "pipeline_layers" : [
         {
             "name" : "gbuffer",
-            "targets" : [ "albedo", "normal" ],
+            "render_targets" : [ "albedo", "normal" ],
             "depth_stencil_target" : "depth_stencil",
             "sort" : "FRONT_BACK"
         }

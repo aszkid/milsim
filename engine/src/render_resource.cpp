@@ -37,3 +37,11 @@ void RenderResourceContext::push_index_buffer(RenderResourceContext::IndexBuffer
 	m_ib.push_back(ib);
 	m_ib_ref.push_back(ref);
 }
+/**
+ * FRAME BUFFER
+ */
+void RenderResourceContext::push_frame_buffer(RenderResourceContext::FrameBufferData fb, RenderResource ref)
+{
+	m_fb.push_back(fb);
+	m_fb_ref.push_back(ref);
+}
