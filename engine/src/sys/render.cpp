@@ -1,7 +1,8 @@
 #include "sys/render.hpp"
+#include "util/io.hpp"
 
 #include <mutex>
-#include <sol.hpp>
+#include <json.hpp>
 
 using namespace MilSim;
 
@@ -132,18 +133,20 @@ static bool sort_to_type(const std::string str, RenderLayer::Sort* dst)
 }
 void Render::setup_pipeline()
 {
-	sol::state state;
-	state.script_file(m_root.append("render_config.lua").string());
+	using json = nlohmann::json;
+
+	json root = json::parse(
+		IO::read_file(m_root.append("render_config.json").string())
+	);
 
 	// This rrc will hold all our resource requests
 	RenderResourceContext rrc;
 
 	m_log->info("Setting up render targets...");
-	auto ts = state.get<sol::table>("pipeline_targets");
-	for(auto pair : ts) {
-		auto t = pair.second.as<sol::table>();
-		const auto name = t.get<std::string>("name");
-		const auto format = t.get<std::string>("format");
+	auto& ts = root["pipeline_targets"];
+	for(auto t : ts) {
+		const auto name = t["name"].get<std::string>();
+		const auto format = t["format"].get<std::string>();
 
 		RenderResource tex;
 		alloc(&tex, RenderResource::TEXTURE);
@@ -173,26 +176,23 @@ void Render::setup_pipeline()
 
 	m_log->info("Setting up pipeline layers...");
 
-	auto ls = state.get<sol::table>("pipeline_layers");
-	for(auto pair : ls) {
-		const auto& l = pair.second.as<sol::table>();
-		const auto& name = l.get<std::string>("name");
-		const auto& depth_stencil = l.get<std::string>("depth_stencil_target");
+	const auto& ls = root["pipeline_layers"];
+	for(auto l : ls) {
+		const auto name = l["name"].get<std::string>();
+		const auto depth_stencil = l["depth_stencil_target"].get<std::string>();
 		const auto depth_stencil_hash = Crypto::HASH(depth_stencil);
-		const auto& sort = l.get<std::string>("sort");
+		const auto sort = l["sort"].get<std::string>();
 
 		RenderLayer layer;
 		layer.name = Crypto::HASH(name);
 
 		m_log->info("Creating pipeline layer `{}`...", name);
 
-		const auto& ts = l.get<sol::table>("render_targets");
-		const size_t count = ts.size();
-		for(size_t i = 0; i < count; i++) {
-			const auto& t = ts.get<std::string>(i+1);
-			const auto t_hash = Crypto::HASH(t);
+		const auto& ts = l.at("targets");
+		for(auto t : ts) {
+			const auto t_hash = Crypto::HASH(t.get<std::string>());
 			if(m_render_targets.find(t_hash) == m_render_targets.end()) {
-				m_log->error("Render target `{}` does not exist! Aborting...", t);
+				m_log->error("Render target `{}` does not exist! Aborting...", t.get<std::string>());
 				throw;
 			}
 			layer.render_targets.push_back(t_hash);
