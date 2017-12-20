@@ -60,6 +60,8 @@ namespace MilSim {
 	 * Resources are hashed names.
 	 */
 	struct RenderLayer {
+		uint64_t sort_key;
+		
 		uint32_t name;
 		std::vector<uint32_t> render_targets;
 		uint32_t depth_stencil_target;
