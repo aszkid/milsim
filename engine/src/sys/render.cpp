@@ -143,10 +143,10 @@ void Render::setup_pipeline()
 	RenderResourceContext rrc;
 
 	m_log->info("Setting up render targets...");
-	auto& ts = root["pipeline_targets"];
-	for(auto t : ts) {
-		const auto name = t["name"].get<std::string>();
-		const auto format = t["format"].get<std::string>();
+	const auto& ts = root["pipeline_targets"];
+	for(const auto& t : ts) {
+		const auto& name = t["name"].get<std::string>();
+		const auto& format = t["format"].get<std::string>();
 
 		RenderResource tex;
 		alloc(&tex, RenderResource::TEXTURE);
@@ -177,11 +177,11 @@ void Render::setup_pipeline()
 	m_log->info("Setting up pipeline layers...");
 
 	const auto& ls = root["pipeline_layers"];
-	for(auto l : ls) {
-		const auto name = l["name"].get<std::string>();
-		const auto depth_stencil = l["depth_stencil_target"].get<std::string>();
+	for(const auto& l : ls) {
+		const auto& name = l["name"].get<std::string>();
+		const auto& depth_stencil = l["depth_stencil_target"].get<std::string>();
 		const auto depth_stencil_hash = Crypto::HASH(depth_stencil);
-		const auto sort = l["sort"].get<std::string>();
+		const auto& sort = l["sort"].get<std::string>();
 
 		RenderLayer layer;
 		layer.name = Crypto::HASH(name);
@@ -189,7 +189,7 @@ void Render::setup_pipeline()
 		m_log->info("Creating pipeline layer `{}`...", name);
 
 		const auto& ts = l.at("targets");
-		for(auto t : ts) {
+		for(const auto& t : ts) {
 			const auto t_hash = Crypto::HASH(t.get<std::string>());
 			if(m_render_targets.find(t_hash) == m_render_targets.end()) {
 				m_log->error("Render target `{}` does not exist! Aborting...", t.get<std::string>());
