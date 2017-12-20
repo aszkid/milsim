@@ -60,15 +60,15 @@ namespace MilSim {
 	 * Resources are hashed names.
 	 */
 	struct RenderLayer {
-		uint32_t m_name;
-		std::vector<uint32_t> m_render_targets;
-		uint32_t m_depth_stencil_target;
-		uint32_t m_framebuffer;
+		uint32_t name;
+		std::vector<uint32_t> render_targets;
+		uint32_t depth_stencil_target;
+		RenderResource framebuffer;
 		enum Sort {
 			FRONT_BACK,
 			BACK_FRONT
 		};
-		Sort m_sort;
+		Sort sort;
 	};
 
 	/**

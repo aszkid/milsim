@@ -32,6 +32,7 @@ namespace MilSim {
 			VERTEX_BUFFER,
 			VERTEX_LAYOUT,
 			INDEX_BUFFER,
+			FRAME_BUFFER,
 			NONE
 		};
 		/**

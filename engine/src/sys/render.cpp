@@ -119,6 +119,17 @@ static bool tex_format_gl(const std::string tex, GLenum* dst)
 	}
 	return true;
 }
+static bool sort_to_type(const std::string str, RenderLayer::Sort* dst)
+{
+	if(str == "FRONT_BACK") {
+		*dst = RenderLayer::FRONT_BACK;
+	} else if(str == "BACK_FRONT") {
+		*dst = RenderLayer::BACK_FRONT;
+	} else {
+		return false;
+	}
+	return true;
+}
 void Render::setup_pipeline()
 {
 	sol::state state;
@@ -164,12 +175,43 @@ void Render::setup_pipeline()
 
 	auto ls = state.get<sol::table>("pipeline_layers");
 	for(auto pair : ls) {
-		auto l = pair.second.as<sol::table>();
+		const auto& l = pair.second.as<sol::table>();
+		const auto& name = l.get<std::string>("name");
+		const auto& depth_stencil = l.get<std::string>("depth_stencil_target");
+		const auto depth_stencil_hash = Crypto::HASH(depth_stencil);
+		const auto& sort = l.get<std::string>("sort");
 
 		RenderLayer layer;
-		layer.m_name = Crypto::HASH(l.get<std::string>("name"));
+		layer.name = Crypto::HASH(name);
 
-		m_log->info("Creating pipeline layer `{}`...", layer.m_name);
+		m_log->info("Creating pipeline layer `{}`...", name);
+
+		const auto& ts = l.get<sol::table>("render_targets");
+		const size_t count = ts.size();
+		for(size_t i = 0; i < count; i++) {
+			const auto& t = ts.get<std::string>(i+1);
+			const auto t_hash = Crypto::HASH(t);
+			if(m_render_targets.find(t_hash) == m_render_targets.end()) {
+				m_log->error("Render target `{}` does not exist! Aborting...", t);
+				throw;
+			}
+			layer.render_targets.push_back(t_hash);
+		}
+
+		if(m_render_targets.find(depth_stencil_hash) == m_render_targets.end()) {
+			m_log->info("Depth+stencil target `{}` does not exist! Aborting...");
+			throw;
+		}
+		layer.depth_stencil_target = depth_stencil_hash;
+
+		if(!sort_to_type(sort, &layer.sort)) {
+			m_log->error("Sort type `{}` not supported! Aborting...");
+			throw;
+		}
+
+		// Create framebuffer
+		RenderResource fbo;
+		alloc(&fbo, RenderResource::FRAME_BUFFER);
 		
 	}
 
@@ -204,7 +246,8 @@ void Render::alloc(RenderResource* rr, RenderResource::Type t)
 	// render_target
 	// none
 	default:
-		break;
+		m_log->info("Render resource {} not supported yet! Aborting...", t);
+		throw;
 	}
 
 	m_resource_lock.unlock();
@@ -213,7 +256,7 @@ void Render::alloc(RenderResource* rr, RenderResource::Type t)
 /**
  * PRIVATE METHODS -- only called from the render thread!
  */
-void Render::_handle_resource(const RenderResourceContext&  rrc)
+void Render::_handle_resource(const RenderResourceContext& rrc)
 {
 	m_resource_lock.lock();
 

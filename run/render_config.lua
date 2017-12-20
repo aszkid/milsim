@@ -19,7 +19,7 @@ pipeline_layers = {
 	-- gbuffer render pass; creates an FBO with these attachments
 	{
 		name = "gbuffer",
-		render_targets = {"albedo", "position", "normal"},
+		render_targets = {"albedo", "normal"},
 		depth_stencil_target = "depth_stencil",
 		sort = "FRONT_BACK"
 	}

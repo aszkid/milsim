@@ -1,0 +1,24 @@
+{
+    "pipeline_targets" : [
+        {
+            "name" : "depth_stencil",
+            "format" : "DEPTH_STENCIL"
+        },
+        {
+            "name" : "albedo",
+            "format" : "RGBA8"
+        },
+        {
+            "name" : "normal",
+            "format" : "RGB16F"
+        }
+    ],
+    "pipeline_layers" : [
+        {
+            "name" : "gbuffer",
+            "targets" : [ "albedo", "normal" ],
+            "depth_stencil_target" : "depth_stencil",
+            "sort" : "FRONT_BACK"
+        }
+    ]
+}
