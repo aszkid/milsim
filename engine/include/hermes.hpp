@@ -23,6 +23,7 @@ namespace MilSim {
 		Message(const t_channel chan)
 			: m_chan(chan)
 		{};
+		virtual ~Message() = default;
 		const t_channel m_chan;
 	};
 

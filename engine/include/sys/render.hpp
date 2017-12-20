@@ -136,13 +136,13 @@ namespace MilSim {
 		std::mutex m_resource_lock;
 
 		/**
-		 * Pipeline description.
+		 * Pipeline layers.
 		 */
 		std::vector<RenderLayer> m_render_layers;
 		/**
 		 * Global render targets.
 		 */
-		std::map<std::string, RenderResource> m_render_targets;
+		std::map<uint32_t, RenderResource> m_render_targets;
 
 		/**
 		 * Resource allocation and destruction methods.

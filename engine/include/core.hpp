@@ -9,7 +9,7 @@
 #include <glbinding/Binding.h>
 #define GLFW_INCLUDE_NONE // avoid glbinding errors
 #include <GLFW/glfw3.h>
-#include <selene.h>
+#include <sol.hpp>
 
 #include "util/types.hpp"
 #include "logger.hpp"

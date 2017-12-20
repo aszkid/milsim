@@ -4,7 +4,7 @@ project(milsim)
 # =================================================
 # GENERAL STUFF
 # =================================================
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -22,8 +22,8 @@ include_directories(ext/spdlog-0.14.0/include)
 # Lua 5.3 (http://www.lua.org/)
 find_package(Lua 5.3 REQUIRED)
 include_directories(${LUA_INCLUDE_DIR})
-# Lua bindings (https://github.com/jeremyong/Selene)
-include_directories(ext/Selene-master/include)
+# Lua bindings (https://github.com/ThePhD/sol2)
+include_directories(ext/sol2-2.18.7/single/sol)
 # Argument parsing (https://github.com/Taywee/args)
 include_directories(ext/args-6.2.0)
 # OpenGL

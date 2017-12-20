@@ -15,7 +15,7 @@ pipeline_targets = {
 		format = "RGB16F"
 	}
 }
-pipeline = {
+pipeline_layers = {
 	-- gbuffer render pass; creates an FBO with these attachments
 	{
 		name = "gbuffer",

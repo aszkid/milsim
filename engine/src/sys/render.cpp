@@ -1,7 +1,7 @@
 #include "sys/render.hpp"
 
 #include <mutex>
-#include <selene.h>
+#include <sol.hpp>
 
 using namespace MilSim;
 
@@ -121,25 +121,22 @@ static bool tex_format_gl(const std::string tex, GLenum* dst)
 }
 void Render::setup_pipeline()
 {
-	sel::State state;
-	state.Load(m_root.append("render_config.lua").string());
+	sol::state state;
+	state.script_file(m_root.append("render_config.lua").string());
 
-	m_log->info("Setting up render targets...");
-	auto ts = state["pipeline_targets"];
 	// This rrc will hold all our resource requests
 	RenderResourceContext rrc;
 
-	size_t i = 1;
-	while(true) {
-		sel::Selector t = ts[i++];
-		if(!t.exists())
-			break;
-
-		const std::string name = t["name"];
-		const std::string format = t["format"];
+	m_log->info("Setting up render targets...");
+	auto ts = state.get<sol::table>("pipeline_targets");
+	for(auto pair : ts) {
+		auto t = pair.second.as<sol::table>();
+		const auto name = t.get<std::string>("name");
+		const auto format = t.get<std::string>("format");
 
 		RenderResource tex;
 		alloc(&tex, RenderResource::TEXTURE);
+
 		RenderResourceContext::TextureData data = {
 			.width = m_winx,
 			.height = m_winy,
@@ -160,6 +157,20 @@ void Render::setup_pipeline()
 		}
 
 		rrc.push_texture(data, tex);
+		m_render_targets[Crypto::HASH(name)] = tex;
+	}
+
+	m_log->info("Setting up pipeline layers...");
+
+	auto ls = state.get<sol::table>("pipeline_layers");
+	for(auto pair : ls) {
+		auto l = pair.second.as<sol::table>();
+
+		RenderLayer layer;
+		layer.m_name = Crypto::HASH(l.get<std::string>("name"));
+
+		m_log->info("Creating pipeline layer `{}`...", layer.m_name);
+		
 	}
 
 	dispatch(rrc);
