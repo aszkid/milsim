@@ -392,9 +392,48 @@ void Render::_handle_resource(const RenderResourceContext& rrc)
 	assert(fbuf_n == rrc.m_fb_ref.size());
 	for(size_t i = 0; i < fbuf_n; i++) {
 		auto fbuf_instance = rrc.m_fb_ref[i];
-		auto& fbuf = m_index_buffers[fbuf_instance];
-		auto& fbuf_data = rrc.m_ib[i];
+		auto& fbuf = m_frame_buffers[fbuf_instance];
+		auto& fbuf_data = rrc.m_fb[i];
 		m_log->info("Preparing framebuffer {:x}...", fbuf_instance.m_handle);
+
+		glGenFramebuffers(1, &fbuf.m_fbo);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbuf.m_fbo);
+
+		auto depthstencil_res = m_textures[fbuf_data.depth_stencil_target];
+		glFramebufferTexture2D(
+			GL_DRAW_FRAMEBUFFER,
+			GL_DEPTH_STENCIL_ATTACHMENT,
+			GL_TEXTURE_2D,
+			depthstencil_res.m_tex_id,
+			0
+		);
+
+		const size_t rt_num = fbuf_data.render_targets.size();
+		std::vector<GLenum> draw_buffers(rt_num);
+		for(size_t j = 0; j < rt_num; j++) {
+			const auto t = fbuf_data.render_targets[j];
+		//for(auto t : fbuf_data.render_targets) {
+			auto tex_res = m_textures[t];
+			glFramebufferTexture2D(
+				GL_DRAW_FRAMEBUFFER,
+				GL_COLOR_ATTACHMENT0 + j,
+				GL_TEXTURE_2D,
+				tex_res.m_tex_id,
+				0
+			);
+			draw_buffers[j] = GL_COLOR_ATTACHMENT0 + j;
+		}
+		glDrawBuffers(rt_num, &draw_buffers[0]);
+
+		// check mistakes
+		GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		if (status != GL_FRAMEBUFFER_COMPLETE) {
+			m_log->error("Frame buffer creation error, status: {:x}. Aborting...", (size_t)status);
+			throw;
+		}
+
+		// temporary fix to avoid screen glitching
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	}
 
 	m_resource_lock.unlock();
