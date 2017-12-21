@@ -46,8 +46,18 @@ void Core::init(const std::string local_root = ".")
 
 	// Init systems
 	m_input = add_system(new Input(m_window), "input");
-	m_render = add_system(new Render(m_window, m_winx, m_winy, m_local_root), "render");
-	m_alexandria = add_system(new Alexandria(m_local_root, m_render), "alexandria");
+	m_render = add_system(new Render(
+		m_window,
+		m_winx,
+		m_winy,
+		m_local_root,
+		&m_frame_status_mutex,
+		&m_frame_status
+	), "render");
+	m_alexandria = add_system(new Alexandria(
+		m_local_root,
+		m_render
+	), "alexandria");
 
 	for(auto& s : m_systems) {
 		s.second->init();
@@ -108,9 +118,15 @@ void Core::loop()
 
 		// Update systems until catched up with lag
 		while(m_t_lag >= m_MS_PER_UPDATE) {
-			// Logic happens
 			glfwPollEvents();
-			update();
+			
+			// Update the systems
+			for(auto& sys : m_systems) {
+				sys.second->update(m_MS_PER_UPDATE);
+			}
+
+			m_current_state->update(m_MS_PER_UPDATE.count() / 1000.0);
+
 			// pull messages `Core` is interested in
 			for(auto e : m_hermes->pull_inbox(Crypto::HASH("Core"))) {
 				if(e->m_chan == Crypto::HASH("InputKey")) {
@@ -129,29 +145,21 @@ void Core::loop()
 				break;
 		}
 
-		// Drawing happens
-		render();
+		// Render current state
+		m_current_state->render(m_t_lag.count() / m_MS_PER_UPDATE.count());
+
+		// m_render->wait();
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
-		if(should_close)
+		if(should_close) {
+			/**
+			 * m_render_fence->set(QUIT);
+			 */
 			break;
-	}
-}
+		}
 
-void Core::update()
-{
-	// Update the systems
-	for(auto& sys : m_systems) {
-		sys.second->update(m_MS_PER_UPDATE);
+		/**
+		 * m_render_fence->set(NEXT_FRAME);
+		 */
 	}
-
-	// Update the current state with elapsed time ("delta" in seconds)
-	if(m_current_state)
-		m_current_state->update(m_MS_PER_UPDATE.count() / 1000.0);
-}
-void Core::render()
-{
-	// Render current state w/ basic interpolation
-	if(m_current_state)
-		m_current_state->render(m_t_lag.count() / m_MS_PER_UPDATE.count());
 }

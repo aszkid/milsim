@@ -13,7 +13,7 @@
 	+ [x] Thread-safe `queue` implementation for Main-Render threads communication; *got one [online](http://www.moodycamel.com/blog/2014/a-fast-general-purpose-lock-free-queue-for-c++)*.
 	+ [ ] Pipeline abstraction basic design.
 	+ [ ] Render commands basic design.
-	+ [ ] Implement `generation`s for render resources!
+	+ [x] Implement `generation`s for render resources!
 - [x] Legit `Material` asset.
 	+ [ ] Test it!
 - [x] Write Alexandria member functions to load assets (no OOP).

@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <mutex>
+#include <condition_variable>
 
 #include <glbinding/gl/gl.h>
 #include <glbinding/Binding.h>
@@ -86,14 +87,27 @@ namespace MilSim {
 	 */
 	class Render : public Sys {
 	public:
-		Render(GLFWwindow* window, uint winx, uint winy, apathy::Path root);
+		Render(GLFWwindow* window,
+			uint winx,
+			uint winy,
+			apathy::Path root,
+			std::mutex* frame_status_mutex,
+			std::condition_variable* frame_status
+		);
 		~Render();
 
 		void init();
 		void kill();
 		void update(std::chrono::milliseconds delta);
 
+		/**
+		 * Kicks off the render thread.
+		 */
 		void thread_entry();
+		/**
+		 * Wait for the current render frame to finish.
+		 */
+		void wait();
 
 		/**
 		 * One of the few blocking functions. To be executed BEFORE thread_entry.
@@ -122,15 +136,12 @@ namespace MilSim {
 		 */
 		std::vector<TextureResource> m_textures;
 		std::vector<RenderResource> m_textures_free;
-		uint64_t m_textures_generation;
 
 		std::vector<VertexBufferResource> m_vertex_buffers;
 		std::vector<RenderResource> m_vertex_buffers_free;
-		uint64_t m_vertex_buffers_generation;
 
 		std::vector<VertexLayoutResource> m_vertex_layouts;
 		std::vector<RenderResource> m_vertex_layouts_free;
-		uint64_t m_vertex_layouts_generation;
 
 		std::vector<IndexBufferResource> m_index_buffers;
 		std::vector<RenderResource> m_index_buffers_free;
@@ -178,7 +189,9 @@ namespace MilSim {
 		 */
 		void _inner_thread_entry();
 		std::thread m_thread;
-		std::atomic<bool> m_should_stop;
+		std::atomic_bool m_should_stop;
+		std::mutex* m_frame_status_mutex;
+		std::condition_variable* m_frame_status;
 
 		/**
 		 * Render thread message queue.

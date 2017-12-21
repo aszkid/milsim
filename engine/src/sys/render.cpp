@@ -6,19 +6,29 @@
 
 using namespace MilSim;
 
-Render::Render(GLFWwindow* window, uint winx, uint winy, apathy::Path root)
-	: Sys::Sys("Render"), m_should_stop(false), m_window(window), m_winx(winx), m_winy(winy), m_root(root)
+Render::Render(
+	GLFWwindow* window,
+	uint winx,
+	uint winy,
+	apathy::Path root,
+	std::mutex* frame_status_mutex,
+	std::condition_variable* frame_status
+	)
+	: Sys::Sys("Render")
 {
+	m_should_stop.store(false);
+	m_window = window;
+	m_winx = winx;
+	m_winy = winy;
+	m_root = root;
+	m_frame_status_mutex = frame_status_mutex;
+	m_frame_status = frame_status;
+
 	m_textures.push_back({});
 	m_vertex_buffers.push_back({});
 	m_vertex_layouts.push_back({});
 	m_index_buffers.push_back({});
 	m_frame_buffers.push_back({});
-
-	m_textures_generation = 0;
-	m_vertex_buffers_generation = 0;
-	m_vertex_layouts_generation = 0;
-	// framebuffer generation... we don't use them yet, but we should
 }
 Render::~Render()
 {
@@ -106,6 +116,12 @@ void Render::_inner_thread_entry()
 		}
 
 		glfwSwapBuffers(m_window);
+		
+		/**
+		 * force this for now -- eventually, bottleneck is guaranteed
+		 * to be in the render thread anyways
+		 */
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 	}
 }
 

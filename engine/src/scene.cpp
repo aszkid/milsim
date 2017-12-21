@@ -293,22 +293,21 @@ Entity Scene::add_model(const char* name, const glm::mat4 local, const glm::mat4
 	Entity model = m_entitymngr->create();
 
 	// set basic debug info
+	auto debug = m_debug_comp->attach(model);
 	m_debug_comp->set_name(
-		m_debug_comp->attach(model),
+		debug,
 		name
 	);
 	// set transform info
-	MilSim::Component::Instance transform = m_transform_component->attach(model);
+	auto transform = m_transform_component->attach(model);
 	m_transform_component->set_local(
 		transform,
-		glm::mat4(local)
+		local
 	);
 	m_transform_component->set_world(
 		transform,
-		glm::mat4(world)
+		world
 	);
-	
-	// send render resource creation command
 
 	// also create render-level representation!
 

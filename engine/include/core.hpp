@@ -5,6 +5,8 @@
 #include <map>
 #include <string>
 #include <chrono>
+#include <condition_variable>
+
 #include <glbinding/gl/gl.h>
 #include <glbinding/Binding.h>
 #define GLFW_INCLUDE_NONE // avoid glbinding errors
@@ -95,8 +97,9 @@ namespace MilSim {
 		std::chrono::milliseconds m_t_lag {0};
 		uint m_fps;
 
-		void update();
-		void render();
+		// Render-main thread synchronization
+		std::mutex m_frame_status_mutex;
+		std::condition_variable m_frame_status;
 	};
 	
 }
