@@ -13,10 +13,12 @@ Render::Render(GLFWwindow* window, uint winx, uint winy, apathy::Path root)
 	m_vertex_buffers.push_back({});
 	m_vertex_layouts.push_back({});
 	m_index_buffers.push_back({});
+	m_frame_buffers.push_back({});
 
 	m_textures_generation = 0;
 	m_vertex_buffers_generation = 0;
 	m_vertex_layouts_generation = 0;
+	// framebuffer generation... we don't use them yet, but we should
 }
 Render::~Render()
 {
@@ -149,8 +151,8 @@ void Render::setup_pipeline()
 
 	// This rrc will hold all our resource requests
 	RenderResourceContext rrc;
+	m_log->info("Setting up render pipeline...");
 
-	m_log->info("Setting up render targets...");
 	const auto& ts = root["pipeline_targets"];
 	for(const auto& t : ts) {
 		const auto& name = t["name"].get<std::string>();
@@ -181,8 +183,6 @@ void Render::setup_pipeline()
 		rrc.push_texture(data, tex);
 		m_render_targets[Crypto::HASH(name)] = tex;
 	}
-
-	m_log->info("Setting up pipeline layers...");
 
 	const auto& ls = root["pipeline_layers"];
 	for(const auto& l : ls) {
@@ -300,8 +300,6 @@ void Render::_handle_resource(const RenderResourceContext& rrc)
 			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, tex_data.width, tex_data.height, tex_data.pixel_format, GL_UNSIGNED_BYTE, tex_data.source);
 		/*if(tex_data.mipmap)
 			glGenerateMipmap(GL_TEXTURE_2D);*/
-
-		m_log->info("Generated GL texture {:x}", tex.m_tex_id);
 	}
 
 	// 2) upload vertex buffers
