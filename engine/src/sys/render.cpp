@@ -448,89 +448,89 @@ void Render::_handle_command(RenderCommandContext* rcc)
 
 RenderResource Render::_alloc_texture()
 {
-	RenderResource res;
-	uint64_t index = 0;
+	RenderResource res {0};
+	res.set_type(RenderResource::TEXTURE);
 
 	if(m_textures_free.empty()) {
 		m_textures.push_back({});
-		index = m_textures.size()-1;
+		res.set_index(m_textures.size()-1);
 	} else {
-		uint64_t old_handle = m_textures_free.back();
+		RenderResource old = m_textures_free.back();
 		m_textures_free.pop_back();
-		index = RR_index(old_handle);
+		res.set_index(old.index());
+		res.set_generation(old.generation() + 1);
 	}
 	
-	res.m_handle = RR_pack(RenderResource::TEXTURE, index);
 	return res;
 }
 RenderResource Render::_alloc_vertex_buffer()
 {
-	RenderResource res;
-	uint64_t index = 0;
+	RenderResource res {0};
+	res.set_type(RenderResource::VERTEX_BUFFER);
 
 	if(m_vertex_buffers_free.empty()) {
 		m_vertex_buffers.push_back({});
-		index = m_vertex_buffers.size() - 1;
+		res.set_index(m_vertex_buffers.size() - 1);
 	} else {
-		uint64_t old_handle = m_vertex_buffers_free.back();
+		RenderResource old = m_vertex_buffers_free.back();
 		m_vertex_buffers_free.pop_back();
-		index = RR_index(old_handle);
+		res.set_index(old.index());
+		res.set_generation(old.generation() + 1);
 	}
 	
-	res.m_handle = RR_pack(RenderResource::VERTEX_BUFFER, index);
 	return res;
 }
 
 RenderResource Render::_alloc_vertex_layout()
 {
-	RenderResource res;
-	uint64_t index = 0;
+	RenderResource res {0};
+	res.set_type(RenderResource::VERTEX_LAYOUT);
 
 	if(m_vertex_layouts_free.empty()) {
 		m_vertex_layouts.push_back({});
-		index = m_vertex_layouts.size() - 1;
+		res.set_index(m_vertex_layouts.size() - 1);
 	} else {
-		uint64_t old_handle = m_vertex_layouts_free.back();
+		RenderResource old = m_vertex_layouts_free.back();
 		m_vertex_layouts_free.pop_back();
-		index = RR_index(old_handle);
+		res.set_index(old.index());
+		res.set_generation(old.generation() + 1);
 	}
 	
-	res.m_handle = RR_pack(RenderResource::VERTEX_LAYOUT, index);
 	return res;
 }
 
 RenderResource Render::_alloc_index_buffer()
 {
-	RenderResource res;
-	uint64_t index = 0;
+	RenderResource res {0};
+	res.set_type(RenderResource::INDEX_BUFFER);
 
 	if(m_index_buffers_free.empty()) {
 		m_index_buffers.push_back({});
-		index = m_index_buffers.size() - 1;
+		res.set_index(m_index_buffers.size() - 1);
 	} else {
-		uint64_t old_handle = m_index_buffers_free.back();
+		RenderResource old = m_index_buffers_free.back();
 		m_index_buffers_free.pop_back();
-		index = RR_index(old_handle);
+		res.set_index(old.index());
+		res.set_generation(old.generation() + 1);
 	}
 
-	res.m_handle = RR_pack(RenderResource::INDEX_BUFFER, index);
 	return res;
 }
 
 RenderResource Render::_alloc_frame_buffer()
 {
-	RenderResource res;
-	uint64_t index = 0;
+	RenderResource res {0};
+	res.set_type(RenderResource::FRAME_BUFFER);
 
 	if(m_frame_buffers_free.empty()) {
 		m_frame_buffers.push_back({});
-		index = m_frame_buffers.size() - 1;
+		res.set_index(m_frame_buffers.size() - 1);
 	} else {
-		uint64_t old_handle = m_frame_buffers_free.back();
+		RenderResource old = m_frame_buffers_free.back();
 		m_frame_buffers_free.pop_back();
-		index = RR_index(old_handle);
+		res.set_index(old.index());
+		res.set_generation(old.generation() + 1);
 	}
 
-	res.m_handle = RR_pack(RenderResource::FRAME_BUFFER, index);
 	return res;
 }

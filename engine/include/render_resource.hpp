@@ -10,20 +10,16 @@ namespace MilSim {
 
 	using namespace gl;
 
-	const uint64_t INDEX_BITS = 56;
-	const uint64_t INDEX_MASK = ((uint64_t)1 << INDEX_BITS) - 1;
-	const uint64_t TYPE_MASK = ~INDEX_MASK;
-	inline uint64_t RR_index(const uint64_t id) {
-		return id & INDEX_MASK;
-	};
-	inline uint64_t RR_type(const uint64_t id) {
-		return (id & TYPE_MASK) >> INDEX_BITS;
-	};
-	inline uint64_t RR_pack(const uint8_t t, const uint64_t i) {
-		return ((uint64_t)t << INDEX_BITS) | (i & INDEX_MASK);
-	};
 	/**
 	 * Render-level representation of resources.
+	 * Handle gives the following info:
+	 * | TYPE | GENERATION | INDEX |
+	 *   |      |            |
+	 *   ---> 8 bits         |
+	 *          |            |
+	 *          ----> 16 bits|
+	 *                       |
+	 *                       -----> 40 bits
 	 */
 	struct RenderResource {
 
@@ -35,23 +31,50 @@ namespace MilSim {
 			FRAME_BUFFER,
 			NONE
 		};
-		/**
-		 * | TYPE | INDEX |
-		 *   |      |
-		 *   ---> 1 byte
-		 *          |
-		 *          ----> 63 bytes
-		 */
+
+		const static size_t INDEX_BITS = 40;
+		const static size_t GENERATION_BITS = 16;
+		const static size_t TYPE_BITS = 8;
+
+		const static size_t INDEX_IDX = 0;
+		const static size_t GENERATION_IDX = INDEX_IDX + INDEX_BITS;
+		const static size_t TYPE_IDX = GENERATION_IDX + GENERATION_BITS;
+
+		const static uint64_t INDEX_MASK = ((1ULL << INDEX_BITS) - 1ULL) << INDEX_IDX;
+		const static uint64_t GENERATION_MASK = ((1ULL << GENERATION_BITS) - 1ULL) << GENERATION_IDX;
+		const static uint64_t TYPE_MASK = ((1ULL << TYPE_BITS) - 1ULL) << TYPE_IDX;
+
 		uint64_t m_handle;
 
 		/**
 		 * Getters
 		 */
 		inline uint64_t index() const {
-			return RR_index(m_handle);
+			return (m_handle & INDEX_MASK) >> INDEX_IDX;
 		};
 		inline uint64_t type() const {
-			return RR_type(m_handle);
+			return (m_handle & TYPE_MASK) >> TYPE_IDX;
+		};
+		inline uint64_t generation() const {
+			return (m_handle & GENERATION_MASK) >> GENERATION_IDX;
+		};
+		/**
+		 * Setters
+		 */
+		inline void set_index(const uint64_t index) {
+			uint64_t mask = (index << INDEX_IDX) & INDEX_MASK;
+			m_handle &= ~INDEX_MASK;
+			m_handle |= mask;
+		};
+		inline void set_generation(const uint64_t generation) {
+			uint64_t mask = (generation << GENERATION_IDX) & GENERATION_MASK;
+			m_handle &= ~GENERATION_MASK;
+			m_handle |= mask;
+		};
+		inline void set_type(const uint64_t type) {
+			uint64_t mask = (type << TYPE_IDX) & TYPE_MASK;
+			m_handle &= ~TYPE_MASK;
+			m_handle |= mask;
 		};
 	};
 

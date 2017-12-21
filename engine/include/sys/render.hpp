@@ -121,22 +121,22 @@ namespace MilSim {
 		 * Resources held.
 		 */
 		std::vector<TextureResource> m_textures;
-		std::vector<uint64_t> m_textures_free;
+		std::vector<RenderResource> m_textures_free;
 		uint64_t m_textures_generation;
 
 		std::vector<VertexBufferResource> m_vertex_buffers;
-		std::vector<uint64_t> m_vertex_buffers_free;
+		std::vector<RenderResource> m_vertex_buffers_free;
 		uint64_t m_vertex_buffers_generation;
 
 		std::vector<VertexLayoutResource> m_vertex_layouts;
-		std::vector<uint64_t> m_vertex_layouts_free;
+		std::vector<RenderResource> m_vertex_layouts_free;
 		uint64_t m_vertex_layouts_generation;
 
 		std::vector<IndexBufferResource> m_index_buffers;
-		std::vector<uint64_t> m_index_buffers_free;
+		std::vector<RenderResource> m_index_buffers_free;
 
 		std::vector<FrameBufferResource> m_frame_buffers;
-		std::vector<uint64_t> m_frame_buffers_free;
+		std::vector<RenderResource> m_frame_buffers_free;
 
 		std::mutex m_resource_lock;
 

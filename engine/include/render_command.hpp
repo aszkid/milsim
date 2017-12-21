@@ -55,13 +55,13 @@ namespace MilSim {
 		/**
 		 * Getters
 		 */
-		inline uint64_t get_layer() {
+		inline uint64_t get_layer() const {
 			return (m_key & LAYER_MASK) >> LAYER_IDX;
 		};
-		inline uint64_t get_depth() {
+		inline uint64_t get_depth() const {
 			return (m_key & DEPTH_MASK) >> DEPTH_IDX;
 		};
-		inline uint64_t get_user_defined() {
+		inline uint64_t get_user_defined() const {
 			return (m_key & USER_MASK) >> USER_IDX;
 		};
 
