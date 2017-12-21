@@ -364,20 +364,31 @@ void Alexandria::parse_folder(const json& root, apathy::Path path, const std::st
 	}
 }
 
-Asset* Alexandria::get_asset(const t_asset_id hash)
+bool Alexandria::have_asset(const t_asset_id hash)
 {
-	auto asset = m_assets.find(hash);
-	if(asset == m_assets.end()) {
+	return m_assets.find(hash) != m_assets.end();
+}
+Asset* Alexandria::get_asset(const t_asset_id hash, const GetFlag flag)
+{
+	if(!have_asset(hash)) {
 		m_log->info("Asset `{:x}` not registered!", hash);
 		return nullptr;
 	}
-	return asset->second.get();
+	if(flag == GetFlag::LOAD && !is_loaded(hash)) {
+		m_log->info("Requested asset `{:x}` not ready; loading...", hash);
+		if(!load_asset(hash))
+			return nullptr;
+	}
+	return m_assets[hash].get();
+}
+
+bool Alexandria::is_loaded(const t_asset_id hash)
+{
+	return m_loaded.find(hash) != m_loaded.end();
 }
 bool Alexandria::load_asset(const t_asset_id hash)
 {
-	if(m_loaded.find(hash) != m_loaded.end())
-		return true;
-	auto asset = get_asset(hash);
+	auto asset = get_asset(hash, GetFlag::NO_LOAD);
 	if(asset == nullptr)
 		return false;
 
@@ -413,14 +424,14 @@ bool Alexandria::load_asset(const t_asset_id hash)
 
 	if(ok)
 		m_loaded.emplace(hash);
-	
+
 	return ok;
 }
 void Alexandria::unload_asset(const t_asset_id hash)
 {
 	auto it = m_assets.find(hash);
 	auto hot = m_loaded.find(hash);
-	if(it == m_assets.end() || hot == m_loaded.end())
+	if(!have_asset(hash) || !is_loaded(hash))
 		return;
 	auto asset = it->second.get();
 
@@ -543,7 +554,7 @@ t_asset_id Alexandria::parse_asset(apathy::Path path, const Asset::Type type, co
 
 bool Alexandria::_load_model(const t_asset_id hash, const json* root)
 {
-	auto model = get_asset<ModelAsset>(hash);
+	auto model = get_asset<ModelAsset>(hash, GetFlag::NO_LOAD);
 	const std::string file = root->at("source");
 	apathy::Path working_path(get_working_path(model->m_id));
 
@@ -563,12 +574,12 @@ bool Alexandria::_load_model(const t_asset_id hash, const json* root)
 	}
 	if(!ret) {
 		m_log->error("Failed to load model {}!", model->m_id.string());
-		abort();
+		return false;
 	}
 	
 	// Prepare asset -- TODO: pool this allocation? let `Alexandria` manage it
 	// We assume the model is a single mesh... for now
-	auto mesh = get_asset<MeshAsset>(model->m_meshes[0]);
+	auto mesh = get_asset<MeshAsset>(model->m_meshes[0], GetFlag::NO_LOAD);
 	m_loaded.emplace(model->m_meshes[0]);
 
 	// Copy vertex data
@@ -600,12 +611,13 @@ bool Alexandria::_load_model(const t_asset_id hash, const json* root)
 	if(!_load_material(mesh->m_material, &root->at("material")))
 		return false;
 	m_loaded.emplace(mesh->m_material);
+
 	return true;
 }
 
 bool Alexandria::_load_material(const t_asset_id hash, const json* root)
 {
-	auto material = get_asset<MaterialAsset>(hash);
+	auto material = get_asset<MaterialAsset>(hash, GetFlag::NO_LOAD);
 	apathy::Path working_path(get_working_path(material->m_id));
 	
 	std::vector<float> Ka = root->at("Ka");
@@ -646,7 +658,7 @@ bool Alexandria::_load_shader(ShaderProgramAsset* shader, apathy::Path id, const
 
 bool Alexandria::_load_texture(const t_asset_id hash, const json* root, bool gpu)
 {
-	auto texture = get_asset<TextureAsset>(hash);
+	auto texture = get_asset<TextureAsset>(hash, GetFlag::NO_LOAD);
 	apathy::Path working_path(get_working_path(texture->m_id));
 
 	// Upload to memory
@@ -697,9 +709,9 @@ bool Alexandria::_load_texture(const t_asset_id hash, const json* root, bool gpu
 
 bool Alexandria::_load_map(const t_asset_id hash, const json* root)
 {
-	auto map = get_asset<MapAsset>(hash);
+	auto map = get_asset<MapAsset>(hash, GetFlag::NO_LOAD);
 
-	auto texture = get_asset<TextureAsset>(map->m_tex);
+	auto texture = get_asset<TextureAsset>(map->m_tex, GetFlag::NO_LOAD);
 	if(!_load_texture(map->m_tex, nullptr, false))
 		return false;
 	m_loaded.emplace(map->m_tex);
@@ -711,7 +723,7 @@ bool Alexandria::_load_map(const t_asset_id hash, const json* root)
 	const size_t tris = (w-1)*(h-1)*2;
 	const size_t ilen = tris*3;
 
-	auto mesh = get_asset<MeshAsset>(map->m_mesh);
+	auto mesh = get_asset<MeshAsset>(map->m_mesh, GetFlag::NO_LOAD);
 	auto& vbuffer = mesh->m_verts;
 	auto& ibuffer = mesh->m_indices;
 	vbuffer.resize(vlen);
@@ -773,14 +785,14 @@ apathy::Path Alexandria::get_working_path(const apathy::Path id) const
 
 void Alexandria::_unload_model(const t_asset_id hash)
 {
-	auto model = get_asset<ModelAsset>(hash);
+	auto model = get_asset<ModelAsset>(hash, GetFlag::NO_LOAD);
 	for(auto mesh : model->m_meshes) {
 		unload_asset(mesh);
 	}
 }
 void Alexandria::_unload_texture(const t_asset_id hash)
 {
-	auto texture = get_asset<TextureAsset>(hash);
+	auto texture = get_asset<TextureAsset>(hash, GetFlag::NO_LOAD);
 	stbi_image_free(texture->m_data);
 	/**
 	 * if(texture->m_handle != 0) {
@@ -790,13 +802,13 @@ void Alexandria::_unload_texture(const t_asset_id hash)
 }
 void Alexandria::_unload_material(const t_asset_id hash)
 {
-	auto material = get_asset<MaterialAsset>(hash);
+	auto material = get_asset<MaterialAsset>(hash, GetFlag::NO_LOAD);
 	unload_asset(material->m_diffuse_tex);
 	unload_asset(material->m_specular_tex);
 }
 void Alexandria::_unload_map(const t_asset_id hash)
 {
-	auto map = get_asset<MapAsset>(hash);
+	auto map = get_asset<MapAsset>(hash, GetFlag::NO_LOAD);
 	unload_asset(map->m_mesh);
 	unload_asset(map->m_tex);
 }

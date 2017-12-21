@@ -183,16 +183,21 @@ namespace MilSim {
 			NO_LOAD,
 			LOAD
 		};
-	
 		template<class T>
-		T* get_asset(const t_asset_id hash) {
+		T* get_asset(const t_asset_id hash, const GetFlag flag = LOAD) {
 			static_assert(
 				std::is_base_of<Asset, T>::value,
 				"Asset passed is not derived from `Asset` base class!"
 			);
-			return static_cast<T*>(get_asset(hash));
+			return static_cast<T*>(get_asset(hash, flag));
 		};
-		Asset* get_asset(const t_asset_id hash);
+		template<class T>
+		T* get_asset(const std::string name, const GetFlag flag = LOAD) {
+			return get_asset<T>(Crypto::HASH(name), flag);
+		};
+		Asset* get_asset(const t_asset_id hash, const GetFlag flag);
+		bool have_asset(const t_asset_id hash);
+		bool is_loaded(const t_asset_id hash);
 
 		bool load_asset(const t_asset_id hash);
 		void unload_asset(const t_asset_id hash);
