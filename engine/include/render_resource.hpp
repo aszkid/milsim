@@ -45,11 +45,8 @@ namespace MilSim {
 		uint64_t m_handle;
 
 		/**
-		 * Casting to integer returns the index.
+		 * Getters
 		 */
-		inline operator uint64_t() const {
-			return RR_index(m_handle);
-		};
 		inline uint64_t index() const {
 			return RR_index(m_handle);
 		};

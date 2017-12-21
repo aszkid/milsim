@@ -32,7 +32,7 @@ namespace MilSim {
 	};
 
 	/**
-	 * Concrete render resources; only handled by the internals
+	 * Concrete GL render resources; only handled by the internals
 	 * of `Sys.Render`.
 	 * Outside systems must use the `RenderResource` interface.
 	 */
@@ -57,7 +57,7 @@ namespace MilSim {
 
 	/**
 	 * Building block of a render pipeline.
-	 * Resources are hashed names.
+	 * Render targets are named.
 	 */
 	struct RenderLayer {
 		uint64_t sort_key;
@@ -65,7 +65,7 @@ namespace MilSim {
 		uint32_t name;
 		std::vector<uint32_t> render_targets;
 		uint32_t depth_stencil_target;
-		RenderResource framebuffer;
+		RenderResource frame_buffer;
 		enum Sort {
 			FRONT_BACK,
 			BACK_FRONT
@@ -148,6 +148,8 @@ namespace MilSim {
 		 * Global render targets.
 		 */
 		std::map<uint32_t, RenderResource> m_render_targets;
+		bool have_render_target(const uint32_t hash);
+		bool have_render_target(const std::string name);
 
 		/**
 		 * Resource allocation and destruction methods.

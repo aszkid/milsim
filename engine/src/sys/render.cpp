@@ -107,6 +107,14 @@ void Render::_inner_thread_entry()
 	}
 }
 
+bool Render::have_render_target(const uint32_t hash)
+{
+	return m_render_targets.find(hash) != m_render_targets.end();
+}
+bool Render::have_render_target(const std::string name)
+{
+	return have_render_target(Crypto::HASH(name));
+}
 static bool tex_format_gl(const std::string tex, GLenum* dst)
 {
 	if(tex == "DEPTH_STENCIL") {
@@ -180,52 +188,49 @@ void Render::setup_pipeline()
 	for(const auto& l : ls) {
 		const auto& name = l["name"].get<std::string>();
 		const auto& depth_stencil = l["depth_stencil_target"].get<std::string>();
-		const auto depth_stencil_hash = Crypto::HASH(depth_stencil);
 		const auto& sort = l["sort"].get<std::string>();
 
+		// Prepare layer
 		RenderLayer layer;
 		layer.name = Crypto::HASH(name);
 
 		m_log->info("Creating pipeline layer `{}`...", name);
 
+		// Allocate framebuffer object and prepare data
+		alloc(&layer.frame_buffer, RenderResource::FRAME_BUFFER);
+		RenderResourceContext::FrameBufferData data;
+
+		// Set layer render targets
 		const auto& ts = l["render_targets"];
 		for(const auto& t : ts) {
-			const auto t_hash = Crypto::HASH(t.get<std::string>());
-			if(m_render_targets.find(t_hash) == m_render_targets.end()) {
+			const auto hash = Crypto::HASH(t.get<std::string>());
+			if(!have_render_target(hash)) {
 				m_log->error("Render target `{}` does not exist! Aborting...", t.get<std::string>());
 				throw;
 			}
-			layer.render_targets.push_back(t_hash);
+			layer.render_targets.push_back(hash);
+			data.render_targets.push_back(m_render_targets[hash]);
 		}
 
-		if(m_render_targets.find(depth_stencil_hash) == m_render_targets.end()) {
+		// Set layer depth+stencil target
+		const auto depth_stencil_hash = Crypto::HASH(depth_stencil);
+		if(!have_render_target(depth_stencil_hash)) {
 			m_log->info("Depth+stencil target `{}` does not exist! Aborting...");
 			throw;
 		}
 		layer.depth_stencil_target = depth_stencil_hash;
+		data.depth_stencil_target = m_render_targets[depth_stencil_hash];
 
+		// Send framebuffer for creation
+		rrc.push_frame_buffer(data, layer.frame_buffer);
+
+		// Set layer sort mode
 		if(!sort_to_type(sort, &layer.sort)) {
 			m_log->error("Sort type `{}` not supported! Aborting...");
 			throw;
 		}
 
-		// Create framebuffer
-		RenderResource fbo;
-		alloc(&fbo, RenderResource::FRAME_BUFFER);
-
-		auto get_rt = [this](const std::vector<uint32_t>& ts) {
-			std::vector<RenderResource> res;
-			for(const auto t : ts) {
-				res.push_back(this->m_render_targets[t]);
-			}
-			return res;
-		};
-		
-		RenderResourceContext::FrameBufferData data {
-			.render_targets = get_rt(layer.render_targets),
-			.depth_stencil_target = get_rt({depth_stencil_hash})[0]
-		};
-		rrc.push_frame_buffer(data, fbo);
+		m_render_layers.push_back(layer);
 	}
 
 	dispatch(rrc);
@@ -281,7 +286,7 @@ void Render::_handle_resource(const RenderResourceContext& rrc)
 	assert(tex_n == rrc.m_tex_ref.size()); // debug
 	for(size_t i = 0; i < tex_n; i++) {
 		auto tex_instance = rrc.m_tex_ref[i];
-		auto& tex = m_textures[tex_instance];
+		auto& tex = m_textures[tex_instance.index()];
 		auto& tex_data = rrc.m_tex[i];
 
 		glGenTextures(1, &tex.m_tex_id);
@@ -304,7 +309,7 @@ void Render::_handle_resource(const RenderResourceContext& rrc)
 	assert(vbuf_n == rrc.m_vb_ref.size()); // debug
 	for(size_t i = 0; i < vbuf_n; i++) {
 		auto vbuf_instance = rrc.m_vb_ref[i];
-		auto& vbuf = m_vertex_buffers[vbuf_instance];
+		auto& vbuf = m_vertex_buffers[vbuf_instance.index()];
 		glGenBuffers(1, &vbuf.m_buf);
 		auto& vbuf_data = rrc.m_vb[i];
 
@@ -339,7 +344,7 @@ void Render::_handle_resource(const RenderResourceContext& rrc)
 	assert(vlayout_n == rrc.m_vl_ref.size());
 	for(size_t i = 0; i < vlayout_n; i++) {
 		auto vlayout_instance = rrc.m_vl_ref[i];
-		auto& vlayout = m_vertex_layouts[vlayout_instance];
+		auto& vlayout = m_vertex_layouts[vlayout_instance.index()];
 		glGenVertexArrays(1, &vlayout.m_vao);
 		auto& vlayout_data = rrc.m_vl[i];
 
@@ -372,7 +377,7 @@ void Render::_handle_resource(const RenderResourceContext& rrc)
 	assert(ibuf_n == rrc.m_ib_ref.size());
 	for(size_t i = 0; i < ibuf_n; i++) {
 		auto ibuf_instance = rrc.m_ib_ref[i];
-		auto& ibuf = m_index_buffers[ibuf_instance];
+		auto& ibuf = m_index_buffers[ibuf_instance.index()];
 		auto& ibuf_data = rrc.m_ib[i];
 
 		glBindBuffer(
@@ -392,14 +397,14 @@ void Render::_handle_resource(const RenderResourceContext& rrc)
 	assert(fbuf_n == rrc.m_fb_ref.size());
 	for(size_t i = 0; i < fbuf_n; i++) {
 		auto fbuf_instance = rrc.m_fb_ref[i];
-		auto& fbuf = m_frame_buffers[fbuf_instance];
+		auto& fbuf = m_frame_buffers[fbuf_instance.index()];
 		auto& fbuf_data = rrc.m_fb[i];
 		m_log->info("Preparing framebuffer {:x}...", fbuf_instance.m_handle);
 
 		glGenFramebuffers(1, &fbuf.m_fbo);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbuf.m_fbo);
 
-		auto depthstencil_res = m_textures[fbuf_data.depth_stencil_target];
+		auto depthstencil_res = m_textures[fbuf_data.depth_stencil_target.index()];
 		glFramebufferTexture2D(
 			GL_DRAW_FRAMEBUFFER,
 			GL_DEPTH_STENCIL_ATTACHMENT,
@@ -413,7 +418,7 @@ void Render::_handle_resource(const RenderResourceContext& rrc)
 		for(size_t j = 0; j < rt_num; j++) {
 			const auto t = fbuf_data.render_targets[j];
 		//for(auto t : fbuf_data.render_targets) {
-			auto tex_res = m_textures[t];
+			auto tex_res = m_textures[t.index()];
 			glFramebufferTexture2D(
 				GL_DRAW_FRAMEBUFFER,
 				GL_COLOR_ATTACHMENT0 + j,
