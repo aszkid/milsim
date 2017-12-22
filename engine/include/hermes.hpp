@@ -11,24 +11,26 @@
 
 namespace MilSim {
 
-	typedef uint32_t t_channel;
+	#define HERMES_DECL_VAR(t, name) t name
+	#define HERMES_DECL_DATA(vars) struct t_data { vars }; t_data data;
+	#define HERMES_SEND_MSG(t, chan, ...) auto _msg = new t;\
+		_msg->data = { __VA_ARGS__ };\
+		m_hermes->send(_msg, Crypto::HASH(chan));
+	#define HERMES_READ_CHANNEL(var, chan) for(const auto var : m_hermes->get_channel(MilSim::Crypto::HASH(chan)))
 
 	/**
-	 * Base event class. System-wide events are based on polymorphism.
-	 * In-game though, we will design a more flexible system of Messages
-	 * based on Lua payloads.
+	 * POD (mostly) base message class.
 	 */
-	class Message {
-	public:
-		Message(const t_channel chan)
-			: m_chan(chan)
+	struct Message {
+		Message(const uint32_t t)
+			: type(t)
 		{};
 		virtual ~Message() = default;
-		const t_channel m_chan;
+
+		const uint32_t type;
 	};
 
-	class InputKeyMessage : public Message {
-	public:
+	struct InputKeyMessage : public Message {
 		enum Key {
 			A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,
 			SPACE,APOSTROPHE,COMMA,MINUS,PERIOD,SLASH,
@@ -49,66 +51,69 @@ namespace MilSim {
 		enum Action {
 			PRESS, RELEASE, REPEAT
 		};
-		InputKeyMessage(Key k, Action a)
-			: Message::Message(Crypto::HASH("InputKey")),
-			  m_key(k), m_action(a)
+
+		InputKeyMessage()
+			: Message::Message(Crypto::HASH("InputKey"))
 		{};
-		Key m_key;
-		Action m_action;
+
+		HERMES_DECL_DATA(
+			Key key;
+			Action action;
+		)
 	};
 
-	class CursorPosMessage : public Message {
-	public:
-		CursorPosMessage(double xpos, double ypos, double xdelta, double ydelta)
-			: Message::Message(Crypto::HASH("CursorPos")),
-			  m_xpos(xpos), m_ypos(ypos),
-			  m_xdelta(xdelta), m_ydelta(ydelta)
+	struct CursorPosMessage : public Message {
+		CursorPosMessage()
+			: Message::Message(Crypto::HASH("CursorPos"))
 		{};
-		double m_xpos, m_ypos;
-		double m_xdelta, m_ydelta;
+		
+		HERMES_DECL_DATA(
+			double xpos;
+			double ypos;
+			double xdelta;
+			double ydelta;
+		)
 	};
 
-	class CursorEnterMessage : public Message {
-	public:
-		CursorEnterMessage(bool entered)
-			: Message::Message(Crypto::HASH("CursorEnter")),
-			  m_entered(entered)
+	struct CursorEnterMessage : public Message {
+		CursorEnterMessage()
+			: Message::Message(Crypto::HASH("CursorEnter"))
 		{};
-		bool m_entered;
+		
+		HERMES_DECL_DATA(
+			bool entered;
+		)
 	};
 
-	class MouseButtonMessage : public Message {
-	public:
+	struct MouseButtonMessage : public Message {
 		enum Button {
 			LEFT, RIGHT, MIDDLE
 		};
 		enum Action {
 			PRESS, RELEASE
 		};
-		MouseButtonMessage(Button b, Action a)
-			: Message::Message(Crypto::HASH("MouseButton")), m_button(b), m_action(a)
+		MouseButtonMessage()
+			: Message::Message(Crypto::HASH("MouseButton"))
 		{};
 
-		Button m_button;
-		Action m_action;
+		HERMES_DECL_DATA(
+			Button button;
+			Action action;
+		)
 	};
 
-	class WindowSizeMessage : public Message {
-	public:
-		WindowSizeMessage(int width, int height)
-			: Message::Message(Crypto::HASH("WindowSize")), m_width(width), m_height(height)
+	struct WindowSizeMessage : public Message {
+		WindowSizeMessage()
+			: Message::Message(Crypto::HASH("WindowSize"))
 		{};
-		int m_width, m_height;
+		
+		HERMES_DECL_DATA(
+			int width;
+			int height;
+		)
 	};
 
-	/**
-	 * Subscription class, holds a list of interested channels. 
-	 * The interested party is responsible for pulling events
-	 * every update loop.
-	 */
-	struct Subscription {
-		std::vector<t_channel> m_channels;
-	};
+	#define HERMES_LOCK std::lock_guard<std::mutex> _hguard(m_mutex)
 
 	/**
 	 * Messenger system, implementation of a
@@ -119,27 +124,21 @@ namespace MilSim {
 		Hermes();
 		~Hermes();
 		
-		/**
-		 * Notifies interest in a set of channels.
-		 */
-		void subscribe(const uint32_t subid, std::vector<t_channel> channels);
-		
-		void send(Message* msg);
+		typedef std::vector<Message*> t_queue;
 
-		void clean();
-
-		/**
-		 * !!slow, not ideal. think of a better way.
-		 */
-		std::vector<Message*> pull_inbox(const uint32_t subid);
+		void send(Message* msg, const uint32_t channel);
+		void swap_queues();
+		t_queue const& get_channel(const uint32_t chan);
 	
 	private:
-		std::map<uint32_t, Subscription> m_subs;
-		std::vector<std::unique_ptr<Message>> m_inbox;
+		std::map<uint32_t, t_queue> m_front_qs;
+		std::map<uint32_t, t_queue> m_back_qs;
+
+		void free_back_queues();
+
 		t_logger m_log;
 
 		std::mutex m_mutex;
-
 	};
 
 

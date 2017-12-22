@@ -67,17 +67,28 @@ void Input::update(std::chrono::milliseconds delta)
 
 void Input::window_size_callback(GLFWwindow* win, int width, int height)
 {
-	m_hermes->send(new WindowSizeMessage(width, height));
+	HERMES_SEND_MSG(WindowSizeMessage, "Input",
+		width,
+		height
+	);
 }
 void Input::cursor_pos_callback(GLFWwindow* win, double xpos, double ypos)
 {
-	m_hermes->send(new CursorPosMessage(xpos, ypos, xpos - m_last_cursor[0], ypos - m_last_cursor[1]));
+	HERMES_SEND_MSG(CursorPosMessage, "Input",
+		xpos,
+		ypos,
+		xpos - m_last_cursor[0],
+		ypos - m_last_cursor[1]
+	);
+	
 	m_last_cursor[0] = xpos;
 	m_last_cursor[1] = ypos;
 }
 void Input::cursor_enter_callback(GLFWwindow* win, int entered)
 {
-	m_hermes->send(new CursorEnterMessage(entered));
+	HERMES_SEND_MSG(CursorEnterMessage, "Input",
+		entered
+	);
 }
 void Input::mouse_button_callback(GLFWwindow* win, int button, int action, int mods)
 {
@@ -105,7 +116,10 @@ void Input::mouse_button_callback(GLFWwindow* win, int button, int action, int m
 		break;
 	}
 
-	m_hermes->send(new MouseButtonMessage(b, a));
+	//m_hermes->send(new MouseButtonMessage(b, a));
+	HERMES_SEND_MSG(MouseButtonMessage, "Input",
+		b, a
+	);
 }
 
 void Input::key_callback(GLFWwindow* win,
@@ -450,5 +464,8 @@ void Input::key_callback(GLFWwindow* win,
 		break;
 	}
 
-	m_hermes->send(new InputKeyMessage(k, a));
+	//m_hermes->send(new InputKeyMessage(k, a));
+	HERMES_SEND_MSG(InputKeyMessage, "Input",
+		k, a
+	);
 }

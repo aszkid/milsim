@@ -93,8 +93,6 @@ Scene::~Scene()
 }
 void Scene::inner_post_init()
 {
-	m_hermes->subscribe(m_name_hash, {Crypto::HASH("WindowSize")});
-
 	/*m_camera.set_position(glm::vec3(0.0, 0.0, 5.0));
 	m_camera.look_at(glm::vec3(0.0, 0.0, 0.0));
 
@@ -129,8 +127,9 @@ void Scene::toggle_wireframe()
 
 void Scene::update(double delta)
 {
-	MILSIM_MSG_LOOP(msg)
+	HERMES_READ_CHANNEL(tmp, "Input")
 	{
+
 		/*if (msg->m_chan == Crypto::HASH("WindowSize"))
 		{
 			auto ws = static_cast<WindowSizeMessage *>(msg);

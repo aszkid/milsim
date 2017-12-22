@@ -33,9 +33,6 @@ Render::~Render()
 
 void Render::init()
 {
-	m_hermes->subscribe(Crypto::HASH("Render"), {
-		Crypto::HASH("WindowSize")
-	});
 }
 void Render::kill()
 {
@@ -63,11 +60,7 @@ void Render::kill()
 }
 void Render::update(std::chrono::milliseconds delta)
 {
-	for(auto msg : m_hermes->pull_inbox(Crypto::HASH("Render"))) {
-		if(msg->m_chan == Crypto::HASH("WindowSize")) {
-			//m_log->info("Updating window size...");
-		}
-	}
+	// check window size
 }
 
 void Render::thread_entry()

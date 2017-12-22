@@ -37,13 +37,6 @@ void Core::init(const std::string local_root = ".")
 	// `Hermes` has to be the first thing to be initialized
 	m_hermes = std::unique_ptr<Hermes>(new Hermes());
 
-	// `Core` needs to subscribe to some stuff
-	m_hermes->subscribe(Crypto::HASH("Core"), {
-		Crypto::HASH("InputKey"),
-		Crypto::HASH("CursorPos"),
-		Crypto::HASH("MouseButton")
-	});
-
 	// Init systems
 	m_input = add_system(new Input(m_window), "input");
 	m_render = add_system(new Render(
@@ -126,16 +119,26 @@ void Core::loop()
 			m_current_state->update(m_MS_PER_UPDATE.count() / 1000.0);
 
 			// pull messages `Core` is interested in
-			for(auto e : m_hermes->pull_inbox(Crypto::HASH("Core"))) {
+			/*for(auto e : m_hermes->pull_inbox(Crypto::HASH("Core"))) {
 				if(e->m_chan == Crypto::HASH("InputKey")) {
 					auto ikm = static_cast<InputKeyMessage*>(e);
 					if(ikm->m_key == InputKeyMessage::Key::ESCAPE) {
 						should_close = true;
 					}
 				}
+			}*/
+			HERMES_READ_CHANNEL(tmp, "Input") {
+				if(tmp->type == Crypto::HASH("InputKey")) {
+					auto msg = static_cast<InputKeyMessage*>(tmp);
+					if(msg->data.key == InputKeyMessage::Key::ESCAPE) {
+						should_close = true;
+					}
+				}
 			}
+
+
 			// Clear message inbox
-			m_hermes->clean();
+			m_hermes->swap_queues();
 			// Peel back lag
 			m_t_lag -= m_MS_PER_UPDATE;
 

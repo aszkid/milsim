@@ -274,10 +274,6 @@ Alexandria::~Alexandria()
 
 void Alexandria::init()
 {
-	m_hermes->subscribe(Crypto::HASH("Alexandria"), {
-		Crypto::HASH("RenderResource")
-	});
-
 	// Prepare common vertex layouts
 	RenderResourceContext rrc;
 	m_sys_render->alloc(&m_vl_mesh, RenderResource::VERTEX_LAYOUT);
@@ -318,10 +314,7 @@ void Alexandria::kill()
 
 void Alexandria::update(std::chrono::milliseconds delta)
 {
-	for(auto& msg : m_hermes->pull_inbox(Crypto::HASH("Alexandria"))) {
-		
-	}
-	//m_log->info("{} assets, {} hot.", m_assets.size(), m_loaded.size());
+
 }
 
 void Alexandria::parse_database(const std::string filename)

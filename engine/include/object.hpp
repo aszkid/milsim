@@ -6,8 +6,6 @@
 
 namespace MilSim {
 
-	#define MILSIM_MSG_LOOP(h) for(auto& h : m_hermes->pull_inbox(m_name_hash))
-
 	/**
 	 * Base class from which many engine classes derive.
 	 * It provides a handle to important systems:

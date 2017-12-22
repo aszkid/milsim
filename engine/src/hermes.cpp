@@ -11,57 +11,38 @@ Hermes::Hermes()
 }
 
 Hermes::~Hermes()
-{}
-
-
-void Hermes::subscribe(const uint32_t subid, std::vector<t_channel> channels)
 {
-	Subscription* sub;
-	if(m_subs.find(subid) != m_subs.end()) {
-		m_log->info("Subscription `{:x}` already exists; appending new channels...");
-	} else {
-		m_subs[subid] = Subscription();
-	}
-
-	sub = &m_subs[subid];
-	sub->m_channels.insert(sub->m_channels.end(), channels.begin(), channels.end());
+	swap_queues();
+	free_back_queues();
 }
 
-std::vector<Message*> Hermes::pull_inbox(const uint32_t subid)
+Hermes::t_queue const& Hermes::get_channel(const uint32_t chan)
 {
-	/**
-	 * (old: no writing on m_inbox happens while we do this)
-	 * we cannot really assume that. the render thread might
-	 * push messages while the main thread is updating components,
-	 * and then we're fucked.
-	 * this is not the most efficient solution, but it is a solution.
-	 */
-	std::lock_guard<std::mutex> guard(m_mutex);
-	auto& sub = m_subs[subid];
-	std::vector<Message*> res;
-	for(auto& m : m_inbox) {
-		if(std::find(sub.m_channels.begin(), sub.m_channels.end(), m->m_chan) != sub.m_channels.end()) {
-			res.push_back(m.get());
-		}
-	}
-	return res;
+	return m_back_qs[chan];
 }
 
-void Hermes::send(Message* msg)
+void Hermes::send(Message* msg, const uint32_t channel)
 {
 	/**
 	 * Now `Hermes` owns the message memory,
 	 * and will free it once we flush the message inbox.
-	 * 
-	 * Rudimentarily thread-safe, blocks on read-and-write.
-	 * We could have a "write" queue, and a "read" queue to avoid
-	 * this double locking.
 	 */
-	std::lock_guard<std::mutex> guard(m_mutex);
-	m_inbox.push_back(std::unique_ptr<Message>(msg));
+	HERMES_LOCK;
+	m_front_qs[channel].push_back(msg);
 }
 
-void Hermes::clean()
+void Hermes::swap_queues()
 {
-	m_inbox.clear();
+	HERMES_LOCK;
+	free_back_queues();
+	m_back_qs = std::move(m_front_qs);
+	m_front_qs.clear();
+}
+void Hermes::free_back_queues()
+{
+	for(auto& q : m_back_qs) {
+		for(auto p : q.second) {
+			delete p;
+		}
+	}
 }
