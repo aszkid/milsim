@@ -94,18 +94,15 @@ void Core::loop()
 
 	m_render->thread_entry();
 
-	bool should_close = false;
 	while(!glfwWindowShouldClose(m_window)) {
 		// Chrono stuff
 		m_currtime = std::chrono::system_clock::now();
 		m_delta = std::chrono::duration_cast<std::chrono::milliseconds>(m_currtime - m_prevtime);
 		m_prevtime = m_currtime;
 		m_t_lag += m_delta;
-
 		m_fps = 1.0 / (
 			m_delta.count() / 1000.0
 		);
-		//m_log->info("{} fps", m_fps);
 
 		// Update systems until catched up with lag
 		while(m_t_lag >= m_MS_PER_UPDATE) {
@@ -118,41 +115,27 @@ void Core::loop()
 
 			m_current_state->update(m_MS_PER_UPDATE.count() / 1000.0);
 
-			// pull messages `Core` is interested in
-			/*for(auto e : m_hermes->pull_inbox(Crypto::HASH("Core"))) {
-				if(e->m_chan == Crypto::HASH("InputKey")) {
-					auto ikm = static_cast<InputKeyMessage*>(e);
-					if(ikm->m_key == InputKeyMessage::Key::ESCAPE) {
-						should_close = true;
-					}
-				}
-			}*/
+			// Check interesting messages
 			HERMES_READ_CHANNEL(tmp, "Input") {
 				if(tmp->type == Crypto::HASH("InputKey")) {
 					auto msg = static_cast<InputKeyMessage*>(tmp);
 					if(msg->data.key == InputKeyMessage::Key::ESCAPE) {
-						should_close = true;
+						goto close;
 					}
 				}
 			}
-
 
 			// Clear message inbox
 			m_hermes->swap_queues();
 			// Peel back lag
 			m_t_lag -= m_MS_PER_UPDATE;
-
-			if(should_close)
-				break;
 		}
 
 		// Wait for render to be done with the current frame
 		m_render->wait();
-
-		// Communicate whether we should enter a new frame or quit
-		if(should_close) {
-			m_render->thread_stop();
-			break;
-		}
 	}
+
+	// Halt render thread by injecting `QUIT` command
+	close:
+		m_render->thread_stop();
 }

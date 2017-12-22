@@ -29,7 +29,7 @@ namespace MilSim {
 	 */
 	struct RenderMessage {
 		enum Type {
-			RESOURCE, COMMAND
+			RESOURCE, COMMAND, QUIT
 		};
 
 		Type m_type;
@@ -184,7 +184,6 @@ namespace MilSim {
 		 */
 		void _inner_thread_entry();
 		std::thread m_thread;
-		std::atomic_bool m_should_stop;
 		FrameFence m_fence;
 
 		/**

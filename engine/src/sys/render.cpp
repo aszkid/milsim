@@ -14,7 +14,6 @@ Render::Render(
 	)
 	: Sys::Sys("Render")
 {
-	m_should_stop.store(false);
 	m_window = window;
 	m_winx = winx;
 	m_winy = winy;
@@ -84,7 +83,7 @@ void Render::thread_entry()
 }
 void Render::thread_stop()
 {
-	m_should_stop.store(true);
+	m_queue_front.enqueue(RenderMessage {RenderMessage::QUIT});
 	m_thread.join();
 }
 void Render::wait()
@@ -105,7 +104,7 @@ void Render::_inner_thread_entry()
 
 	setup_pipeline();
 
-	while(!m_should_stop.load()) {
+	while(true) {
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
@@ -118,6 +117,8 @@ void Render::_inner_thread_entry()
 			case RenderMessage::COMMAND:
 				_handle_command(msg.m_commandc);
 				break;
+			case RenderMessage::QUIT:
+				return;
 			default:
 				break;
 			}
