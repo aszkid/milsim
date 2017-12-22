@@ -98,8 +98,7 @@ namespace MilSim {
 		uint m_fps;
 
 		// Render-main thread synchronization
-		std::mutex m_frame_status_mutex;
-		std::condition_variable m_frame_status;
+		FrameFence m_fence;
 	};
 	
 }

@@ -11,8 +11,7 @@ Render::Render(
 	uint winx,
 	uint winy,
 	apathy::Path root,
-	std::mutex* frame_status_mutex,
-	std::condition_variable* frame_status
+	FrameFence* fence
 	)
 	: Sys::Sys("Render")
 {
@@ -21,8 +20,7 @@ Render::Render(
 	m_winx = winx;
 	m_winy = winy;
 	m_root = root;
-	m_frame_status_mutex = frame_status_mutex;
-	m_frame_status = frame_status;
+	m_fence = fence;
 
 	m_textures.push_back({});
 	m_vertex_buffers.push_back({});
@@ -43,9 +41,6 @@ void Render::init()
 }
 void Render::kill()
 {
-	m_should_stop.store(true);
-	m_thread.join();
-
 	// free remaining alive resources
 	glbinding::Binding::useCurrentContext();
 
@@ -83,6 +78,11 @@ void Render::thread_entry()
 		&Render::_inner_thread_entry,
 		this
 	);
+}
+void Render::thread_stop()
+{
+	m_should_stop.store(true);
+	m_thread.join();
 }
 void Render::_inner_thread_entry()
 {
@@ -122,6 +122,12 @@ void Render::_inner_thread_entry()
 		 * to be in the render thread anyways
 		 */
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+		// Unblock main thread!
+		{
+			std::unique_lock<std::mutex> lk(m_fence->mutex);
+			m_fence->cv.notify_all();
+		}
 	}
 }
 

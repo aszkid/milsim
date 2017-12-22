@@ -19,6 +19,11 @@ namespace MilSim {
 
 	using namespace gl;
 
+	struct FrameFence {
+		std::mutex mutex;
+		std::condition_variable cv;
+	};
+
 	/**
 	 * Render thread messages.
 	 */
@@ -91,8 +96,7 @@ namespace MilSim {
 			uint winx,
 			uint winy,
 			apathy::Path root,
-			std::mutex* frame_status_mutex,
-			std::condition_variable* frame_status
+			FrameFence* fence
 		);
 		~Render();
 
@@ -104,6 +108,7 @@ namespace MilSim {
 		 * Kicks off the render thread.
 		 */
 		void thread_entry();
+		void thread_stop();
 		/**
 		 * Wait for the current render frame to finish.
 		 */
@@ -190,8 +195,7 @@ namespace MilSim {
 		void _inner_thread_entry();
 		std::thread m_thread;
 		std::atomic_bool m_should_stop;
-		std::mutex* m_frame_status_mutex;
-		std::condition_variable* m_frame_status;
+		FrameFence* m_fence;
 
 		/**
 		 * Render thread message queue.

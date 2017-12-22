@@ -51,8 +51,7 @@ void Core::init(const std::string local_root = ".")
 		m_winx,
 		m_winy,
 		m_local_root,
-		&m_frame_status_mutex,
-		&m_frame_status
+		&m_fence
 	), "render");
 	m_alexandria = add_system(new Alexandria(
 		m_local_root,
@@ -145,21 +144,16 @@ void Core::loop()
 				break;
 		}
 
-		// Render current state
-		m_current_state->render(m_t_lag.count() / m_MS_PER_UPDATE.count());
-
-		// m_render->wait();
-
-		std::this_thread::sleep_for(std::chrono::milliseconds(10));
-		if(should_close) {
-			/**
-			 * m_render_fence->set(QUIT);
-			 */
-			break;
+		// Wait for render to be done with the current frame
+		{
+			std::unique_lock<std::mutex> lk(m_fence.mutex);
+			m_fence.cv.wait(lk);
 		}
 
-		/**
-		 * m_render_fence->set(NEXT_FRAME);
-		 */
+		// Communicate whether we should enter a new frame or quit
+		if(should_close) {
+			m_render->thread_stop();
+			break;
+		}
 	}
 }
