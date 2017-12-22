@@ -23,10 +23,6 @@ Hermes::t_queue const& Hermes::get_channel(const uint32_t chan)
 
 void Hermes::send(Message* msg, const uint32_t channel)
 {
-	/**
-	 * Now `Hermes` owns the message memory,
-	 * and will free it once we flush the message inbox.
-	 */
 	HERMES_LOCK;
 	m_front_qs[channel].push_back(msg);
 }
