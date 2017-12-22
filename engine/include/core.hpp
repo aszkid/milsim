@@ -96,9 +96,6 @@ namespace MilSim {
 		std::chrono::milliseconds m_delta;
 		std::chrono::milliseconds m_t_lag {0};
 		uint m_fps;
-
-		// Render-main thread synchronization
-		FrameFence m_fence;
 	};
 	
 }

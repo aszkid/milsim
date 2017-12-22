@@ -10,8 +10,7 @@ Render::Render(
 	GLFWwindow* window,
 	uint winx,
 	uint winy,
-	apathy::Path root,
-	FrameFence* fence
+	apathy::Path root
 	)
 	: Sys::Sys("Render")
 {
@@ -20,7 +19,6 @@ Render::Render(
 	m_winx = winx;
 	m_winy = winy;
 	m_root = root;
-	m_fence = fence;
 
 	m_textures.push_back({});
 	m_vertex_buffers.push_back({});
@@ -84,6 +82,11 @@ void Render::thread_stop()
 	m_should_stop.store(true);
 	m_thread.join();
 }
+void Render::wait()
+{
+	std::unique_lock<std::mutex> lk(m_fence.mutex);
+	m_fence.cv.wait(lk);
+}
 void Render::_inner_thread_entry()
 {
 	// Initialize OpenGL context in the render thread
@@ -119,14 +122,14 @@ void Render::_inner_thread_entry()
 		
 		/**
 		 * force this for now -- eventually, bottleneck is guaranteed
-		 * to be in the render thread anyways
+		 * to be in the render thread anyways (always?)
 		 */
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
 		// Unblock main thread!
 		{
-			std::unique_lock<std::mutex> lk(m_fence->mutex);
-			m_fence->cv.notify_all();
+			std::unique_lock<std::mutex> lk(m_fence.mutex);
+			m_fence.cv.notify_all();
 		}
 	}
 }

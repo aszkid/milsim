@@ -50,8 +50,7 @@ void Core::init(const std::string local_root = ".")
 		m_window,
 		m_winx,
 		m_winy,
-		m_local_root,
-		&m_fence
+		m_local_root
 	), "render");
 	m_alexandria = add_system(new Alexandria(
 		m_local_root,
@@ -145,10 +144,7 @@ void Core::loop()
 		}
 
 		// Wait for render to be done with the current frame
-		{
-			std::unique_lock<std::mutex> lk(m_fence.mutex);
-			m_fence.cv.wait(lk);
-		}
+		m_render->wait();
 
 		// Communicate whether we should enter a new frame or quit
 		if(should_close) {

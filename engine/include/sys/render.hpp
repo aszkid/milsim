@@ -95,8 +95,7 @@ namespace MilSim {
 		Render(GLFWwindow* window,
 			uint winx,
 			uint winy,
-			apathy::Path root,
-			FrameFence* fence
+			apathy::Path root
 		);
 		~Render();
 
@@ -105,7 +104,7 @@ namespace MilSim {
 		void update(std::chrono::milliseconds delta);
 
 		/**
-		 * Kicks off the render thread.
+		 * Thread start-stop.
 		 */
 		void thread_entry();
 		void thread_stop();
@@ -195,7 +194,7 @@ namespace MilSim {
 		void _inner_thread_entry();
 		std::thread m_thread;
 		std::atomic_bool m_should_stop;
-		FrameFence* m_fence;
+		FrameFence m_fence;
 
 		/**
 		 * Render thread message queue.
