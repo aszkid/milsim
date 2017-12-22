@@ -188,7 +188,7 @@ namespace MilSim {
 		FrameFence m_fence;
 
 		/**
-		 * Render thread message queues. Front queue is for writing ("update" threads,
+		 * Render thread message queues. Front queue is for writing ("update" threads),
 		 * back queue is for reading (render thread only).
 		 */
 		moodycamel::ConcurrentQueue<RenderMessage> m_queue_front;

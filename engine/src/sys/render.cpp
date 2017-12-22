@@ -54,9 +54,21 @@ void Render::kill()
 	}
 	m_vertex_layouts.clear();
 
+	for(auto& ibuf : m_index_buffers) {
+		glDeleteBuffers(1, &ibuf.m_ibo);
+	}
+	m_index_buffers.clear();
+
+	for(auto& fbuf : m_frame_buffers) {
+		glDeleteFramebuffers(1, &fbuf.m_fbo);
+	}
+	m_frame_buffers.clear();
+
 	m_textures_free.clear();
 	m_vertex_buffers_free.clear();
 	m_vertex_layouts_free.clear();
+	m_index_buffers_free.clear();
+	m_frame_buffers_free.clear();
 }
 void Render::update(std::chrono::milliseconds delta)
 {
@@ -334,16 +346,17 @@ void Render::_handle_resource(const RenderResourceContext& rrc)
 	for(size_t i = 0; i < vbuf_n; i++) {
 		auto vbuf_instance = rrc.m_vb_ref[i];
 		auto& vbuf = m_vertex_buffers[vbuf_instance.index()];
-		glGenBuffers(1, &vbuf.m_buf);
 		auto& vbuf_data = rrc.m_vb[i];
 
 		if(vbuf_data.chunks.size() > 1) {
 			m_log->info("We don't support multie buffer chunks yet!");
 			abort();
 		}
-
 		auto& chunk = vbuf_data.chunks[0];
+
+		glGenBuffers(1, &vbuf.m_buf);
 		glBindBuffer(GL_COPY_WRITE_BUFFER, vbuf.m_buf);
+
 		GLenum usage;
 		switch(vbuf_data.usage) {
 		case RenderResourceContext::VertexBufferData::STATIC:
@@ -356,6 +369,7 @@ void Render::_handle_resource(const RenderResourceContext& rrc)
 			m_log->info("Buffer usage not supported!");
 			abort();
 		}
+
 		glBufferData(GL_COPY_WRITE_BUFFER,
 			chunk.size,
 			chunk.data,
@@ -369,9 +383,9 @@ void Render::_handle_resource(const RenderResourceContext& rrc)
 	for(size_t i = 0; i < vlayout_n; i++) {
 		auto vlayout_instance = rrc.m_vl_ref[i];
 		auto& vlayout = m_vertex_layouts[vlayout_instance.index()];
-		glGenVertexArrays(1, &vlayout.m_vao);
 		auto& vlayout_data = rrc.m_vl[i];
 
+		glGenVertexArrays(1, &vlayout.m_vao);
 		glBindVertexArray(vlayout.m_vao);
 		for(size_t j = 0; j < vlayout_data.attribs.size(); j++) {
 			auto& attrib = vlayout_data.attribs[j];
@@ -404,6 +418,7 @@ void Render::_handle_resource(const RenderResourceContext& rrc)
 		auto& ibuf = m_index_buffers[ibuf_instance.index()];
 		auto& ibuf_data = rrc.m_ib[i];
 
+		glGenBuffers(1, &ibuf.m_ibo);
 		glBindBuffer(
 			GL_ELEMENT_ARRAY_BUFFER,
 			ibuf.m_ibo
