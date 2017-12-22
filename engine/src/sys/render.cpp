@@ -98,7 +98,7 @@ void Render::_inner_thread_entry()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
 		RenderMessage msg;
-		while(m_queue.try_dequeue(msg)) {
+		while(m_queue_back.try_dequeue(msg)) {
 			switch(msg.m_type) {
 			case RenderMessage::RESOURCE:
 				_handle_resource(msg.m_resourcec);
@@ -119,6 +119,12 @@ void Render::_inner_thread_entry()
 		 */
 		std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
+		// Swap command queues
+		{
+			std::lock_guard<std::mutex> lk(m_swap_mutex);
+			m_queue_back = std::move(m_queue_front);
+			m_queue_front = moodycamel::ConcurrentQueue<RenderMessage>();
+		}
 		// Unblock main thread!
 		{
 			std::unique_lock<std::mutex> lk(m_fence.mutex);
@@ -259,7 +265,9 @@ void Render::setup_pipeline()
  */
 void Render::dispatch(RenderResourceContext rrc)
 {
-	m_queue.enqueue(RenderMessage {RenderMessage::RESOURCE, rrc, nullptr});
+	// i suspect this is not really necessary...
+	std::lock_guard<std::mutex> lk(m_swap_mutex);
+	m_queue_front.enqueue(RenderMessage {RenderMessage::RESOURCE, rrc, nullptr});
 }
 void Render::alloc(RenderResource* rr, RenderResource::Type t)
 {

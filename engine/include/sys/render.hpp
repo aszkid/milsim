@@ -180,15 +180,6 @@ namespace MilSim {
 		RenderResource _alloc_frame_buffer();
 
 		/**
-		 * RenderResourceContexts. We keep track of them here (not optimal)
-		 * because of lifetime issues: the render thread will peek inside when
-		 * the calling thread is most certainly doing something else.
-		 * We might be OK with simply copying... yeah I think that works.
-		 */
-		/*std::vector<RenderResourceContext*> m_rrcs;
-		std::mutex m_rrc_lock;*/
-
-		/**
 		 * Render thread and synchronization.
 		 */
 		void _inner_thread_entry();
@@ -197,9 +188,12 @@ namespace MilSim {
 		FrameFence m_fence;
 
 		/**
-		 * Render thread message queue.
+		 * Render thread message queues. Front queue is for writing ("update" threads,
+		 * back queue is for reading (render thread only).
 		 */
-		moodycamel::ConcurrentQueue<RenderMessage> m_queue;
+		moodycamel::ConcurrentQueue<RenderMessage> m_queue_front;
+		moodycamel::ConcurrentQueue<RenderMessage> m_queue_back;
+		std::mutex m_swap_mutex;
 	};
 
 };
