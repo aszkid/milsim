@@ -44,9 +44,9 @@ void MainScreen::kill()
 	
 }
 
-void MainScreen::render(double interp)
+void MainScreen::render()
 {
-	m_scene->render(interp);
+	m_scene->render();
 }
 void MainScreen::update(double delta)
 {

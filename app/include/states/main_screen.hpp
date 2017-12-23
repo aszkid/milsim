@@ -10,7 +10,7 @@ public:
 	void load();
 	void kill();
 
-	void render(double interp);
+	void render();
 	void update(double delta);
 
 private:

@@ -75,7 +75,7 @@ namespace MilSim {
 		~Scene();
 
 		void update(double delta);
-		void render(double interp);
+		void render();
 
 		Entity get_camera();
 		Entity get_light();

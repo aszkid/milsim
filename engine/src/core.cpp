@@ -131,6 +131,9 @@ void Core::loop()
 			m_t_lag -= m_MS_PER_UPDATE;
 		}
 
+		// Generate and submit render commands
+		m_current_state->render();
+
 		// Wait for render to be done with the current frame
 		m_render->wait();
 	}

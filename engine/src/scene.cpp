@@ -148,7 +148,7 @@ void Scene::update(double delta)
 	// pipe render-level update messages onto `RenderScene` thread
 	// ....
 }
-void Scene::render(double interp)
+void Scene::render()
 {
 	ShaderProgramAsset *shader = nullptr;
 	glm::mat4 proj(1.0);
