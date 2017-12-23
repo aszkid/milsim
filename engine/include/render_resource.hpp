@@ -79,10 +79,9 @@ namespace MilSim {
 	};
 
 	/**
-	 * Interface to construct render-level resources.
-	 * Packed up and sent to the render thread.
+	 * Holds all data necessary to create render resources.
 	 */
-	struct RenderResourceContext {
+    struct RenderResourcePackage {
 		/**
 		 * TEXTURE
 		 */
@@ -99,10 +98,9 @@ namespace MilSim {
 			};
 			uint8_t filter;*/
 		};
-		std::vector<TextureData> m_tex;
-		std::vector<RenderResource> m_tex_ref;
-		void push_texture(TextureData tex, RenderResource ref);
-
+		std::vector<TextureData> tex;
+		std::vector<RenderResource> tex_ref;
+		
 		/**
 		 * VERTEX BUFFER
 		 */
@@ -123,9 +121,8 @@ namespace MilSim {
 			};
 			Usage usage;
 		};
-		std::vector<VertexBufferData> m_vb;
-		std::vector<RenderResource> m_vb_ref;
-		void push_vertex_buffer(VertexBufferData vb, RenderResource ref);
+		std::vector<VertexBufferData> vb;
+		std::vector<RenderResource> vb_ref;
 
 		/**
 		 * VERTEX LAYOUT
@@ -150,9 +147,8 @@ namespace MilSim {
 			};
 			std::vector<Attribute> attribs;
 		};
-		std::vector<VertexLayoutData> m_vl;
-		std::vector<RenderResource> m_vl_ref;
-		void push_vertex_layout(VertexLayoutData vl, RenderResource ref);
+		std::vector<VertexLayoutData> vl;
+		std::vector<RenderResource> vl_ref;
 
 		/**
 		 * INDEX BUFFER
@@ -166,9 +162,8 @@ namespace MilSim {
 			const GLvoid* data;
 			size_t size;
 		};
-		std::vector<IndexBufferData> m_ib;
-		std::vector<RenderResource> m_ib_ref;
-		void push_index_buffer(IndexBufferData ib, RenderResource ref);
+		std::vector<IndexBufferData> ib;
+		std::vector<RenderResource> ib_ref;
 
 		/**
 		 * FRAME BUFFER
@@ -177,9 +172,7 @@ namespace MilSim {
 			std::vector<RenderResource> render_targets;
 			RenderResource depth_stencil_target;
 		};
-		std::vector<FrameBufferData> m_fb;
-		std::vector<RenderResource> m_fb_ref;
-		void push_frame_buffer(FrameBufferData fb, RenderResource ref);
-	};
-
+		std::vector<FrameBufferData> fb;
+		std::vector<RenderResource> fb_ref;
+    };
 }

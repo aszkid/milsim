@@ -198,7 +198,7 @@ void Render::setup_pipeline()
 		RenderResource tex;
 		alloc(&tex, RenderResource::TEXTURE);
 
-		RenderResourceContext::TextureData data = {
+		RenderResourcePackage::TextureData data = {
 			.width = m_winx,
 			.height = m_winy,
 			.source = nullptr
@@ -235,7 +235,7 @@ void Render::setup_pipeline()
 
 		// Allocate framebuffer object and prepare data
 		alloc(&layer.frame_buffer, RenderResource::FRAME_BUFFER);
-		RenderResourceContext::FrameBufferData data;
+		RenderResourcePackage::FrameBufferData data;
 
 		// Set layer render targets
 		const auto& ts = l["render_targets"];
@@ -270,17 +270,17 @@ void Render::setup_pipeline()
 		m_render_layers.push_back(layer);
 	}
 
-	dispatch(rrc);
+	dispatch(rrc.m_data);
 }
 
 /**
  * RENDER THREAD MESSAGE DISPATCH
  */
-void Render::dispatch(RenderResourceContext rrc)
+void Render::dispatch(RenderResourcePackage package)
 {
 	// i suspect this is not really necessary...
 	std::lock_guard<std::mutex> lk(m_swap_mutex);
-	m_queue_front.enqueue(RenderMessage {RenderMessage::RESOURCE, rrc, nullptr});
+	m_queue_front.enqueue(RenderMessage {RenderMessage::RESOURCE, package, nullptr});
 }
 void Render::alloc(RenderResource* rr, RenderResource::Type t)
 {
@@ -315,18 +315,18 @@ void Render::alloc(RenderResource* rr, RenderResource::Type t)
 /**
  * PRIVATE METHODS -- only called from the render thread!
  */
-void Render::_handle_resource(const RenderResourceContext& rrc)
+void Render::_handle_resource(const RenderResourcePackage& package)
 {
 	m_resource_lock.lock();
 
 	// assuming `rrc` not nullptr...
 	// 1) upload textures
-	size_t tex_n = rrc.m_tex.size();
-	assert(tex_n == rrc.m_tex_ref.size()); // debug
+	size_t tex_n = package.tex.size();
+	assert(tex_n == package.tex_ref.size()); // debug
 	for(size_t i = 0; i < tex_n; i++) {
-		auto tex_instance = rrc.m_tex_ref[i];
+		auto tex_instance = package.tex_ref[i];
 		auto& tex = m_textures[tex_instance.index()];
-		auto& tex_data = rrc.m_tex[i];
+		auto& tex_data = package.tex[i];
 
 		glGenTextures(1, &tex.m_tex_id);
 		glBindTexture(GL_TEXTURE_2D, tex.m_tex_id);
@@ -342,12 +342,12 @@ void Render::_handle_resource(const RenderResourceContext& rrc)
 	}
 
 	// 2) upload vertex buffers
-	size_t vbuf_n = rrc.m_vb.size();
-	assert(vbuf_n == rrc.m_vb_ref.size()); // debug
+	size_t vbuf_n = package.vb.size();
+	assert(vbuf_n == package.vb_ref.size()); // debug
 	for(size_t i = 0; i < vbuf_n; i++) {
-		auto vbuf_instance = rrc.m_vb_ref[i];
+		auto vbuf_instance = package.vb_ref[i];
 		auto& vbuf = m_vertex_buffers[vbuf_instance.index()];
-		auto& vbuf_data = rrc.m_vb[i];
+		auto& vbuf_data = package.vb[i];
 
 		if(vbuf_data.chunks.size() > 1) {
 			m_log->info("We don't support multie buffer chunks yet!");
@@ -360,10 +360,10 @@ void Render::_handle_resource(const RenderResourceContext& rrc)
 
 		GLenum usage;
 		switch(vbuf_data.usage) {
-		case RenderResourceContext::VertexBufferData::STATIC:
+		case RenderResourcePackage::VertexBufferData::STATIC:
 			usage = GL_STATIC_DRAW;
 			break;
-		case RenderResourceContext::VertexBufferData::DYNAMIC:
+		case RenderResourcePackage::VertexBufferData::DYNAMIC:
 			usage = GL_DYNAMIC_DRAW;
 			break;
 		default:
@@ -379,12 +379,12 @@ void Render::_handle_resource(const RenderResourceContext& rrc)
 	}
 
 	// 3) Upload vertex array objects (format descriptors)
-	size_t vlayout_n  = rrc.m_vl.size();
-	assert(vlayout_n == rrc.m_vl_ref.size());
+	size_t vlayout_n  = package.vl.size();
+	assert(vlayout_n == package.vl_ref.size());
 	for(size_t i = 0; i < vlayout_n; i++) {
-		auto vlayout_instance = rrc.m_vl_ref[i];
+		auto vlayout_instance = package.vl_ref[i];
 		auto& vlayout = m_vertex_layouts[vlayout_instance.index()];
-		auto& vlayout_data = rrc.m_vl[i];
+		auto& vlayout_data = package.vl[i];
 
 		glGenVertexArrays(1, &vlayout.m_vao);
 		glBindVertexArray(vlayout.m_vao);
@@ -392,7 +392,7 @@ void Render::_handle_resource(const RenderResourceContext& rrc)
 			auto& attrib = vlayout_data.attribs[j];
 			GLenum type;
 			switch(attrib.type) {
-			case RenderResourceContext::VertexLayoutData::Attribute::Type::FLOAT:
+			case RenderResourcePackage::VertexLayoutData::Attribute::Type::FLOAT:
 				type = GL_FLOAT;
 				break;
 			default:
@@ -412,12 +412,12 @@ void Render::_handle_resource(const RenderResourceContext& rrc)
 	}
 
 	// 4) Upload index buffers
-	size_t ibuf_n  = rrc.m_ib.size();
-	assert(ibuf_n == rrc.m_ib_ref.size());
+	size_t ibuf_n  = package.ib.size();
+	assert(ibuf_n == package.ib_ref.size());
 	for(size_t i = 0; i < ibuf_n; i++) {
-		auto ibuf_instance = rrc.m_ib_ref[i];
+		auto ibuf_instance = package.ib_ref[i];
 		auto& ibuf = m_index_buffers[ibuf_instance.index()];
-		auto& ibuf_data = rrc.m_ib[i];
+		auto& ibuf_data = package.ib[i];
 
 		glGenBuffers(1, &ibuf.m_ibo);
 		glBindBuffer(
@@ -433,12 +433,12 @@ void Render::_handle_resource(const RenderResourceContext& rrc)
 	}
 
 	// 5) Upload frame buffers
-	size_t fbuf_n  = rrc.m_fb.size();
-	assert(fbuf_n == rrc.m_fb_ref.size());
+	size_t fbuf_n  = package.fb.size();
+	assert(fbuf_n == package.fb_ref.size());
 	for(size_t i = 0; i < fbuf_n; i++) {
-		auto fbuf_instance = rrc.m_fb_ref[i];
+		auto fbuf_instance = package.fb_ref[i];
 		auto& fbuf = m_frame_buffers[fbuf_instance.index()];
-		auto& fbuf_data = rrc.m_fb[i];
+		auto& fbuf_data = package.fb[i];
 		m_log->info("Preparing framebuffer {:x}...", fbuf_instance.m_handle);
 
 		glGenFramebuffers(1, &fbuf.m_fbo);
@@ -483,7 +483,7 @@ void Render::_handle_resource(const RenderResourceContext& rrc)
 
 	m_resource_lock.unlock();
 }
-void Render::_handle_command(RenderCommandContext* rcc)
+void Render::_handle_command(RenderCommandPackage* package)
 {
 
 }

@@ -10,8 +10,7 @@ set(SOURCES
 	src/core.cpp
 	src/scene.cpp
 	src/render_scene.cpp
-	src/render_resource.cpp
-	src/render_command.cpp
+	src/render_context.cpp
 	src/logger.cpp
 	src/object.cpp
 	src/hermes.cpp

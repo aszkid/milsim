@@ -12,8 +12,7 @@
 
 #include "util/concurrentqueue.hpp"
 #include "sys.hpp"
-#include "render_resource.hpp"
-#include "render_command.hpp"
+#include "render_context.hpp"
 
 namespace MilSim {
 
@@ -33,12 +32,12 @@ namespace MilSim {
 		};
 
 		Type m_type;
-		RenderResourceContext m_resourcec;
-		RenderCommandContext* m_commandc;
+		RenderResourcePackage m_resourcec;
+		RenderCommandPackage* m_commandc;
 	};
 
 	/**
-	 * Concrete GL render resources; only handled by the internals
+	 * Concrete (internal) GL render resources; only handled by the internals
 	 * of `Sys.Render`.
 	 * Outside systems must use the `RenderResource` interface.
 	 */
@@ -122,7 +121,7 @@ namespace MilSim {
 		 * All communication with the render thread happens through these few methods.
 		 * Q: should we now own the RRC?
 		 */
-		void dispatch(RenderResourceContext rrc);
+		void dispatch(RenderResourcePackage package);
 		void alloc(RenderResource* rrc, RenderResource::Type t);
 
 	private:
@@ -170,8 +169,8 @@ namespace MilSim {
 		 * Resource allocation and destruction methods.
 		 * These are only called 
 		 */
-		void _handle_resource(const RenderResourceContext& rrc);
-		void _handle_command(RenderCommandContext* rcc);
+		void _handle_resource(const RenderResourcePackage& package);
+		void _handle_command(RenderCommandPackage* package);
 		
 		RenderResource _alloc_texture();
 		RenderResource _alloc_vertex_buffer();

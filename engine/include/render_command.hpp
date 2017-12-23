@@ -4,8 +4,25 @@
 #include <cstddef>
 #include <vector>
 
+#include "render_resource.hpp"
+
 namespace MilSim {
 
+	/**
+	 * Struct pointed at by `head` in a render command.
+	 */
+	struct RenderCommandPackage {
+		RenderResource shader;
+		// shader_data; i.e. per command shader data (uniforms)
+
+		RenderResource vertex_buffer;
+		RenderResource index_buffer;
+		struct BatchInfo {
+			uint32_t vertex_offset;
+			uint32_t index_offset;
+			uint32_t primitives;
+		};
+	};
 
 	/**
 	 * POD structure holding a render 'key' to perform sorting
@@ -16,11 +33,11 @@ namespace MilSim {
 	 * 		+ Layer: full pipeline description (render targets, stencil+depth buffers...).
 	 * 		+ Shader: shader program to use.
 	 * 		+ Texture: texture to bind (zero if none, I suppose).
-	 * `m_head` points at the data required for the execution of
-	 * this specific command.
+	 * `m_job` is the data required to issue the call.
 	 */
 	struct RenderCommand {
 		uint64_t m_key;
+		RenderCommandPackage m_data;
 
 		const static size_t USER_BITS = 40;
 		const static size_t DEPTH_BITS = 16;
@@ -64,8 +81,6 @@ namespace MilSim {
 		inline uint64_t get_user_defined() const {
 			return (m_key & USER_MASK) >> USER_IDX;
 		};
-
-		void* m_head;
 	};
 
 	/**
@@ -84,15 +99,4 @@ namespace MilSim {
 	struct PipelineState {
 
 	};
-
-	/**
-	 * Render command builder. Generates `RenderCommand`s and
-	 * packs their render data needed to execute the call into `m_data`.
-	 * Used by every `RenderScene` to generate draw calls [and state changes?].
-	 */
-	struct RenderCommandContext {
-		
-		std::vector<RenderCommand> m_commands;
-	};
-
 }
