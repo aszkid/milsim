@@ -300,7 +300,7 @@ void Alexandria::init()
 		}
 	};
 	rrc.push_vertex_layout(layout, m_vl_mesh);
-	m_sys_render->dispatch(rrc.m_data);
+	m_sys_render->dispatch(std::move(rrc.m_data));
 }
 void Alexandria::kill()
 {
@@ -598,7 +598,7 @@ bool Alexandria::_load_model(const t_asset_id hash, const json* root)
 		.usage = RenderResourcePackage::VertexBufferData::STATIC
 	};
 	rrc.push_vertex_buffer(buff, mesh->m_vb_handle);
-	m_sys_render->dispatch(rrc.m_data);
+	m_sys_render->dispatch(std::move(rrc.m_data));
 	
 	// Load material
 	if(!_load_material(mesh->m_material, &root->at("material")))
@@ -694,7 +694,7 @@ bool Alexandria::_load_texture(const t_asset_id hash, const json* root, bool gpu
 			.filter = RenderResourceContext::TextureData::Filter::LINEAR*/
 		};
 		rrc.push_texture(tex, texture->m_handle);
-		m_sys_render->dispatch(rrc.m_data);
+		m_sys_render->dispatch(std::move(rrc.m_data));
 	}
 
 	return true;
@@ -763,7 +763,7 @@ bool Alexandria::_load_map(const t_asset_id hash, const json* root)
 	};
 	rrc.push_vertex_buffer(vb, mesh->m_vb_handle);
 
-	m_sys_render->dispatch(rrc.m_data);
+	m_sys_render->dispatch(std::move(rrc.m_data));
 
 	return true;
 }

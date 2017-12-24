@@ -32,8 +32,8 @@ namespace MilSim {
 		};
 
 		Type m_type;
-		RenderResourcePackage m_resourcec;
-		RenderCommandPackage* m_commandc;
+		RenderResourcePackage m_resources;
+		std::vector<RenderCommand> m_commands;
 	};
 
 	/**
@@ -118,10 +118,20 @@ namespace MilSim {
 		void setup_pipeline();
 
 		/**
-		 * All communication with the render thread happens through these few methods.
-		 * Q: should we now own the RRC?
+		 * Pass render resource package for resource creation.
+		 * Non-blocking.
 		 */
-		void dispatch(RenderResourcePackage package);
+		void dispatch(RenderResourcePackage&& package);
+		/**
+		 * Pass render command list for drawing, mostly.
+		 * This passes ownership of the command list.
+		 * Non-blocking.
+		 */
+		void dispatch(std::vector<RenderCommand>&& commands);
+		/**
+		 * Request a render resource allocation. Returns immediately,
+		 * blocking.
+		 */
 		void alloc(RenderResource* rrc, RenderResource::Type t);
 
 	private:
@@ -170,7 +180,7 @@ namespace MilSim {
 		 * These are only called 
 		 */
 		void _handle_resource(const RenderResourcePackage& package);
-		void _handle_command(RenderCommandPackage* package);
+		void _handle_command(const RenderCommand& command);
 		
 		RenderResource _alloc_texture();
 		RenderResource _alloc_vertex_buffer();

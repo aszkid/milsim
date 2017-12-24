@@ -112,10 +112,11 @@ void Render::_inner_thread_entry()
 		while(m_queue_back.try_dequeue(msg)) {
 			switch(msg.m_type) {
 			case RenderMessage::RESOURCE:
-				_handle_resource(msg.m_resourcec);
+				_handle_resource(msg.m_resources);
 				break;
 			case RenderMessage::COMMAND:
-				_handle_command(msg.m_commandc);
+				for(const auto& command : msg.m_commands)
+					_handle_command(command);
 				break;
 			case RenderMessage::QUIT:
 				return;
@@ -270,17 +271,30 @@ void Render::setup_pipeline()
 		m_render_layers.push_back(layer);
 	}
 
-	dispatch(rrc.m_data);
+	dispatch(std::move(rrc.m_data));
 }
 
 /**
  * RENDER THREAD MESSAGE DISPATCH
  */
-void Render::dispatch(RenderResourcePackage package)
+void Render::dispatch(RenderResourcePackage&& package)
 {
 	// i suspect this is not really necessary...
 	std::lock_guard<std::mutex> lk(m_swap_mutex);
-	m_queue_front.enqueue(RenderMessage {RenderMessage::RESOURCE, package, nullptr});
+
+	RenderMessage msg;
+	msg.m_type = RenderMessage::RESOURCE;
+	msg.m_resources = std::move(package);
+	m_queue_front.enqueue(msg);
+}
+void Render::dispatch(std::vector<RenderCommand>&& commands)
+{
+	std::lock_guard<std::mutex> lk(m_swap_mutex);
+	
+	RenderMessage msg;
+	msg.m_type = RenderMessage::COMMAND;
+	msg.m_commands = std::move(commands);
+	m_queue_front.enqueue(msg);
 }
 void Render::alloc(RenderResource* rr, RenderResource::Type t)
 {
@@ -483,7 +497,7 @@ void Render::_handle_resource(const RenderResourcePackage& package)
 
 	m_resource_lock.unlock();
 }
-void Render::_handle_command(RenderCommandPackage* package)
+void Render::_handle_command(const RenderCommand& command)
 {
 
 }
