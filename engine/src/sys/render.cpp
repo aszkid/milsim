@@ -499,7 +499,10 @@ void Render::_handle_resource(const RenderResourcePackage& package)
 }
 void Render::_handle_command(const RenderCommand& command)
 {
-
+	m_log->info("Drawing something with key {:x}!", command.m_key);
+	m_log->info("  : vbuf {}", command.m_data.vertex_buffer.m_handle);
+	m_log->info("  : ibuf {}", command.m_data.index_buffer.m_handle);
+	m_log->info("  : {} primitives", command.m_data.batch.num_primitives);
 }
 
 RenderResource Render::_alloc_texture()

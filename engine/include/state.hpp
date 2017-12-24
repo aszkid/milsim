@@ -3,10 +3,10 @@
 #include <glm/ext.hpp>
 
 #include "sys/alexandria.hpp"
+#include "sys/render.hpp"
 #include "entity.hpp"
 #include "hermes.hpp"
 #include "scene.hpp"
-#include "render_scene.hpp"
 #include "object.hpp"
 
 #include "component/debug.hpp"
@@ -41,6 +41,9 @@ namespace MilSim {
 			m_winx = winx;
 			m_winy = winy;
 		};
+		void set_render(Render* render) {
+			m_render = render;
+		};
 
 	private:
 		// SceneGraph
@@ -54,18 +57,21 @@ namespace MilSim {
 
 	protected:
 		Scene* new_scene() {
-			return new Scene(
+			auto scene = new Scene(
 				m_entitymngr.get(),
 				m_debug_component.get(),
-				m_transform_component.get()
+				m_transform_component.get(),
+				m_render
 			);
-		};
-		RenderScene* new_render_scene() {
-			return new RenderScene();
+			post_init_child(scene, "Scene");
+			scene->set_viewport(m_winx, m_winy);
+			return scene;
 		};
 
 		bool m_ready;
 		uint m_winx, m_winy;
+
+		Render* m_render;
 
 		// Entity-Component handles
 		std::unique_ptr<EntityManager> m_entitymngr;

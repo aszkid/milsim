@@ -71,7 +71,12 @@ namespace MilSim {
 	 */
 	class Scene : public Object {
 	public:
-		Scene(EntityManager* em, DebugComponent* dc, TransformComponent* tc);
+		Scene(
+			EntityManager* em,
+			DebugComponent* dc,
+			TransformComponent* tc,
+			Render* render
+		);
 		~Scene();
 
 		void update(double delta);
@@ -96,6 +101,7 @@ namespace MilSim {
 
 		// handle to the render scene used to render our stuff
 		RenderScene* m_render_scene;
+		Render* m_render;
 	
 		// Viewport
 		uint m_winx, m_winy;

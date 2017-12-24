@@ -20,8 +20,9 @@ namespace MilSim {
 		struct BatchInfo {
 			uint32_t vertex_offset;
 			uint32_t index_offset;
-			uint32_t primitives;
+			uint32_t num_primitives; // assume triangles for now
 		};
+		BatchInfo batch;
 	};
 
 	/**
@@ -29,10 +30,6 @@ namespace MilSim {
 	 * and a pointer to the actual render data.
 	 * `m_key` bit structure for now:
 	 * 		| Layer (8b) | Depth (16b) | User-defined (40b) |
-	 * where
-	 * 		+ Layer: full pipeline description (render targets, stencil+depth buffers...).
-	 * 		+ Shader: shader program to use.
-	 * 		+ Texture: texture to bind (zero if none, I suppose).
 	 * `m_job` is the data required to issue the call.
 	 */
 	struct RenderCommand {

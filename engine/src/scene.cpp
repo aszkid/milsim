@@ -81,7 +81,12 @@ void Camera::_update_view()
 ////////////////////////////////////////
 // SCENE
 ////////////////////////////////////////
-Scene::Scene(EntityManager* em, DebugComponent* dc, TransformComponent* tc)
+Scene::Scene(
+	EntityManager* em,
+	DebugComponent* dc,
+	TransformComponent* tc,
+	Render* render	
+	)
 {
 	m_entitymngr = em;
 	m_debug_comp = dc;

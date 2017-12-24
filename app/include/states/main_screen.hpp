@@ -25,6 +25,11 @@ private:
 	float m_walking_spd;
 	bool m_sprint;
 
+	std::array<glm::vec3, 3> m_verts;
+	std::array<GLuint, 3> m_indices;
+	MilSim::RenderResource m_ibref, m_vbref, m_vlref;
+	const size_t m_NUM {3};
+
 	// scene stuff
 	MilSim::Entity m_statue;
 };

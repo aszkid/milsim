@@ -13,18 +13,56 @@ MainScreen::~MainScreen()
 
 void MainScreen::load()
 {
-	// create world scene
+	// create main scene
 	m_scene = std::unique_ptr<MilSim::Scene>(new_scene());
-	post_init_child(m_scene.get(), "Scene");
-	m_scene->set_viewport(m_winx, m_winy);
-	// create corresponding render scene
-	m_render_scene = std::unique_ptr<MilSim::RenderScene>(new_render_scene());
-	post_init_child(m_render_scene.get(), "RenderScene");
-	// give `RenderScene` handle to `Scene`
-	m_scene->set_render_scene(m_render_scene.get());
 
-	// Build our scene
-	//m_scene->add_triangle();
+	// Create shader
+
+	// Allocate render resources
+	using namespace MilSim;
+	m_render->alloc(&m_ibref, RenderResource::INDEX_BUFFER);
+	m_render->alloc(&m_vbref, RenderResource::VERTEX_BUFFER);
+	m_render->alloc(&m_vlref, RenderResource::VERTEX_LAYOUT);
+
+	// Raw triangle data
+	m_verts = {
+		glm::vec3(0.f, 0.5f, 0.f),
+		glm::vec3(-0.5f, -0.5f, 0.f),
+		glm::vec3(0.5f, -0.5f, 0.f)
+	};
+	m_indices = {
+		0,1,2
+	};
+
+	// Resource descriptors
+	RenderResourcePackage::VertexBufferData vb = {
+		.chunks = {
+			{ .data = &m_verts[0], .size = m_NUM * sizeof(glm::vec3) }
+		},
+		.usage = RenderResourcePackage::VertexBufferData::Usage::STATIC
+	};
+	RenderResourcePackage::IndexBufferData ib = {
+		.data = &m_indices[0],
+		.size = m_NUM * sizeof(GLuint)
+	};
+	RenderResourcePackage::VertexLayoutData vl = {
+		.attribs = {
+			{
+				// Vertex position
+				.size =  3,
+				.type = RenderResourcePackage::VertexLayoutData::Attribute::FLOAT,
+				.offset = 0,
+			}
+		}
+	};
+
+	// Send to the render thread
+	RenderResourceContext rrc;
+	rrc.push_vertex_buffer(vb, m_vbref);
+	rrc.push_index_buffer(ib, m_ibref);
+	rrc.push_vertex_layout(vl, m_vlref);
+
+	m_render->dispatch(std::move(rrc.m_data));
 	
 	//m_statue = m_scene->add_model("/Base/Models/Greek");
 
@@ -41,12 +79,33 @@ void MainScreen::load()
 }
 void MainScreen::kill()
 {
-	
+
 }
 
 void MainScreen::render()
 {
 	m_scene->render();
+
+	// Draw our beautiful triangle
+	using namespace MilSim;
+
+	RenderCommandPackage package = {
+		.shader = {0},
+		.vertex_buffer = m_vbref,
+		.index_buffer = m_ibref,
+		.batch = {
+			.vertex_offset = 0,
+			.index_offset = 0,
+			.num_primitives = 1
+		}
+	};
+
+	RenderCommandContext rcc;
+	rcc.m_render = m_render; // ugly
+	// submit all draw calls, just one for now
+	rcc.render(&package, RenderResource {0});
+	// dispatch them
+	m_render->dispatch(std::move(rcc.m_commands));
 }
 void MainScreen::update(double delta)
 {

@@ -45,3 +45,25 @@ void RenderResourceContext::push_frame_buffer(RRP::FrameBufferData fb, RenderRes
 	m_data.fb.push_back(fb);
 	m_data.fb_ref.push_back(ref);
 }
+
+
+
+RenderCommandPackage* RenderCommandContext::render(
+	RenderCommandPackage* job,
+	RenderResource shader)
+{
+	RenderCommand cmd;
+	cmd.m_data = *job;
+
+	// key data
+	cmd.set_layer(0); // set by given shader; TODO
+	cmd.set_depth(0); // quantize depth from float
+	cmd.set_user_defined(0); // nothing for now
+
+	// patch `cmd.m_data` if needed, by querying `Sys.Render`;
+	// TODO
+
+	m_commands.emplace_back(cmd);
+
+	return &m_commands.back().m_data;
+}
