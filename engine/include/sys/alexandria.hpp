@@ -130,12 +130,9 @@ namespace MilSim {
 		ShaderProgramAsset(const apathy::Path id);
 		~ShaderProgramAsset();
 
-		GLuint m_vert_id;
-		GLuint m_frag_id;
-		GLuint m_prog_id;
+		RenderResource m_program;
 		std::string m_vert_source;
 		std::string m_frag_source;
-		std::map<std::string, GLuint> m_uniforms;
 	};
 
 	/**
@@ -199,6 +196,7 @@ namespace MilSim {
 		bool have_asset(const t_asset_id hash);
 		bool is_loaded(const t_asset_id hash);
 
+		bool load_asset(const std::string name);
 		bool load_asset(const t_asset_id hash);
 		void unload_asset(const t_asset_id hash);
 
@@ -251,6 +249,7 @@ namespace MilSim {
 		bool _load_shader(ShaderProgramAsset* shader, apathy::Path id, const json* root);
 		bool _load_texture(const t_asset_id hash, const json* root, bool gpu = true);
 		bool _load_map(const t_asset_id hash, const json* root);
+		bool _load_shader_program(const t_asset_id hash, const json* root);
 
 		void _unload_model(const t_asset_id hash);
 		void _unload_material(const t_asset_id hash);

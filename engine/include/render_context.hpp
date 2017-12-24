@@ -21,6 +21,7 @@ namespace MilSim {
 		void push_vertex_layout(RRP::VertexLayoutData vl, RenderResource ref);
 		void push_index_buffer(RRP::IndexBufferData ib, RenderResource ref);
 		void push_frame_buffer(RRP::FrameBufferData fb, RenderResource ref);
+		void push_shader_program(RRP::ShaderProgramData sp, RenderResource ref);
 	};
 
 	/**

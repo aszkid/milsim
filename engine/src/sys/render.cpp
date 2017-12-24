@@ -24,6 +24,7 @@ Render::Render(
 	m_vertex_layouts.push_back({});
 	m_index_buffers.push_back({});
 	m_frame_buffers.push_back({});
+	m_shader_programs.push_back({});
 }
 Render::~Render()
 {
@@ -298,7 +299,7 @@ void Render::dispatch(std::vector<RenderCommand>&& commands)
 }
 void Render::alloc(RenderResource* rr, RenderResource::Type t)
 {
-	m_resource_lock.lock();
+	std::lock_guard<std::mutex> lk(m_resource_lock);
 
 	switch(t) {
 	case RenderResource::TEXTURE:
@@ -316,14 +317,14 @@ void Render::alloc(RenderResource* rr, RenderResource::Type t)
 	case RenderResource::FRAME_BUFFER:
 		*rr = _alloc_frame_buffer();
 		break;
-	// shader
+	case RenderResource::SHADER_PROGRAM:
+		*rr = _alloc_shader_program();
+		break;
 	// none
 	default:
 		m_log->info("Render resource {} not supported yet! Aborting...", t);
 		throw;
 	}
-
-	m_resource_lock.unlock();
 }
 
 /**
@@ -331,7 +332,7 @@ void Render::alloc(RenderResource* rr, RenderResource::Type t)
  */
 void Render::_handle_resource(const RenderResourcePackage& package)
 {
-	m_resource_lock.lock();
+	std::lock_guard<std::mutex> lk(m_resource_lock);
 
 	// assuming `rrc` not nullptr...
 	// 1) upload textures
@@ -494,6 +495,52 @@ void Render::_handle_resource(const RenderResourcePackage& package)
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	}
 
+	// 6) Upload shader programs
+	size_t sp_n  = package.sp.size();
+	assert(sp_n == package.sp.size());
+	for(size_t i = 0; i < sp_n; i++) {
+		auto sp_instance = package.sp_ref[i];
+		auto& sp = m_shader_programs[sp_instance.index()];
+		auto& sp_data = package.sp[i];
+
+		int ok;
+		char info[512];
+
+		GLuint vertex = glCreateShader(GL_VERTEX_SHADER);
+		const char* vertex_source = sp_data.vertex_source.c_str();
+		glShaderSource(vertex, 1, &vertex_source, NULL);
+		glCompileShader(vertex);
+		glGetShaderiv(vertex, GL_COMPILE_STATUS, &ok);
+		if(!ok) {
+			glGetShaderInfoLog(vertex, 512, NULL, info);
+			m_log->error("Vertex shader compilation failed: {}", info);
+			throw;
+		}
+
+		GLuint frag = glCreateShader(GL_FRAGMENT_SHADER);
+		const char* frag_source = sp_data.fragment_source.c_str();
+		glShaderSource(frag, 1, &frag_source, NULL);
+		glCompileShader(frag);
+		glGetShaderiv(frag, GL_COMPILE_STATUS, &ok);
+		if(!ok) {
+			glGetShaderInfoLog(frag, 512, NULL, info);
+			m_log->error("Fragment shader compilation failed: {}", info);
+			throw;
+		}
+
+		// Link the shader program
+		sp.m_program = glCreateProgram();
+		glAttachShader(sp.m_program, vertex);
+		glAttachShader(sp.m_program, frag);
+		glLinkProgram(sp.m_program);
+		glGetProgramiv(sp.m_program, GL_LINK_STATUS, &ok);
+		if(!ok) {
+			glGetProgramInfoLog(sp.m_program, 512, NULL, info);
+			m_log->error("Shader program failed to link: {}", info);
+			throw;
+		}
+	}
+
 	m_resource_lock.unlock();
 }
 void Render::_handle_command(const RenderCommand& command)
@@ -586,6 +633,24 @@ RenderResource Render::_alloc_frame_buffer()
 	} else {
 		RenderResource old = m_frame_buffers_free.back();
 		m_frame_buffers_free.pop_back();
+		res.set_index(old.index());
+		res.set_generation(old.generation() + 1);
+	}
+
+	return res;
+}
+
+RenderResource Render::_alloc_shader_program()
+{
+	RenderResource res {0};
+	res.set_type(RenderResource::SHADER_PROGRAM);
+
+	if(m_shader_programs_free.empty()) {
+		m_shader_programs.push_back({});
+		res.set_index(m_shader_programs.size() - 1);
+	} else {
+		RenderResource old = m_shader_programs_free.back();
+		m_shader_programs_free.pop_back();
 		res.set_index(old.index());
 		res.set_generation(old.generation() + 1);
 	}

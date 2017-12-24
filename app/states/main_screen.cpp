@@ -16,7 +16,8 @@ void MainScreen::load()
 	// create main scene
 	m_scene = std::unique_ptr<MilSim::Scene>(new_scene());
 
-	// Create shader
+	// Load GUI shader
+	m_alexandria->load_asset("/Base/Shaders/GUI");
 
 	// Allocate render resources
 	using namespace MilSim;

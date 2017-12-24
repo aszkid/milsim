@@ -45,7 +45,8 @@
 					"type" : "shader",
 					"id" : "GUI",
 					"vertex_src" : "pass.vert",
-					"fragment_src" : "pass.frag"
+					"fragment_src" : "pass.frag",
+					"pipeline_layer" : "gui"
 				}
 			]
 		}

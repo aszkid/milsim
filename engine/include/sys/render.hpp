@@ -59,6 +59,9 @@ namespace MilSim {
 	struct FrameBufferResource {
 		GLuint m_fbo;
 	};
+	struct ShaderProgramResource {
+		GLuint m_program;
+	};
 
 	/**
 	 * Building block of a render pipeline.
@@ -162,6 +165,9 @@ namespace MilSim {
 		std::vector<FrameBufferResource> m_frame_buffers;
 		std::vector<RenderResource> m_frame_buffers_free;
 
+		std::vector<ShaderProgramResource> m_shader_programs;
+		std::vector<RenderResource> m_shader_programs_free;
+
 		std::mutex m_resource_lock;
 
 		/**
@@ -187,6 +193,7 @@ namespace MilSim {
 		RenderResource _alloc_vertex_layout();
 		RenderResource _alloc_index_buffer();
 		RenderResource _alloc_frame_buffer();
+		RenderResource _alloc_shader_program();
 
 		/**
 		 * Render thread and synchronization.

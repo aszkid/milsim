@@ -45,6 +45,14 @@ void RenderResourceContext::push_frame_buffer(RRP::FrameBufferData fb, RenderRes
 	m_data.fb.push_back(fb);
 	m_data.fb_ref.push_back(ref);
 }
+/**
+ * SHADER PROGRAM
+ */
+void RenderResourceContext::push_shader_program(RRP::ShaderProgramData sp, RenderResource ref)
+{
+	m_data.sp.push_back(sp);
+	m_data.sp_ref.push_back(ref);
+}
 
 
 

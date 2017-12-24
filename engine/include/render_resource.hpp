@@ -29,6 +29,7 @@ namespace MilSim {
 			VERTEX_LAYOUT,
 			INDEX_BUFFER,
 			FRAME_BUFFER,
+			SHADER_PROGRAM,
 			NONE
 		};
 
@@ -174,5 +175,16 @@ namespace MilSim {
 		};
 		std::vector<FrameBufferData> fb;
 		std::vector<RenderResource> fb_ref;
+
+
+		/**
+		 * SHADER PROGRAM
+		 */
+		struct ShaderProgramData {
+			std::string vertex_source;
+			std::string fragment_source;
+		};
+		std::vector<ShaderProgramData> sp;
+		std::vector<RenderResource> sp_ref;
     };
 }

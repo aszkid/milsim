@@ -178,41 +178,8 @@ ShaderProgramAsset::~ShaderProgramAsset()
 //{
 	/*const char *vert = m_vert_source.c_str();
 	const char *frag = m_frag_source.c_str();
-	
-	int ok;
-	char info[512];
 
-	m_vert_id = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(m_vert_id, 1, &vert, NULL);
-	glCompileShader(m_vert_id);
-	glGetShaderiv(m_vert_id, GL_COMPILE_STATUS, &ok);
-	if(!ok) {
-		glGetShaderInfoLog(m_vert_id, 512, NULL, info);
-		m_logger->error("Vertex shader compilation failed: {}", info);
-		abort();
-	}
-
-	m_frag_id = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(m_frag_id, 1, &frag, NULL);
-	glCompileShader(m_frag_id);
-	glGetShaderiv(m_frag_id, GL_COMPILE_STATUS, &ok);
-	if(!ok) {
-		glGetShaderInfoLog(m_frag_id, 512, NULL, info);
-		m_logger->error("Fragment shader compilation failed: {}", info);
-		abort();
-	}
-
-	// Link the shader program
-	m_prog_id = glCreateProgram();
-	glAttachShader(m_prog_id, m_vert_id);
-	glAttachShader(m_prog_id, m_frag_id);
-	glLinkProgram(m_prog_id);
-	glGetProgramiv(m_prog_id, GL_LINK_STATUS, &ok);
-	if(!ok) {
-		glGetProgramInfoLog(m_prog_id, 512, NULL, info);
-		m_logger->error("Shader program failed to link: {}", info);
-		abort();
-	}
+	// ...
 
 	// Lookup uniforms
 	GLint num_uniforms = 0;
@@ -379,6 +346,10 @@ bool Alexandria::is_loaded(const t_asset_id hash)
 {
 	return m_loaded.find(hash) != m_loaded.end();
 }
+bool Alexandria::load_asset(const std::string name)
+{
+	return load_asset(Crypto::HASH(name));
+}
 bool Alexandria::load_asset(const t_asset_id hash)
 {
 	auto asset = get_asset(hash, GetFlag::NO_LOAD);
@@ -390,6 +361,7 @@ bool Alexandria::load_asset(const t_asset_id hash)
 	const auto& data = db_get_asset(db["data"], asset->m_id, asset->m_type);
 
 	if(data.empty()) {
+		// we know it's there, but don't know how to load it
 		m_log->info("Asset `{}` ({:x}) has no database entry!", asset->m_id.string(), Crypto::HASH(asset->m_id.string()));
 		return false;
 	}
@@ -409,6 +381,9 @@ bool Alexandria::load_asset(const t_asset_id hash)
 		break;
 	case Asset::MAP:
 		ok =  _load_map(hash, &data);
+		break;
+	case Asset::SHADER:
+		ok = _load_shader_program(hash, &data);
 		break;
 	default:
 		ok = false;
@@ -764,6 +739,36 @@ bool Alexandria::_load_map(const t_asset_id hash, const json* root)
 	rrc.push_vertex_buffer(vb, mesh->m_vb_handle);
 
 	m_sys_render->dispatch(std::move(rrc.m_data));
+
+	return true;
+}
+
+bool Alexandria::_load_shader_program(const t_asset_id hash, const json* root)
+{
+	auto shader = get_asset<ShaderProgramAsset>(hash, GetFlag::NO_LOAD);
+
+	const std::string layer = root->at("pipeline_layer");
+	const std::string vertex_src = root->at("vertex_src");
+	const std::string fragment_src = root->at("fragment_src");
+
+	const apathy::Path vertex_path = get_working_path(shader->m_id).append(vertex_src);
+	const apathy::Path fragment_path = get_working_path(shader->m_id).append(fragment_src);
+	
+	shader->m_vert_source = IO::read_file(vertex_path.string());
+	shader->m_frag_source = IO::read_file(fragment_path.string());
+	m_sys_render->alloc(&shader->m_program, RenderResource::SHADER_PROGRAM);
+
+	m_log->info("Got shader handle {:x}", shader->m_program.m_handle);
+
+	RenderResourcePackage::ShaderProgramData data = {
+		.vertex_source = shader->m_vert_source,
+		.fragment_source = shader->m_frag_source
+	};
+	RenderResourceContext rrc;
+	rrc.push_shader_program(data, shader->m_program);
+
+	m_sys_render->dispatch(std::move(rrc.m_data));
+
 
 	return true;
 }
