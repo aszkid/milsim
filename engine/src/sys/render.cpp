@@ -453,7 +453,6 @@ void Render::_handle_resource(const RenderResourcePackage& package)
 		auto fbuf_instance = package.fb_ref[i];
 		auto& fbuf = m_frame_buffers[fbuf_instance.index()];
 		auto& fbuf_data = package.fb[i];
-		m_log->info("Preparing framebuffer {:x}...", fbuf_instance.m_handle);
 
 		glGenFramebuffers(1, &fbuf.m_fbo);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbuf.m_fbo);
@@ -499,10 +498,10 @@ void Render::_handle_resource(const RenderResourcePackage& package)
 }
 void Render::_handle_command(const RenderCommand& command)
 {
-	m_log->info("Drawing something with key {:x}!", command.m_key);
-	m_log->info("  : vbuf {}", command.m_data.vertex_buffer.m_handle);
-	m_log->info("  : ibuf {}", command.m_data.index_buffer.m_handle);
-	m_log->info("  : {} primitives", command.m_data.batch.num_primitives);
+	/*m_log->info("Drawing something with key {:x}!", command.m_key);
+	m_log->info("  : vbuf {:x}", command.m_data.vertex_buffer.m_handle);
+	m_log->info("  : ibuf {:x}", command.m_data.index_buffer.m_handle);
+	m_log->info("  : {} primitives", command.m_data.batch.num_primitives);*/
 }
 
 RenderResource Render::_alloc_texture()

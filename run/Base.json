@@ -40,11 +40,12 @@
 		{
 			"type" : "folder",
 			"id" : "Shaders",
-			"contents" : [],
-			"__" : [
+			"contents" : [
 				{
 					"type" : "shader",
-					"id" : "Simple"
+					"id" : "GUI",
+					"vertex_src" : "pass.vert",
+					"fragment_src" : "pass.frag"
 				}
 			]
 		}

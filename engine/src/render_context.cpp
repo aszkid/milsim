@@ -57,7 +57,7 @@ RenderCommandPackage* RenderCommandContext::render(
 
 	// key data
 	cmd.set_layer(0); // set by given shader; TODO
-	cmd.set_depth(0); // quantize depth from float
+	cmd.set_depth(0); // quantize depth from float; TODO
 	cmd.set_user_defined(0); // nothing for now
 
 	// patch `cmd.m_data` if needed, by querying `Sys.Render`;

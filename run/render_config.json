@@ -11,12 +11,22 @@
         {
             "name" : "normal",
             "format" : "RGB16F"
+        },
+        {
+            "name" : "gui_color",
+            "format" : "RGBA8"
         }
     ],
     "pipeline_layers" : [
         {
             "name" : "gbuffer",
             "render_targets" : [ "albedo", "normal" ],
+            "depth_stencil_target" : "depth_stencil",
+            "sort" : "FRONT_BACK"
+        },
+        {
+            "name" : "gui",
+            "render_targets" : [ "gui_color" ],
             "depth_stencil_target" : "depth_stencil",
             "sort" : "FRONT_BACK"
         }
