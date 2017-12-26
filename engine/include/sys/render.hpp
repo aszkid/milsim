@@ -9,6 +9,7 @@
 #define GLFW_INCLUDE_NONE // avoid glbinding errors
 #include <GLFW/glfw3.h>
 #include <apathy/path.hpp>
+#include <json.hpp>
 
 #include "util/concurrentqueue.hpp"
 #include "sys.hpp"
@@ -17,11 +18,7 @@
 namespace MilSim {
 
 	using namespace gl;
-
-	struct FrameFence {
-		std::mutex mutex;
-		std::condition_variable cv;
-	};
+	using json = nlohmann::json;
 
 	/**
 	 * Render thread messages.
@@ -67,11 +64,11 @@ namespace MilSim {
 	/**
 	 * Building block of a render pipeline.
 	 * Render targets are named.
+	 * Not executed, but rendered into.
 	 */
 	struct RenderLayer {
-		uint64_t sort_key;
+		size_t idx;
 		uint32_t name;
-		
 		std::vector<uint32_t> render_targets;
 		uint32_t depth_stencil_target;
 		RenderResource frame_buffer;
@@ -80,6 +77,17 @@ namespace MilSim {
 			BACK_FRONT
 		};
 		Sort sort;
+	};
+	/**
+	 * Explicit render pass, specifying input targets
+	 * and output targets.
+	 * Executed.
+	 */
+	struct RenderPass {
+		uint32_t name;
+		std::vector<uint32_t> inputs;
+		uint32_t output;
+		RenderResource shader;
 	};
 
 	/**
@@ -138,6 +146,11 @@ namespace MilSim {
 		 */
 		void alloc(RenderResource* rrc, RenderResource::Type t);
 
+		/**
+		 * Resource queries.
+		 */
+		size_t get_layer_idx(const uint32_t name);
+
 	private:
 		
 		/**
@@ -172,15 +185,22 @@ namespace MilSim {
 		std::mutex m_resource_lock;
 
 		/**
-		 * Pipeline layers.
+		 * Pipeline layers & render passes.
 		 */
-		std::vector<RenderLayer> m_render_layers;
+		std::map<uint32_t, RenderLayer> m_render_layers;
+		std::map<uint32_t, RenderPass> m_render_passes;
 		/**
 		 * Global render targets.
 		 */
 		std::map<uint32_t, RenderResource> m_render_targets;
 		bool have_render_target(const uint32_t hash);
 		bool have_render_target(const std::string name);
+
+		/**
+		 * Pipeline creation.
+		 */
+		void _create_pipeline_layer(const json& data, RenderResourceContext& rrc);
+		void _create_pipeline_pass(const json& data, RenderResourceContext& rrc);
 
 		/**
 		 * Drawing methods.
@@ -204,6 +224,10 @@ namespace MilSim {
 		 */
 		void _inner_thread_entry();
 		std::thread m_thread;
+		struct FrameFence {
+			std::mutex mutex;
+			std::condition_variable cv;
+		};
 		FrameFence m_fence;
 
 		/**

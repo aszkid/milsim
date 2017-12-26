@@ -1,9 +1,6 @@
 #include "sys/render.hpp"
 #include "util/io.hpp"
 
-#include <mutex>
-#include <json.hpp>
-
 using namespace MilSim;
 
 Render::Render(
@@ -126,6 +123,7 @@ void Render::_inner_thread_entry()
 			}
 		}
 
+		// finally swap buffers
 		glfwSwapBuffers(m_window);
 		
 		/**
@@ -223,56 +221,74 @@ void Render::setup_pipeline()
 		m_render_targets[Crypto::HASH(name)] = tex;
 	}
 
-	const auto& ls = root["pipeline_layers"];
-	for(const auto& l : ls) {
-		const auto& name = l["name"].get<std::string>();
-		const auto& depth_stencil = l["depth_stencil_target"].get<std::string>();
-		const auto& sort = l["sort"].get<std::string>();
-
-		// Prepare layer
-		RenderLayer layer;
-		layer.name = Crypto::HASH(name);
-
-		m_log->info("Creating pipeline layer `{}`...", name);
-
-		// Allocate framebuffer object and prepare data
-		alloc(&layer.frame_buffer, RenderResource::FRAME_BUFFER);
-		RenderResourcePackage::FrameBufferData data;
-
-		// Set layer render targets
-		const auto& ts = l["render_targets"];
-		for(const auto& t : ts) {
-			const auto hash = Crypto::HASH(t.get<std::string>());
-			if(!have_render_target(hash)) {
-				m_log->error("Render target `{}` does not exist! Aborting...", t.get<std::string>());
-				throw;
-			}
-			layer.render_targets.push_back(hash);
-			data.render_targets.push_back(m_render_targets[hash]);
-		}
-
-		// Set layer depth+stencil target
-		const auto depth_stencil_hash = Crypto::HASH(depth_stencil);
-		if(!have_render_target(depth_stencil_hash)) {
-			m_log->info("Depth+stencil target `{}` does not exist! Aborting...");
+	const auto& passes = root["pipeline_passes"];
+	for(const auto& pass_data : passes) {
+		const auto& type = pass_data["type"];
+		const auto& name = pass_data["name"];
+		if(type == "layer") {
+			_create_pipeline_layer(pass_data, rrc);
+		} else if(type == "fullscreen") {
+			_create_pipeline_pass(pass_data, rrc);
+		} else {
+			m_log->error("Pipeline pass `{}` is unsupported type `{}`!", name.get<std::string>(), type.get<std::string>());
 			throw;
 		}
-		layer.depth_stencil_target = depth_stencil_hash;
-		data.depth_stencil_target = m_render_targets[depth_stencil_hash];
-
-		// Send framebuffer for creation
-		rrc.push_frame_buffer(data, layer.frame_buffer);
-
-		// Set layer sort mode
-		if(!sort_to_type(sort, &layer.sort)) {
-			m_log->error("Sort type `{}` not supported! Aborting...");
-			throw;
-		}
-
-		m_render_layers.push_back(layer);
 	}
 
 	dispatch(std::move(rrc.m_data));
+}
+void Render::_create_pipeline_layer(const json& data, RenderResourceContext& rrc)
+{
+	const auto& name = data["name"].get<std::string>();
+	const auto& depth_stencil = data["depth_stencil_target"].get<std::string>();
+	const auto& sort = data["sort"].get<std::string>();
+
+	// Prepare layer
+	RenderLayer layer;
+	layer.name = Crypto::HASH(name);
+
+	m_log->info("Creating pipeline layer `{}`...", name);
+
+	// Allocate framebuffer object and prepare data
+	alloc(&layer.frame_buffer, RenderResource::FRAME_BUFFER);
+	RenderResourcePackage::FrameBufferData fb_data;
+
+	// Set layer render targets
+	const auto& ts = data["render_targets"];
+	for(const auto& t : ts) {
+		const auto hash = Crypto::HASH(t.get<std::string>());
+		if(!have_render_target(hash)) {
+			m_log->error("Render target `{}` does not exist! Aborting...", t.get<std::string>());
+			throw;
+		}
+		layer.render_targets.push_back(hash);
+		fb_data.render_targets.push_back(m_render_targets[hash]);
+	}
+
+	// Set layer depth+stencil target
+	const auto depth_stencil_hash = Crypto::HASH(depth_stencil);
+	if(!have_render_target(depth_stencil_hash)) {
+		m_log->info("Depth+stencil target `{:x}` does not exist! Aborting...", depth_stencil);
+		throw;
+	}
+	layer.depth_stencil_target = depth_stencil_hash;
+	fb_data.depth_stencil_target = m_render_targets[depth_stencil_hash];
+
+	// Send framebuffer for creation
+	rrc.push_frame_buffer(fb_data, layer.frame_buffer);
+
+	// Set layer sort mode
+	if(!sort_to_type(sort, &layer.sort)) {
+		m_log->error("Sort type `{}` not supported! Aborting...", sort);
+		throw;
+	}
+
+	layer.idx = m_render_layers.size() + 1;
+	m_render_layers[layer.name] = layer;
+}
+void Render::_create_pipeline_pass(const json& data, RenderResourceContext& rrc)
+{
+
 }
 
 /**
@@ -324,6 +340,15 @@ void Render::alloc(RenderResource* rr, RenderResource::Type t)
 	default:
 		m_log->info("Render resource {} not supported yet! Aborting...", t);
 		throw;
+	}
+}
+size_t Render::get_layer_idx(const uint32_t name)
+{
+	auto it = m_render_layers.find(name);
+	if(it != m_render_layers.end()) {
+		return it->second.idx;
+	} else {
+		return 0;
 	}
 }
 
@@ -585,16 +610,14 @@ void Render::_handle_command(const RenderCommand& command)
 }
 void Render::_bind_layer(const uint32_t layer)
 {
-	const uint8_t workaround = layer;
-	// TODO
-	for(auto it = m_render_layers.begin(); it != m_render_layers.end(); ++it) {
-		if((uint8_t)it->name == workaround) {
-			m_log->info("Found your layer!");
-			auto& fbo = m_frame_buffers[it->frame_buffer.index()].m_fbo;
-			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-			break;
-		}
+	auto it = m_render_layers.find(layer);
+	if(it != m_render_layers.end()) {
+		m_log->info("Found your layer!");
+		auto& fbo = m_frame_buffers[it->second.frame_buffer.index()].m_fbo;
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	} else {
+		m_log->error("Render layer `{}` not found!", layer);
 	}
 }
 

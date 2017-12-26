@@ -1,5 +1,7 @@
 #include "render_context.hpp"
 
+#include "sys/render.hpp"
+
 using namespace MilSim;
 
 /**
@@ -64,7 +66,7 @@ RenderCommandPackage* RenderCommandContext::render(
 	cmd.m_data = *job;
 
 	// uint32 --> uint8; be very careful
-	cmd.set_layer(shader->m_layer); // set by given shader; TODO
+	cmd.set_layer(m_render->get_layer_idx(shader->m_layer)); // set by given shader; TODO
 	cmd.set_depth(0); // quantize depth from float; TODO
 	cmd.set_user_defined(0); // nothing for now
 

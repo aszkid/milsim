@@ -5,6 +5,10 @@
             "format" : "DEPTH_STENCIL"
         },
         {
+            "name" : "overlay_depth_stencil",
+            "format" : "DEPTH_STENCIL"
+        },
+        {
             "name" : "albedo",
             "format" : "RGBA8"
         },
@@ -13,22 +17,38 @@
             "format" : "RGB16F"
         },
         {
-            "name" : "gui_color",
+            "name" : "overlay",
             "format" : "RGBA8"
         }
     ],
-    "pipeline_layers" : [
+    "pipeline_passes" : [
         {
             "name" : "gbuffer",
+            "type" : "layer",
             "render_targets" : [ "albedo", "normal" ],
             "depth_stencil_target" : "depth_stencil",
             "sort" : "FRONT_BACK"
         },
         {
             "name" : "gui",
-            "render_targets" : [ "gui_color" ],
-            "depth_stencil_target" : "depth_stencil",
+            "type" : "layer",
+            "render_targets" : [ "overlay" ],
+            "depth_stencil_target" : "overlay_depth_stencil",
             "sort" : "FRONT_BACK"
+        },
+        {
+            "name" : "deferred_pass",
+            "type" : "fullscreen",
+            "inputs" : [ "albedo", "normal" ],
+            "output" : "back_buffer",
+            "shader" : "/Base/Shaders/DeferredShader"
+        },
+        {
+            "name" : "overlay_pass",
+            "type" : "fullscreen",
+            "inputs" : [ "overlay" ],
+            "output" : "back_buffer",
+            "shader" : "/Base/Shaders/Overlay"
         }
     ]
 }

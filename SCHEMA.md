@@ -63,6 +63,14 @@ More stuff (15/12/17): the `Render` system running on its own thread is good thi
 
 We avoid having to "sync with the render thread" by completely delegating the job. The idea is that a scene object can be created, exist, interact with its environment and die *even without having a graphics representation drawn to screen*. The real delay though, will be a single frame at most, which is optimal enough.
 
+(26/12/17): Some words on how the render pipeline is set up. The file `render_config.json` contains most of the stuff required to construct the render system. First, we declare global `pipeline_targets` (render and depth-stencil targets) to be used, with a specific format. Then we declare `pipeline_passes`, that specify either `fullscreen` passes (renders onto a fullscreen quad from given input textures, specifying a shader) or a `layer` (renders onto specified output textures, used by arbitrary shaders).
+
+In our basic setup, we have the following:
+1. *`gbuffer` layer pass*, draws 3D geometry onto three targets (`albedo` & `normal` + depth-stencil).
+2. *`gui` layer pass*, draws 2D geometry onto two targets (`overlay` + overlay depth-stencil).
+2. *`deferred_shading` fullscreen pass*, computes traditional deferred shading from data in `albedo` & `normal` textures, onto the `back_buffer` default target.
+3. *`overlay_oass` fullscreen pass*, simple additive [...]
+
 ### Sys.Net
 
 
