@@ -13,6 +13,7 @@ set(SOURCES
 	src/render_context.cpp
 	src/logger.cpp
 	src/object.cpp
+	src/assets.cpp
 	src/hermes.cpp
 	
 	src/entity.cpp

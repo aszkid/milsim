@@ -70,8 +70,8 @@ namespace MilSim {
 	 */
 	struct RenderLayer {
 		uint64_t sort_key;
-		
 		uint32_t name;
+		
 		std::vector<uint32_t> render_targets;
 		uint32_t depth_stencil_target;
 		RenderResource frame_buffer;
@@ -183,14 +183,15 @@ namespace MilSim {
 		bool have_render_target(const std::string name);
 
 		/**
-		 * Resource allocation and destruction methods.
-		 * These are only called 
+		 * Drawing methods.
 		 */
-		void _handle_resource(const RenderResourcePackage& package);
 		void _handle_command(const RenderCommand& command);
-
 		void _bind_layer(const uint32_t layer);
 		
+		/**
+		 * Resource allocation and destruction methods.
+		 */
+		void _handle_resource(const RenderResourcePackage& package);
 		RenderResource _alloc_texture();
 		RenderResource _alloc_vertex_buffer();
 		RenderResource _alloc_vertex_layout();

@@ -561,13 +561,12 @@ void Render::_handle_command(const RenderCommand& command)
 	 * 5. draw
 	 */
 	auto& data = command.m_data;
-	auto& key = command.m_key;
 	auto& vl = m_vertex_layouts[command.m_data.vertex_layout.index()];
 	auto& vb = m_vertex_buffers[command.m_data.vertex_buffer.index()];
 	auto& ib = m_index_buffers[command.m_data.index_buffer.index()];
 	auto& sp = m_shader_programs[command.m_data.shader.index()];
 
-	//_bind_layer(key.get_layer());
+	_bind_layer(command.get_layer());
 	glBindVertexArray(vl.m_vao);
 	glUseProgram(sp.m_program);
 	glBindVertexBuffer(
