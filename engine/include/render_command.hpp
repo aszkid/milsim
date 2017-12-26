@@ -15,6 +15,7 @@ namespace MilSim {
 		RenderResource shader;
 		// shader_data; i.e. per command shader data (uniforms)
 
+		RenderResource vertex_layout; // fixed here for now; should be given by shader
 		RenderResource vertex_buffer;
 		RenderResource index_buffer;
 		struct BatchInfo {

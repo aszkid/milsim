@@ -47,11 +47,12 @@ namespace MilSim {
 	};
 	struct VertexBufferResource {
 		GLuint m_buf;
-		GLsizeiptr m_size;
+		GLsizei m_size;
 		GLenum m_usage;
 	};
 	struct VertexLayoutResource {
 		GLuint m_vao;
+		GLsizei m_ele_size;
 	};
 	struct IndexBufferResource {
 		GLuint m_ibo;
@@ -187,6 +188,8 @@ namespace MilSim {
 		 */
 		void _handle_resource(const RenderResourcePackage& package);
 		void _handle_command(const RenderCommand& command);
+
+		void _bind_layer(const uint32_t layer);
 		
 		RenderResource _alloc_texture();
 		RenderResource _alloc_vertex_buffer();

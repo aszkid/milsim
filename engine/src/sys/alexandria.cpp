@@ -611,19 +611,6 @@ bool Alexandria::_load_material(const t_asset_id hash, const json* root)
 	return true;
 }
 
-bool Alexandria::_load_shader(ShaderProgramAsset* shader, apathy::Path id, const json* root)
-{
-	const size_t hash = Crypto::HASH(id.string());
-	const std::string file = root->at("source");
-	apathy::Path working_path(get_working_path(id));
-	
-	// TODO: catch exceptions...
-	auto vert_source = IO::read_file(apathy::Path(working_path).string() + ".vert");
-	auto frag_source = IO::read_file(apathy::Path(working_path).string() + ".frag");
-
-	return true;
-}
-
 bool Alexandria::_load_texture(const t_asset_id hash, const json* root, bool gpu)
 {
 	auto texture = get_asset<TextureAsset>(hash, GetFlag::NO_LOAD);
@@ -756,6 +743,7 @@ bool Alexandria::_load_shader_program(const t_asset_id hash, const json* root)
 	
 	shader->m_vert_source = IO::read_file(vertex_path.string());
 	shader->m_frag_source = IO::read_file(fragment_path.string());
+	shader->m_layer = Crypto::HASH(layer);
 	m_sys_render->alloc(&shader->m_program, RenderResource::SHADER_PROGRAM);
 
 	m_log->info("Got shader handle {:x}", shader->m_program.m_handle);

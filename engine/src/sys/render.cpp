@@ -369,17 +369,17 @@ void Render::_handle_resource(const RenderResourcePackage& package)
 			abort();
 		}
 		auto& chunk = vbuf_data.chunks[0];
+		vbuf.m_size = chunk.size;
 
 		glGenBuffers(1, &vbuf.m_buf);
 		glBindBuffer(GL_COPY_WRITE_BUFFER, vbuf.m_buf);
 
-		GLenum usage;
 		switch(vbuf_data.usage) {
 		case RenderResourcePackage::VertexBufferData::STATIC:
-			usage = GL_STATIC_DRAW;
+			vbuf.m_usage = GL_STATIC_DRAW;
 			break;
 		case RenderResourcePackage::VertexBufferData::DYNAMIC:
-			usage = GL_DYNAMIC_DRAW;
+			vbuf.m_usage = GL_DYNAMIC_DRAW;
 			break;
 		default:
 			m_log->info("Buffer usage not supported!");
@@ -389,7 +389,7 @@ void Render::_handle_resource(const RenderResourcePackage& package)
 		glBufferData(GL_COPY_WRITE_BUFFER,
 			chunk.size,
 			chunk.data,
-			usage
+			vbuf.m_usage
 		);
 	}
 
@@ -401,14 +401,18 @@ void Render::_handle_resource(const RenderResourcePackage& package)
 		auto& vlayout = m_vertex_layouts[vlayout_instance.index()];
 		auto& vlayout_data = package.vl[i];
 
+		vlayout.m_ele_size = 0;
+
 		glGenVertexArrays(1, &vlayout.m_vao);
 		glBindVertexArray(vlayout.m_vao);
 		for(size_t j = 0; j < vlayout_data.attribs.size(); j++) {
 			auto& attrib = vlayout_data.attribs[j];
+			size_t realsize; // byte vertex attrib size
 			GLenum type;
 			switch(attrib.type) {
 			case RenderResourcePackage::VertexLayoutData::Attribute::Type::FLOAT:
 				type = GL_FLOAT;
+				realsize = attrib.size * sizeof(float);
 				break;
 			default:
 				m_log->info("Vertex attribute format not supported!");
@@ -423,6 +427,9 @@ void Render::_handle_resource(const RenderResourcePackage& package)
 				GL_FALSE,
 				attrib.offset
 			);
+			// bind all attribs to stream 0 (for now?)
+			glVertexAttribBinding(j, 0);
+			vlayout.m_ele_size += realsize;
 		}
 	}
 
@@ -545,10 +552,49 @@ void Render::_handle_resource(const RenderResourcePackage& package)
 }
 void Render::_handle_command(const RenderCommand& command)
 {
-	/*m_log->info("Drawing something with key {:x}!", command.m_key);
-	m_log->info("  : vbuf {:x}", command.m_data.vertex_buffer.m_handle);
-	m_log->info("  : ibuf {:x}", command.m_data.index_buffer.m_handle);
-	m_log->info("  : {} primitives", command.m_data.batch.num_primitives);*/
+	/**
+	 * TODO; do not bind stuff if already bound
+	 * 1. bind render layer from key
+	 * 2. bind vao from shader
+	 * 3. bind shader
+	 * 4. bind buffers (vertex, index, uniform...)
+	 * 5. draw
+	 */
+	auto& data = command.m_data;
+	auto& key = command.m_key;
+	auto& vl = m_vertex_layouts[command.m_data.vertex_layout.index()];
+	auto& vb = m_vertex_buffers[command.m_data.vertex_buffer.index()];
+	auto& ib = m_index_buffers[command.m_data.index_buffer.index()];
+	auto& sp = m_shader_programs[command.m_data.shader.index()];
+
+	//_bind_layer(key.get_layer());
+	glBindVertexArray(vl.m_vao);
+	glUseProgram(sp.m_program);
+	glBindVertexBuffer(
+		0, // always 0 binding point for now
+		vb.m_buf,
+		0,
+		vl.m_ele_size // assume tightly packed for now
+	);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib.m_ibo);
+	glDrawElements(
+		GL_TRIANGLES,
+		data.batch.num_primitives * 3,
+		GL_UNSIGNED_INT,
+		(GLvoid*)0
+	);
+}
+void Render::_bind_layer(const uint32_t layer)
+{
+	// TODO
+	for(auto it = m_render_layers.begin(); it != m_render_layers.end(); ++it) {
+		if(it->name == layer) {
+			auto& fbo = m_frame_buffers[it->frame_buffer.index()].m_fbo;
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			break;
+		}
+	}
 }
 
 RenderResource Render::_alloc_texture()

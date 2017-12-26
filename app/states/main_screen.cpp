@@ -13,14 +13,15 @@ MainScreen::~MainScreen()
 
 void MainScreen::load()
 {
+	using namespace MilSim;
+
 	// create main scene
 	m_scene = std::unique_ptr<MilSim::Scene>(new_scene());
 
 	// Load GUI shader
-	m_alexandria->load_asset("/Base/Shaders/GUI");
+	m_shader = m_alexandria->get_asset<ShaderProgramAsset>("/Base/Shaders/GUI")->m_program;
 
 	// Allocate render resources
-	using namespace MilSim;
 	m_render->alloc(&m_ibref, RenderResource::INDEX_BUFFER);
 	m_render->alloc(&m_vbref, RenderResource::VERTEX_BUFFER);
 	m_render->alloc(&m_vlref, RenderResource::VERTEX_LAYOUT);
@@ -91,7 +92,8 @@ void MainScreen::render()
 	using namespace MilSim;
 
 	RenderCommandPackage package = {
-		.shader = {0},
+		.shader = m_shader,
+		.vertex_layout = m_vlref,
 		.vertex_buffer = m_vbref,
 		.index_buffer = m_ibref,
 		.batch = {
@@ -104,7 +106,7 @@ void MainScreen::render()
 	RenderCommandContext rcc;
 	rcc.m_render = m_render; // ugly
 	// submit all draw calls, just one for now
-	rcc.render(&package, RenderResource {0});
+	rcc.render(&package, m_shader);
 	// dispatch them
 	m_render->dispatch(std::move(rcc.m_commands));
 }
