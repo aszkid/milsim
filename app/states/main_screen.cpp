@@ -19,7 +19,7 @@ void MainScreen::load()
 	m_scene = std::unique_ptr<MilSim::Scene>(new_scene());
 
 	// Load GUI shader
-	m_shader = m_alexandria->get_asset<ShaderProgramAsset>("/Base/Shaders/GUI")->m_program;
+	m_shader = m_alexandria->get_asset<ShaderProgramAsset>("/Base/Shaders/GUI");
 
 	// Allocate render resources
 	m_render->alloc(&m_ibref, RenderResource::INDEX_BUFFER);
@@ -92,7 +92,7 @@ void MainScreen::render()
 	using namespace MilSim;
 
 	RenderCommandPackage package = {
-		.shader = m_shader,
+		.shader = m_shader->m_program,
 		.vertex_layout = m_vlref,
 		.vertex_buffer = m_vbref,
 		.index_buffer = m_ibref,

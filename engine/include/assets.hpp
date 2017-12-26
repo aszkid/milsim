@@ -4,7 +4,8 @@
 #include <apathy/path.hpp>
 #include <glm/glm.hpp>
 
-#include "sys/render.hpp"
+#include "logger.hpp"
+#include "render_resource.hpp"
 
 namespace MilSim {
 

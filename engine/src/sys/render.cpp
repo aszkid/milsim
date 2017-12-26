@@ -585,9 +585,11 @@ void Render::_handle_command(const RenderCommand& command)
 }
 void Render::_bind_layer(const uint32_t layer)
 {
+	const uint8_t workaround = layer;
 	// TODO
 	for(auto it = m_render_layers.begin(); it != m_render_layers.end(); ++it) {
-		if(it->name == layer) {
+		if((uint8_t)it->name == workaround) {
+			m_log->info("Found your layer!");
 			auto& fbo = m_frame_buffers[it->frame_buffer.index()].m_fbo;
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

@@ -29,7 +29,7 @@ private:
 	std::array<GLuint, 3> m_indices;
 	MilSim::RenderResource m_ibref, m_vbref, m_vlref;
 	const size_t m_NUM {3};
-	MilSim::RenderResource m_shader;
+	MilSim::ShaderProgramAsset* m_shader;
 
 	// scene stuff
 	MilSim::Entity m_statue;

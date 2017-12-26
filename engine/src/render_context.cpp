@@ -58,13 +58,13 @@ void RenderResourceContext::push_shader_program(RRP::ShaderProgramData sp, Rende
 
 RenderCommandPackage* RenderCommandContext::render(
 	RenderCommandPackage* job,
-	RenderResource shader)
+	ShaderProgramAsset* shader)
 {
 	RenderCommand cmd;
 	cmd.m_data = *job;
 
-	// key data
-	cmd.set_layer(0); // set by given shader; TODO
+	// uint32 --> uint8; be very careful
+	cmd.set_layer(shader->m_layer); // set by given shader; TODO
 	cmd.set_depth(0); // quantize depth from float; TODO
 	cmd.set_user_defined(0); // nothing for now
 

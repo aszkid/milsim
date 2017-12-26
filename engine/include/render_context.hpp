@@ -2,6 +2,7 @@
 
 #include "render_resource.hpp"
 #include "render_command.hpp"
+#include "assets.hpp"
 
 namespace MilSim {
 
@@ -42,7 +43,7 @@ namespace MilSim {
 		 */
 		RenderCommandPackage* render(
 			RenderCommandPackage* job,
-			RenderResource shader
+			ShaderProgramAsset* shader
 		);
 
 		/**
