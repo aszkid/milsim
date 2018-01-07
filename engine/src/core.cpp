@@ -145,7 +145,7 @@ void Core::loop()
 		// Generate and submit render commands
 		// TODO: avoid branching...
 		if(m_wait_frame) {
-			m_wait_frame = true;
+			m_wait_frame = false;
 		} else {
 			m_current_state->render();
 		}

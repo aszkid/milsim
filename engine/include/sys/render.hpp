@@ -1,19 +1,21 @@
 #pragma once
 
-#include <atomic>
 #include <mutex>
 #include <condition_variable>
 
 #include <glbinding/gl/gl.h>
 #include <glbinding/Binding.h>
-#define GLFW_INCLUDE_NONE // avoid glbinding errors
-#include <GLFW/glfw3.h>
 #include <apathy/path.hpp>
 #include <json.hpp>
 
 #include "util/concurrentqueue.hpp"
 #include "sys.hpp"
 #include "render_context.hpp"
+
+/**
+ * Global forward-definitions.
+ */
+class GLFWwindow;
 
 namespace MilSim {
 
@@ -213,6 +215,7 @@ namespace MilSim {
 		 */
 		void _handle_command(const RenderCommand& command);
 		void _bind_layer_idx(const uint32_t idx);
+		void _execute_pass(const RenderPass& pass);
 		
 		/**
 		 * Resource allocation and destruction methods.

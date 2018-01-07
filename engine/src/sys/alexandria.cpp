@@ -150,7 +150,6 @@ Asset* Alexandria::get_asset(const t_asset_id hash, const GetFlag flag)
 		return nullptr;
 	}
 	if(flag == GetFlag::LOAD && !is_loaded(hash)) {
-		m_log->info("Requested asset `{:x}` not ready; loading...", hash);
 		if(!load_asset(hash))
 			return nullptr;
 	}

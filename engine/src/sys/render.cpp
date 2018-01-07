@@ -1,3 +1,6 @@
+#define GLFW_INCLUDE_NONE // avoid glbinding errors
+#include <GLFW/glfw3.h>
+
 #include "sys/render.hpp"
 #include "util/io.hpp"
 #include "sys/alexandria.hpp"
@@ -124,6 +127,13 @@ void Render::_inner_thread_entry()
 			}
 		}
 
+		/**
+		 * Execute every fullscreen pass.
+		 */
+		for(auto const& pass : m_render_passes) {
+			_execute_pass(pass.second);
+		}
+
 		// finally swap buffers
 		glfwSwapBuffers(m_window);
 		
@@ -248,7 +258,7 @@ void Render::_create_pipeline_layer(const json& data, RenderResourceContext& rrc
 	RenderLayer layer;
 	layer.name = Crypto::HASH(name);
 
-	m_log->info("Creating pipeline layer `{}`...", name);
+	m_log->info("Creating pipeline layer `{}` ({:x})...", name, layer.name);
 
 	// Allocate framebuffer object and prepare data
 	alloc(&layer.frame_buffer, RenderResource::FRAME_BUFFER);
@@ -297,7 +307,7 @@ void Render::_create_pipeline_pass(const json& data, RenderResourceContext& rrc)
 	// Prepare render pass
 	RenderPass pass;
 	pass.name = Crypto::HASH(name);
-	m_log->info("Creating pipeline fullscreen pass `{}`...", name);
+	m_log->info("Creating pipeline fullscreen pass `{}` ({:x})...", name, pass.name);
 
 	for(const auto& str : inputs) {
 		const uint32_t input = Crypto::HASH(str);
@@ -319,6 +329,7 @@ void Render::_create_pipeline_pass(const json& data, RenderResourceContext& rrc)
 	 * 1) Query `Alexandria` for `ShaderProgramAsset`
 	 * 2) Fetch `RenderResource` handle from the asset
 	 */
+	// TODO: WORRY ABOUT THE THREAD-SAFETY OF THIS!!
 	const auto shader_asset = m_alexandria->get_asset<ShaderProgramAsset>(shader);
 	if(shader_asset == nullptr) {
 		m_log->error("Failed loading shader program `{}`! Aborting...", shader);
@@ -335,6 +346,7 @@ void Render::_create_pipeline_pass(const json& data, RenderResourceContext& rrc)
 		throw;
 	}
 
+	m_render_passes[pass.name] = std::move(pass);
 }
 
 /**
@@ -670,6 +682,11 @@ void Render::_bind_layer_idx(const uint32_t idx)
 	auto& fbo = m_frame_buffers[it->second.frame_buffer.index()].m_fbo;
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void Render::_execute_pass(const RenderPass& pass)
+{
+	m_log->info("Executing fullscreen pass `{:x}`...", pass.name);
 }
 
 RenderResource Render::_alloc_texture()
