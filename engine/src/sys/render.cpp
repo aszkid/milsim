@@ -131,7 +131,7 @@ void Render::_inner_thread_entry()
 		 * Execute every fullscreen pass.
 		 */
 		for(auto const& pass : m_render_passes) {
-			_execute_pass(pass.second);
+			_execute_pass(pass);
 		}
 
 		// finally swap buffers
@@ -295,7 +295,7 @@ void Render::_create_pipeline_layer(const json& data, RenderResourceContext& rrc
 	}
 
 	layer.idx = m_render_layers.size() + 1;
-	m_render_layers[layer.name] = layer;
+	m_render_layers.push_back(std::move(layer));
 }
 void Render::_create_pipeline_pass(const json& data, RenderResourceContext& rrc)
 {
@@ -346,7 +346,7 @@ void Render::_create_pipeline_pass(const json& data, RenderResourceContext& rrc)
 		throw;
 	}
 
-	m_render_passes[pass.name] = std::move(pass);
+	m_render_passes.push_back(std::move(pass));
 }
 
 /**
@@ -402,12 +402,16 @@ void Render::alloc(RenderResource* rr, RenderResource::Type t)
 }
 size_t Render::get_layer_idx(const uint32_t name)
 {
-	auto it = m_render_layers.find(name);
-	if(it != m_render_layers.end()) {
-		return it->second.idx;
-	} else {
+	auto it = std::find_if(m_render_layers.begin(), m_render_layers.end(),
+		[name](const auto& layer) {
+			return layer.name == name;
+		}
+	);
+
+	if(it == m_render_layers.end()) {
 		return 0;
 	}
+	return it->idx;
 }
 
 /**
@@ -671,15 +675,16 @@ void Render::_handle_command(const RenderCommand& command)
 void Render::_bind_layer_idx(const uint32_t idx)
 {
 	auto it = std::find_if(m_render_layers.begin(), m_render_layers.end(),
-		[idx](const auto& l) {
-			return l.second.idx == idx;
-	});
+		[idx](const auto& layer) {
+			return layer.idx == idx;
+		}
+	);
 	
 	if(it == m_render_layers.end()) {
 		m_log->error("Render layer at index `{}` not found!", idx);
 		throw;
 	}
-	auto& fbo = m_frame_buffers[it->second.frame_buffer.index()].m_fbo;
+	auto& fbo = m_frame_buffers[it->frame_buffer.index()].m_fbo;
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }

@@ -195,8 +195,8 @@ namespace MilSim {
 		/**
 		 * Pipeline layers & render passes.
 		 */
-		std::map<uint32_t, RenderLayer> m_render_layers;
-		std::map<uint32_t, RenderPass> m_render_passes;
+		std::vector<RenderLayer> m_render_layers;
+		std::vector<RenderPass> m_render_passes;
 		/**
 		 * Global render targets.
 		 */
