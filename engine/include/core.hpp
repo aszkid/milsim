@@ -1,32 +1,35 @@
 #pragma once
 
-#include <vector>
 #include <memory>
 #include <map>
 #include <string>
 #include <chrono>
-#include <condition_variable>
-
-#include <glbinding/gl/gl.h>
-#include <glbinding/Binding.h>
-#define GLFW_INCLUDE_NONE // avoid glbinding errors
-#include <GLFW/glfw3.h>
-#include <sol.hpp>
 
 #include "util/types.hpp"
 #include "logger.hpp"
 #include "hermes.hpp"
 #include "state.hpp"
-#include "sys/alexandria.hpp"
-#include "sys/input.hpp"
-#include "sys/render.hpp"
 
+/**
+ * Base-level forward definitions.
+ */
+class GLFWwindow;
 
 namespace MilSim {
 	
 	typedef std::unique_ptr<GameState> t_state_ptr;
 	typedef std::unique_ptr<Sys> t_sys_ptr;
 
+	/**
+	 * Forward definitions..
+	 */
+	class Render;
+	class Input;
+	class Alexandria;
+
+	/**
+	 * `Core`: the glue class.
+	 */
 	class Core {
 	public:
 		Core();
@@ -79,10 +82,18 @@ namespace MilSim {
 		Alexandria* m_alexandria;
 		Input* m_input;
 		Render* m_render;
+		GLFWwindow* m_window;
+
+		/**
+		 * Game state stuff. Wait frame delays calling
+		 * render on the current state for the next frame.
+		 * Mostly a hack to give the render thread time
+		 * to upload resources.
+		 */
+		GameState* m_current_state;
+		bool m_wait_frame {false};
 
 		// Various
-		GLFWwindow* m_window;
-		GameState* m_current_state;
 		apathy::Path m_local_root;
 		uint m_winx, m_winy;
 

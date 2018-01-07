@@ -213,7 +213,6 @@ bool Alexandria::load_asset(const t_asset_id hash)
 void Alexandria::unload_asset(const t_asset_id hash)
 {
 	auto it = m_assets.find(hash);
-	auto hot = m_loaded.find(hash);
 	if(!have_asset(hash) || !is_loaded(hash))
 		return;
 	auto asset = it->second.get();

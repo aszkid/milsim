@@ -20,6 +20,8 @@ namespace MilSim {
 	using namespace gl;
 	using json = nlohmann::json;
 
+	class Alexandria;
+
 	/**
 	 * Render thread messages.
 	 */
@@ -114,6 +116,10 @@ namespace MilSim {
 		void kill();
 		void update(std::chrono::milliseconds delta);
 
+		inline void set_alexandria(Alexandria* alex) {
+			m_alexandria = alex;
+		}
+
 		/**
 		 * Thread start-stop.
 		 */
@@ -206,7 +212,7 @@ namespace MilSim {
 		 * Drawing methods.
 		 */
 		void _handle_command(const RenderCommand& command);
-		void _bind_layer(const uint32_t layer);
+		void _bind_layer_idx(const uint32_t idx);
 		
 		/**
 		 * Resource allocation and destruction methods.
@@ -237,6 +243,11 @@ namespace MilSim {
 		moodycamel::ConcurrentQueue<RenderMessage> m_queue_front;
 		moodycamel::ConcurrentQueue<RenderMessage> m_queue_back;
 		std::mutex m_swap_mutex;
+
+		/**
+		 * Handle to Alexandria.
+		 */
+		Alexandria* m_alexandria;
 	};
 
 };

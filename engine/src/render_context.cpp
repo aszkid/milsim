@@ -73,7 +73,7 @@ RenderCommandPackage* RenderCommandContext::render(
 	// patch `cmd.m_data` if needed, by querying `Sys.Render`;
 	// TODO
 
-	m_commands.emplace_back(cmd);
+	m_commands.emplace_back(std::move(cmd));
 
 	return &m_commands.back().m_data;
 }

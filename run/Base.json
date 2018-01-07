@@ -47,6 +47,20 @@
 					"vertex_src" : "pass.vert",
 					"fragment_src" : "pass.frag",
 					"pipeline_layer" : "gui"
+				},
+				{
+					"type" : "shader",
+					"id" : "Overlay",
+					"vertex_src" : "overlay.vert",
+					"fragment_src" : "overlay.frag",
+					"pipeline_layer" : "NULL"
+				},
+				{
+					"type" : "shader",
+					"id" : "DeferredShader",
+					"vertex_src" : "deferred.vert",
+					"fragment_src" : "deferred.frag",
+					"pipeline_layer" : "NULL"
 				}
 			]
 		}

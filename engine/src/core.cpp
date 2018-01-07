@@ -1,6 +1,14 @@
-#include "core.hpp"
-
+#include <glbinding/gl/gl.h>
+#include <glbinding/Binding.h>
+#define GLFW_INCLUDE_NONE // avoid glbinding errors
+#include <GLFW/glfw3.h>
+#include <sol.hpp>
 #include <thread>
+
+#include "core.hpp"
+#include "sys/alexandria.hpp"
+#include "sys/input.hpp"
+#include "sys/render.hpp"
 
 using namespace MilSim;
 
@@ -53,6 +61,8 @@ void Core::init(const std::string local_root = ".")
 	for(auto& s : m_systems) {
 		s.second->init();
 	}
+
+	m_render->set_alexandria(m_alexandria);
 }
 void Core::deinit()
 {
@@ -82,6 +92,7 @@ GameState* Core::get_state(const std::string id)
 void Core::force_state(const std::string id)
 {
 	m_current_state = m_states[id].get();
+	m_wait_frame = true;
 }
 
 void Core::loop()
@@ -132,7 +143,12 @@ void Core::loop()
 		}
 
 		// Generate and submit render commands
-		m_current_state->render();
+		// TODO: avoid branching...
+		if(m_wait_frame) {
+			m_wait_frame = true;
+		} else {
+			m_current_state->render();
+		}
 
 		// Wait for render to be done with the current frame
 		m_render->wait();

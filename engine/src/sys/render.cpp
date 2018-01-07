@@ -1,5 +1,6 @@
 #include "sys/render.hpp"
 #include "util/io.hpp"
+#include "sys/alexandria.hpp"
 
 using namespace MilSim;
 
@@ -288,6 +289,51 @@ void Render::_create_pipeline_layer(const json& data, RenderResourceContext& rrc
 }
 void Render::_create_pipeline_pass(const json& data, RenderResourceContext& rrc)
 {
+	const auto& name = data["name"].get<std::string>();
+	const auto& inputs = data["inputs"].get<std::vector<std::string>>();
+	const auto& output = data["output"].get<std::string>();
+	const auto& shader = data["shader"].get<std::string>();
+
+	// Prepare render pass
+	RenderPass pass;
+	pass.name = Crypto::HASH(name);
+	m_log->info("Creating pipeline fullscreen pass `{}`...", name);
+
+	for(const auto& str : inputs) {
+		const uint32_t input = Crypto::HASH(str);
+		if(!have_render_target(input)) {
+			m_log->error("Do not have render target `{}`! Aborting...", str);
+			throw;
+		}
+		pass.inputs.push_back(input);
+	}
+
+	if(output != "back_buffer") {
+		m_log->error("No outputs supported other than `back_buffer`, for now. Aborting...");
+		throw;
+	}
+	pass.output = Crypto::HASH(output);
+
+	/**
+	 * Load shader information.
+	 * 1) Query `Alexandria` for `ShaderProgramAsset`
+	 * 2) Fetch `RenderResource` handle from the asset
+	 */
+	const auto shader_asset = m_alexandria->get_asset<ShaderProgramAsset>(shader);
+	if(shader_asset == nullptr) {
+		m_log->error("Failed loading shader program `{}`! Aborting...", shader);
+		throw;
+	}
+	pass.shader = shader_asset->m_program;
+	/**
+	 * HACK: we don't really check you get the same shader!
+	 * TODO: we must store an actual RenderResource handle in `m_shader_programs`
+	 * to check the generation.
+	 */
+	if(m_shader_programs.size() <= pass.shader.index()) {
+		m_log->error("Shader program `{}` has not been uploaded to the GPU! Aborting...", shader);
+		throw;
+	}
 
 }
 
@@ -591,7 +637,9 @@ void Render::_handle_command(const RenderCommand& command)
 	auto& ib = m_index_buffers[command.m_data.index_buffer.index()];
 	auto& sp = m_shader_programs[command.m_data.shader.index()];
 
-	_bind_layer(command.get_layer());
+	m_log->info("Handling render command with key `{:x}`", command.m_key);
+
+	_bind_layer_idx(command.get_layer());
 	glBindVertexArray(vl.m_vao);
 	glUseProgram(sp.m_program);
 	glBindVertexBuffer(
@@ -608,17 +656,20 @@ void Render::_handle_command(const RenderCommand& command)
 		(GLvoid*)0
 	);
 }
-void Render::_bind_layer(const uint32_t layer)
+void Render::_bind_layer_idx(const uint32_t idx)
 {
-	auto it = m_render_layers.find(layer);
-	if(it != m_render_layers.end()) {
-		m_log->info("Found your layer!");
-		auto& fbo = m_frame_buffers[it->second.frame_buffer.index()].m_fbo;
-		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	} else {
-		m_log->error("Render layer `{}` not found!", layer);
+	auto it = std::find_if(m_render_layers.begin(), m_render_layers.end(),
+		[idx](const auto& l) {
+			return l.second.idx == idx;
+	});
+	
+	if(it == m_render_layers.end()) {
+		m_log->error("Render layer at index `{}` not found!", idx);
+		throw;
 	}
+	auto& fbo = m_frame_buffers[it->second.frame_buffer.index()].m_fbo;
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 RenderResource Render::_alloc_texture()
