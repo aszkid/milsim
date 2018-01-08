@@ -7,11 +7,11 @@
 - [x] Macro for `Objects` to initialize sub-`Objects` in a nice way (i.e. don't have to manually pass `m_hermes`, etc).
 
 - [x] Control camera with mouse
-- [ ] "Simple" rendering pipeline implementation.
+- [x] "Simple" rendering pipeline implementation.
 	+ [x] `.obj` loader for Alexandria
 	+ [x] Support for textures!
 	+ [x] Thread-safe `queue` implementation for Main-Render threads communication; *got one [online](http://www.moodycamel.com/blog/2014/a-fast-general-purpose-lock-free-queue-for-c++)*.
-	+ [ ] Render commands basic design w/ shader-pipeline binding.
+	+ [x] Render commands basic design w/ shader-pipeline binding.
 	+ [x] Implement `generation`s for render resources!
 - [ ] Legit `Material` asset. PBR, really.
 - [x] Write Alexandria member functions to load assets (no OOP).
