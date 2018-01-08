@@ -197,6 +197,7 @@ namespace MilSim {
 		 */
 		std::vector<RenderLayer> m_render_layers;
 		std::vector<RenderPass> m_render_passes;
+		GLuint m_fake_vao;
 		/**
 		 * Global render targets.
 		 */

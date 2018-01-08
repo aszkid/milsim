@@ -34,3 +34,4 @@
 - [On Über-shaders and modular shader program generation](https://gamedev.stackexchange.com/questions/57957/game-engine-design-ubershader-shader-management-design), and [graph-based material/shader systems](https://gamedev.stackexchange.com/questions/88199/in-a-graph-based-material-system-how-can-i-support-a-variety-of-input-and-outpu) (a la UE4).
 - [More](http://www.shaderplay.com/products/nodeflex/overview/overview.html) and [more](https://github.com/unconed/shadergraph) graph-based shader [authoring](https://shaderfrog.com/) tools.
 - [OpenGL 4.4 scene rendering techniques (NVidia)](http://on-demand.gputechconf.com/gtc/2014/presentations/S4379-opengl-44-scene-rendering-techniques.pdf).
+- [*Screen Covering Triangle* with shader trickery](https://rauwendaal.net/2014/06/14/rendering-a-screen-covering-triangle-in-opengl/).

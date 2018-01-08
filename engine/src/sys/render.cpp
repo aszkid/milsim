@@ -130,6 +130,8 @@ void Render::_inner_thread_entry()
 		/**
 		 * Execute every fullscreen pass.
 		 */
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+		glBindVertexArray(m_fake_vao);
 		for(auto const& pass : m_render_passes) {
 			_execute_pass(pass);
 		}
@@ -193,6 +195,14 @@ void Render::setup_pipeline()
 {
 	using json = nlohmann::json;
 
+	/**
+	 * Create empty vao for fullscreen quads.
+	 */
+	glGenVertexArrays(1, &m_fake_vao);
+
+	/**
+	 * Open config file.
+	 */
 	json root = json::parse(
 		IO::read_file(m_root.append("render_config.json").string())
 	);
@@ -653,7 +663,7 @@ void Render::_handle_command(const RenderCommand& command)
 	auto& ib = m_index_buffers[command.m_data.index_buffer.index()];
 	auto& sp = m_shader_programs[command.m_data.shader.index()];
 
-	m_log->info("Handling render command with key `{:x}`", command.m_key);
+	//m_log->info("Handling render command with key `{:x}`", command.m_key);
 
 	_bind_layer_idx(command.get_layer());
 	glBindVertexArray(vl.m_vao);
@@ -692,6 +702,26 @@ void Render::_bind_layer_idx(const hash_t idx)
 void Render::_execute_pass(const RenderPass& pass)
 {
 	m_log->info("Executing fullscreen pass `{:x}`...", pass.name);
+	/**
+	 * 1. Bind input textures in order.
+	 * 2. Bind pass shader.
+	 * 3. Execute single draw call (3 vertices, screen-filling triangle).
+	 */
+	
+	size_t tex_idx = 0;
+	for(const hash_t input : pass.inputs) {
+		const RenderResource res_handle = m_render_targets[input];
+		const TextureResource tex_handle = m_textures[res_handle.index()];
+		glActiveTexture(GL_TEXTURE0 + tex_idx);
+		glBindTexture(GL_TEXTURE_2D, tex_handle.m_tex_id);
+		tex_idx++;
+	}
+
+	const ShaderProgramResource sh_handle = m_shader_programs[pass.shader.index()];
+	glUseProgram(sh_handle.m_program);
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+
+	m_log->info("Finished pass!");
 }
 
 RenderResource Render::_alloc_texture()
