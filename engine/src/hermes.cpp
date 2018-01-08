@@ -16,12 +16,12 @@ Hermes::~Hermes()
 	free_back_queues();
 }
 
-Hermes::t_queue const& Hermes::get_channel(const uint32_t chan)
+Hermes::t_queue const& Hermes::get_channel(const hash_t chan)
 {
 	return m_back_qs[chan];
 }
 
-void Hermes::send(Message* msg, const uint32_t channel)
+void Hermes::send(Message* msg, const hash_t channel)
 {
 	HERMES_LOCK;
 	m_front_qs[channel].push_back(msg);

@@ -7,6 +7,11 @@ find_package(Threads REQUIRED)
 include_directories(include)
 
 set(SOURCES
+	../ext/csiphash.cpp
+
+	src/util/io.cpp
+	src/util/crypto.cpp
+
 	src/core.cpp
 	src/scene.cpp
 	src/render_scene.cpp
@@ -24,8 +29,6 @@ set(SOURCES
 	src/sys/alexandria.cpp
 	src/sys/input.cpp
 	src/sys/render.cpp
-
-	src/util/io.cpp
 	
 	src/sys/script.cpp
 	src/sys/audio.cpp

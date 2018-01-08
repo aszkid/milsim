@@ -157,7 +157,7 @@ void Render::_inner_thread_entry()
 	}
 }
 
-bool Render::have_render_target(const uint32_t hash)
+bool Render::have_render_target(const hash_t hash)
 {
 	return m_render_targets.find(hash) != m_render_targets.end();
 }
@@ -310,7 +310,7 @@ void Render::_create_pipeline_pass(const json& data, RenderResourceContext& rrc)
 	m_log->info("Creating pipeline fullscreen pass `{}` ({:x})...", name, pass.name);
 
 	for(const auto& str : inputs) {
-		const uint32_t input = Crypto::HASH(str);
+		const hash_t input = Crypto::HASH(str);
 		if(!have_render_target(input)) {
 			m_log->error("Do not have render target `{}`! Aborting...", str);
 			throw;
@@ -400,7 +400,7 @@ void Render::alloc(RenderResource* rr, RenderResource::Type t)
 		throw;
 	}
 }
-size_t Render::get_layer_idx(const uint32_t name)
+size_t Render::get_layer_idx(const hash_t name)
 {
 	auto it = std::find_if(m_render_layers.begin(), m_render_layers.end(),
 		[name](const auto& layer) {
@@ -672,7 +672,7 @@ void Render::_handle_command(const RenderCommand& command)
 		(GLvoid*)0
 	);
 }
-void Render::_bind_layer_idx(const uint32_t idx)
+void Render::_bind_layer_idx(const hash_t idx)
 {
 	auto it = std::find_if(m_render_layers.begin(), m_render_layers.end(),
 		[idx](const auto& layer) {

@@ -1,14 +1,14 @@
 #pragma once
 
-#include "CRC.h"
+#include <string>
 
 namespace MilSim {
+	
+	typedef uint64_t hash_t;
+
 namespace Crypto {
 
-	// Hashing function
-	inline uint32_t HASH(const std::string str) {
-		return CRC::Calculate(str.c_str(), str.length(), CRC::CRC_32());
-	}
+	hash_t HASH(const std::string& str);
 
 }
 }

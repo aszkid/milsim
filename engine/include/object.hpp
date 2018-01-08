@@ -40,7 +40,7 @@ namespace MilSim {
 		Alexandria* m_alexandria;
 		t_logger m_logger;
 		std::string m_name;
-		uint32_t m_name_hash;
+		hash_t m_name_hash;
 	};
 
 

@@ -72,9 +72,9 @@ namespace MilSim {
 	 */
 	struct RenderLayer {
 		size_t idx;
-		uint32_t name;
-		std::vector<uint32_t> render_targets;
-		uint32_t depth_stencil_target;
+		hash_t name;
+		std::vector<hash_t> render_targets;
+		hash_t depth_stencil_target;
 		RenderResource frame_buffer;
 		enum Sort {
 			FRONT_BACK,
@@ -88,9 +88,9 @@ namespace MilSim {
 	 * Executed.
 	 */
 	struct RenderPass {
-		uint32_t name;
-		std::vector<uint32_t> inputs;
-		uint32_t output;
+		hash_t name;
+		std::vector<hash_t> inputs;
+		hash_t output;
 		RenderResource shader;
 	};
 
@@ -157,7 +157,7 @@ namespace MilSim {
 		/**
 		 * Resource queries.
 		 */
-		size_t get_layer_idx(const uint32_t name);
+		size_t get_layer_idx(const hash_t name);
 
 	private:
 		
@@ -200,8 +200,8 @@ namespace MilSim {
 		/**
 		 * Global render targets.
 		 */
-		std::map<uint32_t, RenderResource> m_render_targets;
-		bool have_render_target(const uint32_t hash);
+		std::map<hash_t, RenderResource> m_render_targets;
+		bool have_render_target(const hash_t hash);
 		bool have_render_target(const std::string name);
 
 		/**
@@ -214,7 +214,7 @@ namespace MilSim {
 		 * Drawing methods.
 		 */
 		void _handle_command(const RenderCommand& command);
-		void _bind_layer_idx(const uint32_t idx);
+		void _bind_layer_idx(const hash_t idx);
 		void _execute_pass(const RenderPass& pass);
 		
 		/**

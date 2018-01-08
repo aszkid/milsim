@@ -22,12 +22,12 @@ namespace MilSim {
 	 * POD (mostly) base message class.
 	 */
 	struct Message {
-		Message(const uint32_t t)
+		Message(const hash_t t)
 			: type(t)
 		{};
 		virtual ~Message() = default;
 
-		const uint32_t type;
+		const hash_t type;
 	};
 
 	struct InputKeyMessage : public Message {
@@ -126,13 +126,13 @@ namespace MilSim {
 		
 		typedef std::vector<Message*> t_queue;
 
-		void send(Message* msg, const uint32_t channel);
+		void send(Message* msg, const hash_t channel);
 		void swap_queues();
-		t_queue const& get_channel(const uint32_t chan);
+		t_queue const& get_channel(const hash_t chan);
 	
 	private:
-		std::map<uint32_t, t_queue> m_front_qs;
-		std::map<uint32_t, t_queue> m_back_qs;
+		std::map<hash_t, t_queue> m_front_qs;
+		std::map<hash_t, t_queue> m_back_qs;
 
 		void free_back_queues();
 

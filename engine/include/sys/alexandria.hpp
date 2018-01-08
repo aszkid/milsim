@@ -69,15 +69,15 @@ namespace MilSim {
 		 * Asset library. Registered assets are in `m_assets`,
 		 * while loaded assets are in `m_loaded`.
 		 */
-		std::map<uint32_t, t_asset_ptr> m_assets;
-		std::unordered_set<uint32_t> m_loaded;
+		std::map<hash_t, t_asset_ptr> m_assets;
+		std::unordered_set<hash_t> m_loaded;
 
 		/**
 		 * Database book-keeping. Top-most directory, i.e.
 		 * `/Base/Models/Greek` model is from `Base` database.
 		 * Allows us to defer loading.
 		 */
-		std::map<uint32_t, json> m_dbs;
+		std::map<hash_t, json> m_dbs;
 
 		/**
 		 * Iterates JSON database and calls `parse_asset` on each found asset.

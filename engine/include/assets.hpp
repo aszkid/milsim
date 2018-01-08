@@ -6,10 +6,11 @@
 
 #include "logger.hpp"
 #include "render_resource.hpp"
+#include "util/crypto.hpp"
 
 namespace MilSim {
 
-    typedef uint32_t t_asset_id;
+    typedef hash_t t_asset_id;
 	/**
 	 * Asset: abstract base class for assets.
 	 * Assets have two states: REGISTERED or LOADED.
@@ -124,7 +125,7 @@ namespace MilSim {
 		ShaderProgramAsset(const apathy::Path id);
 		~ShaderProgramAsset();
 
-		uint32_t m_layer;
+		hash_t m_layer;
 		RenderResource m_program;
 		std::string m_vert_source;
 		std::string m_frag_source;
