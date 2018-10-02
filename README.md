@@ -18,7 +18,7 @@ Rendering an OBJ model textured by a MTL file. Interactive 3D camera (FPS-like).
 
 1. A core engine object is created.
 2. The message passing system is intialized.
-3. All systems are initialized (input, render--from a [render_, resource loading).
+3. All systems are initialized (input, render--from [render_config.json](run/render_config.json), resource loading).
 4. The resource loading system collects a database of resources from a JSON file (e.g. [Base.json](run/Base.json)).
 5. An initial game state is added to the list of states (which might look something like [main_screen.cpp](app/states/main_screen.cpp)).
 6. The core object starts [looping](engine/src/core.cpp#L98); message queues are swapped at every frame.
