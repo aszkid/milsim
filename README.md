@@ -8,7 +8,7 @@ The 'logic' and 'render' steps happen concurrently, but work on different frames
 
 *Design philosophy:* a somewhat rambling write-up on the different parts of the engine can be found in the [SCHEMA](SCHEMA.md) document. The [bitsquid](http://bitsquid.blogspot.com/) (later 'Stingray') engine was a major source of inspiration with regards to data-oriented patterns. Take a look at [ROADMAP](ROADMAP.md) for a progress check-list.
 
-## Demo image
+## Demo screenshot
 
 Rendering an OBJ model textured by a MTL file. Interactive 3D camera (FPS-like).
 
