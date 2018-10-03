@@ -2,7 +2,7 @@
 
 A game engine in (you've guessed it) C++. These too-many 6,000 LOC provide the (WIP) design of a somewhat backend-agnostic rendering pipeline (take a look at the [render.hpp](engine/include/sys/render.hpp) system), basic resource loading (`.obj` model files, textures in most reasonable image formats, fonts, shaders) and a message-passing system ([hermes.hpp](engine/include/hermes.hpp)).
 
-The 'logic' and 'render' steps happen concurrently, but work on different frames. While the logic thread is working on submitting draw calls an updating world state for frame `N`, the render thread is processing batched draw calls and resource commands from frame `N-1`. This avoids hairy concurrency issues insofar as logic-render interactions are concerned, and defines a very clear line separating concerns between engine systems.
+The 'logic' and 'render' steps happen concurrently, but work on different frames. While the logic thread is working on submitting draw calls an updating world state for frame `N`, the render thread is processing batched draw calls and resource commands from frame `N-1`. This avoids hairy concurrency issues insofar as logic-render interactions are concerned, and defines a very clear line separating concerns between engine systems. The built-in render backend implementation is OpenGL, because that's what I'm familiar with.
 
 *Project architecture:* the engine compiles into a library, while apps link from it and design their own game states. We use CMake for cross-platform building; the engine itself should work on Linux and Windows at least (tested on Linux x64).
 
